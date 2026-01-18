@@ -120,7 +120,7 @@ export function Popup() {
   // Cuenta regresiva del estado actual.
   const scheduleCountdown = useMemo(() => {
     if (!timeline) return null;
-    if (!timeline.currentUntil) return "∞";
+    if (!timeline.currentUntil) return "--:--";
     return formatDuration(timeline.currentUntil - now);
   }, [timeline, now]);
 
@@ -208,3 +208,4 @@ export function Popup() {
     </div>
   );
 }
+

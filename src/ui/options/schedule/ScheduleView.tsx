@@ -487,11 +487,9 @@ function translatePeriodLabel(label: string, language: Language) {
   switch (label) {
     case "Madrugada":
       return "Early morning";
-    case "Mañana":
-    case "MaAñana":
+    case "Manana":
       return "Morning";
-    case "Mediodía":
-    case "MediodA-a":
+    case "Mediodia":
       return "Midday";
     case "Tarde":
       return "Afternoon";
@@ -518,3 +516,7 @@ function formatMinutes(total: number) {
   const m = total % 60;
   return `${h}h ${m}m`;
 }
+
+
+
+

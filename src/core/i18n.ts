@@ -203,12 +203,12 @@ export const STRINGS = {
 
 export type I18nKey = keyof typeof STRINGS;
 
-export function t(lang: Language, key: I18nKey) {
+export function t(lang: Language, key: I18nKey): string {
   const entry = STRINGS[key];
   return entry?.[lang] ?? entry?.en ?? key;
 }
 
-export function tf(lang: Language, key: I18nKey, vars: Record<string, string>) {
+export function tf(lang: Language, key: I18nKey, vars: Record<string, string>): string {
   let text = t(lang, key);
   for (const [k, v] of Object.entries(vars)) {
     text = text.replace(`{${k}}`, v);

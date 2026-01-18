@@ -47,11 +47,11 @@ export function ensureBlockingGuard(): GuardHandle {
 
     const label = document.createElement("div");
     label.id = "focustube-blocking-guard-label";
-    label.textContent = "Verificando reglasƒ?İ";
+    label.textContent = "Verificando reglas...";
     label.style.cssText = "font-weight:700; font-size: 13px; opacity: 0.9;";
 
     const hint = document.createElement("div");
-    hint.textContent = "Si estA­s en horario de foco, esto es normal.";
+    hint.textContent = "Si estas en horario de foco, esto es normal.";
     hint.style.cssText = "font-size: 12px; opacity: 0.7;";
 
     box.appendChild(title);
@@ -96,3 +96,4 @@ export function ensureBlockingGuard(): GuardHandle {
 
   return { show, hide, setLabel };
 }
+

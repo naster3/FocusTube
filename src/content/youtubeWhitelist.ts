@@ -103,10 +103,10 @@ export async function allowWhitelistedYouTubeWatchIfPossible(
   }
 
   // Intenta con handle (canal).
-  guardSetLabel?.("Verificando canalƒ?İ");
+  guardSetLabel?.("Verificando canal...");
   const handle = await waitForYouTubeHandle(4500, (left) => {
     if (left % 900 < 150) {
-      guardSetLabel?.("Verificando canalƒ?İ");
+      guardSetLabel?.("Verificando canal...");
     }
   });
 
@@ -141,4 +141,5 @@ export async function allowWhitelistedYouTubeWatchIfPossible(
 
   return false;
 }
+
 

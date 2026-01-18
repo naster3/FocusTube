@@ -264,7 +264,7 @@ export function initFloatingTimerOverlay() {
         return;
       }
 
-      const t = res.timeline as {
+      const timeline = res.timeline as {
         state: "blocked" | "free";
         reason: string;
         currentUntil: number | null;
@@ -273,18 +273,18 @@ export function initFloatingTimerOverlay() {
       };
 
       const now = Date.now();
-      const until = t.currentUntil;
+      const until = timeline.currentUntil;
 
-      if (t.state === "blocked") {
+      if (timeline.state === "blocked") {
         line1.textContent = t(lang, "overlay.blocked");
-        big.textContent = until ? formatDuration(until - now) : "ƒ^z";
-        line2.textContent = `${t(lang, "overlay.reason")}: ${reasonLabel(t.reason)}`;
+        big.textContent = until ? formatDuration(until - now) : "--:--";
+        line2.textContent = `${t(lang, "overlay.reason")}: ${reasonLabel(timeline.reason)}`;
       } else {
         line1.textContent = t(lang, "overlay.free");
-        big.textContent = until ? formatDuration(until - now) : "ƒ^z";
-        if (t.nextBlockStart && t.nextBlockEnd) {
+        big.textContent = until ? formatDuration(until - now) : "--:--";
+        if (timeline.nextBlockStart && timeline.nextBlockEnd) {
           line2.textContent = tf(lang, "overlay.next_block", {
-            duration: formatDuration(t.nextBlockEnd - t.nextBlockStart)
+            duration: formatDuration(timeline.nextBlockEnd - timeline.nextBlockStart)
           });
         } else {
           line2.textContent = "";
@@ -351,3 +351,4 @@ export function initFloatingTimerOverlay() {
     void loadLanguage();
   });
 }
+
