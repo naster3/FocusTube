@@ -1,0 +1,50 @@
+﻿.popup {
+  width: 280px;
+  padding: 16px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #0f172a;
+  background: linear-gradient(135deg, #f9f3ec, #eff4ff);
+}
+
+.popup h1 {
+  font-size: 20px;
+  margin: 0 0 4px 0;
+}
+
+.popup p {
+  margin: 0 0 12px 0;
+  color: #475569;
+  font-size: 12px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.toggle {
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.primary {
+  width: 100%;
+  border: none;
+  background: #111827;
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
