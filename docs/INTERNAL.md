@@ -7,7 +7,8 @@ FocusTube Blocker es una extension MV3 que bloquea contenido de YouTube/YouTube 
 - Background (service worker): `src/background/index.ts`.
 - Content script: `src/content/index.ts` (inyecta el overlay y redirige a la pagina bloqueada).
 - UI: `src/ui/popup`, `src/ui/options`, `src/ui/blocked`.
-- Shared: reglas, storage, tipos y utilidades en `src/shared/*`.
+- Core: reglas, tipos y utilidades en `src/core/*`.
+- Infrastructure: storage y DB en `src/infrastructure/*`.
 - Manifest base: `src/manifest/manifest.base.json` (se copia a `dist/manifest.json`).
 
 ## Flujo de bloqueo
@@ -28,7 +29,7 @@ FocusTube Blocker es una extension MV3 que bloquea contenido de YouTube/YouTube 
 
 ## Datos y storage
 - `settings` y `metrics` viven en `chrome.storage.local`.
-- Valores por defecto en `src/shared/defaults.ts`.
+- Valores por defecto en `src/core/defaults.ts`.
 - `mergeSettings` y `mergeMetrics` mantienen compatibilidad.
 - Modo estricto: requiere PIN (hash en `pinHash`) para desactivar.
 
@@ -49,7 +50,7 @@ FocusTube Blocker es una extension MV3 que bloquea contenido de YouTube/YouTube 
 - Iconos se copian desde `public/icons`.
 
 ## Tests
-- `vitest run` (ver `src/shared/schedule.test.ts`).
+- `vitest run` (ver `src/tests/schedule.test.ts`).
 
 ## Puntos a vigilar
 - El conteo de tiempo depende de visibilidad, foco de ventana y URL activa.

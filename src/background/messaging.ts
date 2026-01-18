@@ -1,8 +1,8 @@
-import { DEFAULT_METRICS } from "../shared/defaults";
-import { clearDb } from "../shared/db";
-import { resetMetrics } from "../shared/storage";
-import { computeScheduleTimeline } from "../shared/timeline";
-import { evaluateBlock } from "../shared/url";
+import { DEFAULT_METRICS } from "../core/defaults";
+import { clearDb } from "../infrastructure/db";
+import { resetMetrics } from "../infrastructure/storage";
+import { computeScheduleTimeline } from "../core/timeline";
+import { evaluateBlock } from "../core/url";
 import { addAttempt, addBlockedTime } from "./metrics";
 import { ensureMetricsLoaded, ensureSettingsLoaded, getTabState, setMetricsCache, setMetricsDirty, tabStates } from "./state";
 import { updateTabTarget } from "./tabs";

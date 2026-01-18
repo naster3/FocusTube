@@ -1,19 +1,23 @@
 import React, { useMemo, useState, useEffect } from "react";
-import type { Interval, IntervalWeek } from "../../../shared/types";
+import type { Interval, IntervalWeek, Language } from "../../../core/types";
+import { t, tf } from "../../../core/i18n";
 import { Segment, computeTotals, detectOverlaps, minutesToTime, normalizeIntervals, parseTimeToMinutes } from "./helpers";
 
 // Orden visual Lunes a Domingo.
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
-const DAY_LABELS = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"];
+const DAY_LABELS_ES = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"];
+const DAY_LABELS_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 type ScheduleViewProps = {
   intervalsByDay: IntervalWeek;
   timeFormat12h: boolean;
+  language: Language;
   onChange: (next: IntervalWeek) => void;
+  onReset?: () => void;
 };
 
 // Orquestador de vista Dia/Semana y edicion de intervalos.
-export function ScheduleView({ intervalsByDay, timeFormat12h, onChange }: ScheduleViewProps) {
+export function ScheduleView({ intervalsByDay, timeFormat12h, language, onChange, onReset }: ScheduleViewProps) {
   const [activeTab, setActiveTab] = useState<"day" | "week">("day");
   const [selectedDay, setSelectedDay] = useState<number>(() => new Date().getDay());
   const [modalOpen, setModalOpen] = useState(false);
@@ -62,8 +66,8 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, onChange }: Schedu
     <section className="mb-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_24px_rgba(15,23,42,0.08)]">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">Horarios</h3>
-          <p className="text-sm text-slate-600">Define bloques y tiempos libres por dia.</p>
+          <h3 className="text-lg font-semibold text-slate-900">{t(language, "schedule.title")}</h3>
+          <p className="text-sm text-slate-600">{t(language, "schedule.subtitle")}</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -72,7 +76,7 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, onChange }: Schedu
             }`}
             onClick={() => setActiveTab("day")}
           >
-            Dia
+            {t(language, "schedule.tab.day")}
           </button>
           <button
             className={`rounded-md border px-3 py-1.5 text-sm ${
@@ -80,32 +84,48 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, onChange }: Schedu
             }`}
             onClick={() => setActiveTab("week")}
           >
-            Semana
+            {t(language, "schedule.tab.week")}
           </button>
         </div>
       </div>
 
       {overlaps.length > 0 && (
         <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-          Hay intervalos solapados
+          {t(language, "schedule.overlaps")}
         </div>
       )}
 
       {activeTab === "day" ? (
         <>
-          <DayTimelineBar intervals={intervals} timeFormat12h={timeFormat12h} />
+          <DayTimelineBar intervals={intervals} timeFormat12h={timeFormat12h} language={language} />
           <div className="mt-3 text-sm text-slate-700">
-            Bloqueado: {formatMinutes(totals.blockedMinutes)} / Libre: {formatMinutes(totals.freeMinutes)}
+            {tf(language, "schedule.blocked_free", {
+              blocked: formatMinutes(totals.blockedMinutes),
+              free: formatMinutes(totals.freeMinutes)
+            })}
           </div>
 
           <div className="mt-6">
-            <IntervalList intervals={intervals} onEdit={handleEdit} onDelete={handleDelete} onToggle={handleToggle} />
-            <button
-              className="mt-4 inline-flex items-center gap-2 rounded-md bg-teal-600 px-4 py-2 text-sm text-white"
-              onClick={handleAdd}
-            >
-              Agregar intervalo
-            </button>
+            <IntervalList
+              intervals={intervals}
+              language={language}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onToggle={handleToggle}
+            />
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <button
+                className="inline-flex items-center gap-2 rounded-md bg-teal-600 px-4 py-2 text-sm text-white"
+                onClick={handleAdd}
+              >
+                {t(language, "schedule.add_interval")}
+              </button>
+              {onReset && (
+                <button className="rounded-md border px-4 py-2 text-sm" onClick={onReset}>
+                  {t(language, "schedule.reset")}
+                </button>
+              )}
+            </div>
           </div>
         </>
       ) : (
@@ -113,6 +133,7 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, onChange }: Schedu
           intervalsByDay={intervalsByDay}
           selectedDay={selectedDay}
           timeFormat12h={timeFormat12h}
+          language={language}
           onSelectDay={(day) => {
             setSelectedDay(day);
             setActiveTab("day");
@@ -123,6 +144,7 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, onChange }: Schedu
       <AddEditIntervalModal
         open={modalOpen}
         interval={editing}
+        language={language}
         onClose={() => {
           setModalOpen(false);
           setEditing(null);
@@ -133,7 +155,15 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, onChange }: Schedu
   );
 }
 
-function DayTimelineBar({ intervals, timeFormat12h }: { intervals: Interval[]; timeFormat12h: boolean }) {
+function DayTimelineBar({
+  intervals,
+  timeFormat12h,
+  language
+}: {
+  intervals: Interval[];
+  timeFormat12h: boolean;
+  language: Language;
+}) {
   const segments = useMemo(() => normalizeIntervals(intervals), [intervals]);
   const [nowMin, setNowMin] = useState(() => {
     const d = new Date();
@@ -161,7 +191,12 @@ function DayTimelineBar({ intervals, timeFormat12h }: { intervals: Interval[]; t
       <div className="relative">
         <div className="flex h-12 w-full overflow-hidden rounded-md border border-slate-200 bg-white">
           {segments.map((segment) => (
-            <TimeBlockSegment key={segment.id} segment={segment} timeFormat12h={timeFormat12h} />
+            <TimeBlockSegment
+              key={segment.id}
+              segment={segment}
+              timeFormat12h={timeFormat12h}
+              language={language}
+            />
           ))}
         </div>
 
@@ -170,7 +205,7 @@ function DayTimelineBar({ intervals, timeFormat12h }: { intervals: Interval[]; t
           style={{ left: `${nowLeft}%` }}
         >
           <div className="absolute -top-6 left-1/2 -translate-x-1/2 rounded bg-rose-500 px-2 py-0.5 text-[11px] text-white">
-            Now
+            {t(language, "schedule.now")}
           </div>
         </div>
       </div>
@@ -182,17 +217,20 @@ function WeekTimelineBars({
   intervalsByDay,
   selectedDay,
   timeFormat12h,
+  language,
   onSelectDay
 }: {
   intervalsByDay: IntervalWeek;
   selectedDay: number;
   timeFormat12h: boolean;
+  language: Language;
   onSelectDay: (day: number) => void;
 }) {
   return (
     <div className="grid gap-3">
       {DAY_ORDER.map((day, idx) => {
         const segments = normalizeIntervals(intervalsByDay[day] || []);
+        const dayLabel = language === "es" ? DAY_LABELS_ES[idx] : DAY_LABELS_EN[idx];
         const isActive = day === selectedDay;
         return (
           <button
@@ -203,10 +241,16 @@ function WeekTimelineBars({
             onClick={() => onSelectDay(day)}
           >
             <div className="flex items-center gap-3">
-              <span className="w-10 text-sm font-semibold">{DAY_LABELS[idx]}</span>
+              <span className="w-10 text-sm font-semibold">{dayLabel}</span>
               <div className="flex h-6 w-full overflow-hidden rounded-md border border-slate-200 bg-white">
                 {segments.map((segment) => (
-                  <TimeBlockSegment key={segment.id} segment={segment} compact timeFormat12h={timeFormat12h} />
+                  <TimeBlockSegment
+                    key={segment.id}
+                    segment={segment}
+                    compact
+                    timeFormat12h={timeFormat12h}
+                    language={language}
+                  />
                 ))}
               </div>
             </div>
@@ -220,16 +264,19 @@ function WeekTimelineBars({
 function TimeBlockSegment({
   segment,
   compact,
-  timeFormat12h
+  timeFormat12h,
+  language
 }: {
   segment: Segment;
   compact?: boolean;
   timeFormat12h: boolean;
+  language: Language;
 }) {
   const width = ((segment.endMin - segment.startMin) / 1440) * 100;
   const start = formatMinuteLabel(segment.startMin, timeFormat12h);
   const end = formatMinuteLabel(segment.endMin, timeFormat12h);
-  const modeLabel = segment.mode === "blocked" ? "BLOQUEADO" : "LIBRE";
+  const modeLabel = segment.mode === "blocked" ? t(language, "schedule.blocked_label") : t(language, "schedule.free_label");
+  const period = translatePeriodLabel(segment.periodLabel, language);
 
   const base =
     segment.mode === "blocked"
@@ -245,7 +292,7 @@ function TimeBlockSegment({
       title={`${modeLabel} ${start}-${end}`}
     >
       <span className="px-1 text-center leading-tight">
-        {compact ? (segment.mode === "blocked" ? "B" : "L") : `${modeLabel} - ${segment.periodLabel}`}
+        {compact ? (segment.mode === "blocked" ? "B" : "L") : `${modeLabel} - ${period}`}
       </span>
     </div>
   );
@@ -253,11 +300,13 @@ function TimeBlockSegment({
 
 function IntervalList({
   intervals,
+  language,
   onEdit,
   onDelete,
   onToggle
 }: {
   intervals: Interval[];
+  language: Language;
   onEdit: (interval: Interval) => void;
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
@@ -265,14 +314,14 @@ function IntervalList({
   return (
     <div className="rounded-lg border border-slate-200 bg-white">
       <div className="grid grid-cols-5 gap-2 border-b border-slate-200 px-4 py-2 text-xs font-semibold text-slate-500">
-        <span>Inicio</span>
-        <span>Fin</span>
-        <span>Modo</span>
-        <span>Estado</span>
-        <span className="text-right">Acciones</span>
+        <span>{t(language, "schedule.list.start")}</span>
+        <span>{t(language, "schedule.list.end")}</span>
+        <span>{t(language, "schedule.list.mode")}</span>
+        <span>{t(language, "schedule.list.state")}</span>
+        <span className="text-right">{t(language, "schedule.list.actions")}</span>
       </div>
       {intervals.length === 0 ? (
-        <div className="px-4 py-4 text-sm text-slate-500">Sin intervalos.</div>
+        <div className="px-4 py-4 text-sm text-slate-500">{t(language, "schedule.empty")}</div>
       ) : (
         intervals.map((interval) => (
           <div key={interval.id} className="grid grid-cols-5 gap-2 px-4 py-2 text-sm border-t border-slate-100">
@@ -285,14 +334,14 @@ function IntervalList({
               }`}
               onClick={() => onToggle(interval.id)}
             >
-              {interval.enabled ? "Enabled" : "Disabled"}
+              {interval.enabled ? t(language, "schedule.list.enabled") : t(language, "schedule.list.disabled")}
             </button>
             <div className="flex justify-end gap-2">
               <button className="text-slate-600 hover:text-slate-900" onClick={() => onEdit(interval)}>
-                Editar
+                {t(language, "schedule.list.edit")}
               </button>
               <button className="text-rose-600 hover:text-rose-800" onClick={() => onDelete(interval.id)}>
-                Borrar
+                {t(language, "schedule.list.delete")}
               </button>
             </div>
           </div>
@@ -305,11 +354,13 @@ function IntervalList({
 function AddEditIntervalModal({
   open,
   interval,
+  language,
   onClose,
   onSave
 }: {
   open: boolean;
   interval: Interval | null;
+  language: Language;
   onClose: () => void;
   onSave: (next: Interval) => void;
 }) {
@@ -332,7 +383,7 @@ function AddEditIntervalModal({
 
   const validate = () => {
     if (start === end) {
-      return "Inicio y fin no pueden ser iguales.";
+      return t(language, "schedule.modal.error_same");
     }
     return "";
   };
@@ -367,8 +418,12 @@ function AddEditIntervalModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-        <h2 className="text-lg font-semibold mb-1">{interval ? "Editar intervalo" : "Agregar intervalo"}</h2>
-        <p className="mb-4 text-xs text-slate-500">Duracion estimada: {durationLabel()}</p>
+        <h2 className="text-lg font-semibold mb-1">
+          {interval ? t(language, "schedule.modal.edit") : t(language, "schedule.modal.add")}
+        </h2>
+        <p className="mb-4 text-xs text-slate-500">
+          {tf(language, "schedule.modal.duration", { duration: durationLabel() })}
+        </p>
 
         {error && (
           <div className="mb-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 px-3 py-2 rounded">
@@ -378,51 +433,73 @@ function AddEditIntervalModal({
 
         <div className="grid gap-3">
           <label className="text-sm">
-            Inicio
+            {t(language, "schedule.modal.start")}
             <input
               type="time"
               className="mt-1 w-full rounded border px-3 py-2"
               value={start}
-              onChange={(e) => setStart(e.target.value as "HH:MM")}
+              onChange={(e) => setStart(e.target.value as Interval["start"])}
             />
           </label>
           <label className="text-sm">
-            Fin
+            {t(language, "schedule.modal.end")}
             <input
               type="time"
               className="mt-1 w-full rounded border px-3 py-2"
               value={end}
-              onChange={(e) => setEnd(e.target.value as "HH:MM")}
+              onChange={(e) => setEnd(e.target.value as Interval["end"])}
             />
           </label>
           <label className="text-sm">
-            Modo
+            {t(language, "schedule.modal.mode")}
             <select
               className="mt-1 w-full rounded border px-3 py-2"
               value={mode}
               onChange={(e) => setMode(e.target.value as Interval["mode"])}
             >
-              <option value="blocked">blocked</option>
-              <option value="free">free</option>
+              <option value="blocked">{t(language, "schedule.modal.mode_blocked")}</option>
+              <option value="free">{t(language, "schedule.modal.mode_free")}</option>
             </select>
           </label>
           <label className="inline-flex items-center gap-2 text-sm">
             <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
-            Enabled
+            {t(language, "schedule.modal.enabled")}
           </label>
         </div>
 
         <div className="mt-6 flex justify-end gap-2">
           <button className="px-4 py-2 rounded border" onClick={onClose}>
-            Cancelar
+            {t(language, "schedule.modal.cancel")}
           </button>
           <button className="px-4 py-2 rounded bg-slate-900 text-white" onClick={handleSave}>
-            Guardar
+            {t(language, "schedule.modal.save")}
           </button>
         </div>
       </div>
     </div>
   );
+}
+
+function translatePeriodLabel(label: string, language: Language) {
+  if (language === "es") {
+    return label;
+  }
+  switch (label) {
+    case "Madrugada":
+      return "Early morning";
+    case "Mañana":
+    case "MaAñana":
+      return "Morning";
+    case "Mediodía":
+    case "MediodA-a":
+      return "Midday";
+    case "Tarde":
+      return "Afternoon";
+    case "Noche":
+      return "Night";
+    default:
+      return label;
+  }
 }
 
 function formatMinuteLabel(totalMinutes: number, use12h: boolean) {

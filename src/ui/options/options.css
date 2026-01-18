@@ -10,13 +10,37 @@
   min-height: 100vh;
 }
 
-header h1 {
+.options-header h1 {
   margin: 0 0 6px 0;
 }
 
-header p {
+.options-header p {
   margin: 0 0 20px 0;
   color: #475569;
+}
+
+.options-nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.options-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  background: #ffffff;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.options-nav a:hover {
+  border-color: #0f172a;
 }
 
 .panel {
@@ -155,6 +179,15 @@ header p {
   padding: 12px;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
+}
+
+.chart-canvas {
+  height: 140px;
+}
+
+.chart-canvas canvas {
+  width: 100%;
+  height: 100%;
 }
 
 .bars {

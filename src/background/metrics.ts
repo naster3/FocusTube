@@ -1,6 +1,6 @@
-import { flushToDb } from "../shared/db";
-import { setMetrics } from "../shared/storage";
-import type { DailyDelta, DbEvent } from "../shared/db";
+import { flushToDb } from "../infrastructure/db";
+import { setMetrics } from "../infrastructure/storage";
+import type { DailyDelta, DbEvent } from "../infrastructure/db";
 import { ensureMetricsLoaded, getMetricsCache, getTabState, isMetricsDirty, isWindowFocused, setMetricsDirty } from "./state";
 import { tabStates } from "./state";
 

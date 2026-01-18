@@ -1,5 +1,5 @@
-import { getMetrics, getSettings } from "../shared/storage";
-import type { Metrics, Settings } from "../shared/types";
+import { getMetrics, getSettings } from "../infrastructure/storage";
+import type { Metrics, Settings } from "../core/types";
 
 // Estado en memoria por pestana para tracking de tiempo.
 export type TabState = {

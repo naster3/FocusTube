@@ -10,19 +10,6 @@ const manifestBase = resolve(root, "src", "manifest", "manifest.base.json");
 mkdirSync(dist, { recursive: true });
 copyFileSync(manifestBase, resolve(dist, "manifest.json"));
 
-copyFileSync(
-  resolve(root, "dist", "src", "ui", "popup", "index.html"),
-  resolve(dist, "popup.html")
-);
-copyFileSync(
-  resolve(root, "dist", "src", "ui", "options", "index.html"),
-  resolve(dist, "options.html")
-);
-copyFileSync(
-  resolve(root, "dist", "src", "ui", "blocked", "index.html"),
-  resolve(dist, "blocked.html")
-);
-
 // Copia recursiva de assets (icons).
 const copyRecursive = (from, to) => {
   mkdirSync(to, { recursive: true });

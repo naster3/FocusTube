@@ -1,23 +1,23 @@
-import { IntervalWeek, Settings, Metrics, WeekSchedule } from "./types";
+import { Interval, IntervalWeek, Settings, Metrics, WeekSchedule } from "./types";
 
 // Schedules por defecto por dia.
 export const DEFAULT_SCHEDULES: WeekSchedule = {
-  0: [],
+  0: [{ start: "10:30", end: "12:00" }],
   1: [
     { start: "10:30", end: "12:00" },
-    { start: "14:00", end: "18:00" }
+    { start: "18:00", end: "22:30" }
   ],
   2: [
     { start: "10:30", end: "12:00" },
-    { start: "14:00", end: "18:00" }
+    { start: "18:00", end: "22:30" }
   ],
   3: [
     { start: "10:30", end: "12:00" },
-    { start: "14:00", end: "18:00" }
+    { start: "18:00", end: "22:30" }
   ],
   4: [
     { start: "10:30", end: "12:00" },
-    { start: "14:00", end: "18:00" }
+    { start: "18:00", end: "22:30" }
   ],
   5: [
     { start: "10:30", end: "12:00" }
@@ -35,8 +35,8 @@ const toIntervals = (schedules: WeekSchedule): IntervalWeek => {
     }
     intervals[day] = ranges.map((range, idx) => ({
       id: `day-${day}-${idx}-${range.start}-${range.end}`,
-      start: range.start as "HH:MM",
-      end: range.end as "HH:MM",
+      start: range.start as Interval["start"],
+      end: range.end as Interval["end"],
       mode: "blocked",
       enabled: true
     }));
@@ -51,6 +51,7 @@ export const DEFAULT_SETTINGS: Settings = {
   blockEnabled: false,
   blockShorts: true,
   blockKids: false,
+  language: "en",
   strictMode: false,
   pinHash: null,
   blockedDomains: [
@@ -60,7 +61,8 @@ export const DEFAULT_SETTINGS: Settings = {
     "xvideos.com",
     "es.pornhub.com",
     "e-hentai.org",
-    "nhentai.net"
+    "nhentai.net",
+    "olympusbiblioteca.com"
   ],
   whitelist: [],
   schedules: DEFAULT_SCHEDULES,

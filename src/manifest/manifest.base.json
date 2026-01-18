@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
   "name": "FocusTube Blocker",
-  "version": "1.7.8",
+  "version": "2.2.1",
   "description": "Bloquea YouTube por horarios con whitelist y modo estricto.",
   "permissions": [
+    "permissions",
     "storage",
     "tabs",
     "declarativeNetRequest",
@@ -21,9 +22,9 @@
   ],
   "action": {
     "default_title": "FocusTube Blocker",
-    "default_popup": "popup.html"
+    "default_popup": "src/ui/popup/index.html"
   },
-  "options_page": "options.html",
+  "options_page": "src/ui/options/index.html",
   "background": {
     "service_worker": "background.js",
     "type": "module"
@@ -37,7 +38,7 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "blocked.html",
+        "src/ui/blocked/index.html",
         "blocked.js"
       ],
       "matches": [

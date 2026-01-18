@@ -4,12 +4,14 @@ export type TimeRange = {
   end: string;
 };
 
+export type TimeString = `${number}${number}:${number}${number}`;
+
 export type WeekSchedule = Record<number, TimeRange[]>;
 
 export type Interval = {
   id: string;
-  start: "HH:MM";
-  end: "HH:MM";
+  start: TimeString;
+  end: TimeString;
   mode: "blocked" | "free";
   enabled: boolean;
 };
@@ -20,6 +22,7 @@ export type Settings = {
   blockEnabled: boolean;
   blockShorts: boolean;
   blockKids: boolean;
+  language: "en" | "es";
   strictMode: boolean;
   pinHash: string | null;
   blockedDomains: string[];
@@ -29,6 +32,8 @@ export type Settings = {
   timeFormat12h: boolean;
   unblockUntil: number | null;
 };
+
+export type Language = Settings["language"];
 
 export type Metrics = {
   version: number;

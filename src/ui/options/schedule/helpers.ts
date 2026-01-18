@@ -1,4 +1,4 @@
-import type { Interval } from "../../../shared/types";
+import type { Interval, TimeString } from "../../../core/types";
 
 export type Segment = {
   id: string;
@@ -18,17 +18,17 @@ const PERIODS = [
 ];
 
 // Convierte HH:MM a minutos.
-export function parseTimeToMinutes(value: "HH:MM"): number {
+export function parseTimeToMinutes(value: TimeString): number {
   const [h, m] = value.split(":").map(Number);
   return h * 60 + m;
 }
 
 // Convierte minutos a HH:MM.
-export function minutesToTime(total: number): "HH:MM" {
+export function minutesToTime(total: number): TimeString {
   const h = Math.floor(total / 60) % 24;
   const m = total % 60;
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(h)}:${pad(m)}` as "HH:MM";
+  return `${pad(h)}:${pad(m)}` as TimeString;
 }
 
 // Obtiene etiqueta de periodo por minuto.

@@ -1,6 +1,7 @@
 // Pantalla de bloqueo y desbloqueo temporal.
-import { getMetrics, getSettings, setSettings } from "../../shared/storage";
-import { formatDateTime } from "../../shared/utils";
+import { getMetrics, getSettings, updateSettings } from "../../infrastructure/storage";
+import { formatDateTime } from "../../core/utils";
+import { t } from "../../core/i18n";
 
 // Acumula tiempo de pantalla bloqueada.
 function startBlockedTimer() {
@@ -31,12 +32,7 @@ function startBlockedTimer() {
   });
 }
 
-const messages = [
-  "Respira, enfoca y vuelve con un objetivo claro.",
-  "Un descanso consciente hoy es un logro manana.",
-  "Tu atencion es limitada, tu progreso no.",
-  "Cinco minutos de foco ganan a una hora sin rumbo."
-];
+const messages = ["blocked.message.1", "blocked.message.2", "blocked.message.3", "blocked.message.4"] as const;
 
 const params = new URLSearchParams(window.location.search);
 let blockedUrl = params.get("url") || "";
@@ -70,22 +66,56 @@ const lastAttemptEl = document.getElementById("last-attempt");
 const blockedUrlEl = document.getElementById("blocked-url");
 const unblockBtn = document.getElementById("unblock-btn") as HTMLButtonElement | null;
 const closeBtn = document.getElementById("close-btn") as HTMLButtonElement | null;
+const blockedTagEl = document.getElementById("blocked-tag");
+const blockedTitleEl = document.getElementById("blocked-title");
+const attemptsLabelEl = document.getElementById("attempts-label");
+const lastAttemptLabelEl = document.getElementById("last-attempt-label");
+
+// Libera automaticamente cuando el horario deja de bloquear.
+function startScheduleAutoUnblock() {
+  const intervalMs = 15000;
+  window.setInterval(async () => {
+    await resolveBlockedUrl();
+    if (!blockedUrl) return;
+    try {
+      const res = await chrome.runtime.sendMessage({ type: "GET_TIMELINE" }) as { ok?: boolean; timeline?: { state?: string } } | undefined;
+      if (res?.ok && res.timeline?.state === "free") {
+        window.location.href = blockedUrl;
+      }
+    } catch {
+      // ignore
+    }
+  }, intervalMs);
+}
 
 // Mensaje motivacional aleatorio.
-function pickMessage() {
+function pickMessage(lang: "en" | "es") {
   const index = Math.floor(Math.random() * messages.length);
-  return messages[index];
+  return t(lang, messages[index]);
 }
 
 // Renderiza datos de intents y botones.
 async function render() {
   const [settings, metrics] = await Promise.all([getSettings(), getMetrics()]);
+  const lang = settings.language ?? "en";
   await resolveBlockedUrl();
   const todayKey = new Date().toISOString().slice(0, 10);
   const attempts = metrics.attemptsByDay[todayKey] || 0;
 
   if (messageEl) {
-    messageEl.textContent = pickMessage();
+    messageEl.textContent = pickMessage(lang);
+  }
+  if (blockedTagEl) {
+    blockedTagEl.textContent = t(lang, "blocked.tag");
+  }
+  if (blockedTitleEl) {
+    blockedTitleEl.textContent = t(lang, "blocked.title");
+  }
+  if (attemptsLabelEl) {
+    attemptsLabelEl.textContent = t(lang, "blocked.attempts_today");
+  }
+  if (lastAttemptLabelEl) {
+    lastAttemptLabelEl.textContent = t(lang, "blocked.last_attempt");
   }
   if (attemptsEl) {
     attemptsEl.textContent = String(attempts);
@@ -94,7 +124,7 @@ async function render() {
     lastAttemptEl.textContent = metrics.lastAttemptAt ? formatDateTime(metrics.lastAttemptAt) : "-";
   }
   if (blockedUrlEl) {
-    blockedUrlEl.textContent = blockedUrl ? `URL: ${blockedUrl}` : "";
+    blockedUrlEl.textContent = blockedUrl ? `${t(lang, "blocked.url_prefix")} ${blockedUrl}` : "";
   }
 
   if (!unblockBtn) {
@@ -103,18 +133,22 @@ async function render() {
 
   if (settings.strictMode) {
     unblockBtn.disabled = true;
-    unblockBtn.textContent = "Modo estricto activo";
+    unblockBtn.textContent = t(lang, "blocked.strict_active");
   } else {
     unblockBtn.disabled = false;
-    unblockBtn.textContent = "Desbloquear 5 minutos";
+    unblockBtn.textContent = t(lang, "blocked.unblock");
     unblockBtn.onclick = async () => {
       await resolveBlockedUrl();
       const now = Date.now();
-      await setSettings({ ...settings, unblockUntil: now + 5 * 60 * 1000 });
+      await updateSettings({ unblockUntil: now + 5 * 60 * 1000 });
       if (blockedUrl) {
         window.location.href = blockedUrl;
       }
     };
+  }
+
+  if (closeBtn) {
+    closeBtn.textContent = t(lang, "blocked.close");
   }
 }
 
@@ -124,3 +158,5 @@ closeBtn?.addEventListener("click", () => {
 
 render();
 startBlockedTimer();
+startScheduleAutoUnblock();
+

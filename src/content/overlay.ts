@@ -1,4 +1,6 @@
 import { safeSendMessage } from "./extensionMessaging";
+import { t, tf } from "../core/i18n";
+import type { Language } from "../core/types";
 
 // Formatea hora AM/PM para el widget.
 function formatTimeAmPm(ts: number) {
@@ -76,11 +78,17 @@ export function initFloatingTimerOverlay() {
   btnMin.textContent = "-";
   btnMin.title = "Minimizar";
   btnMin.style.cssText = miniBtnStyle();
+  btnMin.addEventListener("pointerdown", (e) => {
+    e.stopPropagation();
+  });
 
   const btnClose = document.createElement("button");
   btnClose.textContent = "A-";
   btnClose.title = "Ocultar (vuelve al recargar)";
   btnClose.style.cssText = miniBtnStyle();
+  btnClose.addEventListener("pointerdown", (e) => {
+    e.stopPropagation();
+  });
 
   btns.appendChild(btnMin);
   btns.appendChild(btnClose);
@@ -93,7 +101,7 @@ export function initFloatingTimerOverlay() {
 
   const line1 = document.createElement("div");
   line1.style.cssText = `font-size: 12px; opacity: 0.85;`;
-  line1.textContent = "Cargando estadoƒ?İ";
+  line1.textContent = "Loading...";
 
   const big = document.createElement("div");
   big.style.cssText = `font-size: 18px; font-weight: 900; letter-spacing: 0.2px;`;
@@ -129,6 +137,32 @@ export function initFloatingTimerOverlay() {
   // Minimizar / ocultar.
   // Minimizar / ocultar.
   let minimized = false;
+  let restoreBtn: HTMLButtonElement | null = null;
+  let lang: Language = "en";
+  const applyStaticLabels = () => {
+    title.textContent = t(lang, "overlay.title");
+    btnMin.title = t(lang, "overlay.minimize");
+    btnClose.title = t(lang, "overlay.hide");
+    if (!minimized) {
+      line1.textContent = t(lang, "overlay.loading");
+    }
+    if (restoreBtn) {
+      restoreBtn.textContent = t(lang, "overlay.show");
+    }
+  };
+
+  const loadLanguage = async () => {
+    try {
+      const stored = await chrome.storage.local.get("settings");
+      const next = (stored.settings as { language?: Language } | undefined)?.language;
+      if (next) {
+        lang = next;
+      }
+    } catch {
+      // ignore
+    }
+    applyStaticLabels();
+  };
   btnMin.addEventListener("click", (e) => {
     e.stopPropagation();
     minimized = !minimized;
@@ -138,8 +172,8 @@ export function initFloatingTimerOverlay() {
 
   btnClose.addEventListener("click", (e) => {
     e.stopPropagation();
-    root.remove();
-    w.__FOCUSTUBE_OVERLAY__ = false;
+    root.style.display = "none";
+    showRestoreButton();
   });
 
   // Drag del widget.
@@ -153,6 +187,10 @@ export function initFloatingTimerOverlay() {
   const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
   header.addEventListener("pointerdown", (e) => {
+    const target = e.target as HTMLElement | null;
+    if (target && (target.tagName === "BUTTON" || target.closest("button"))) {
+      return;
+    }
     dragging = true;
     header.style.cursor = "grabbing";
     header.setPointerCapture(e.pointerId);
@@ -202,13 +240,13 @@ export function initFloatingTimerOverlay() {
   function reasonLabel(reason: string) {
     switch (reason) {
       case "manual":
-        return "manual";
+        return t(lang, "overlay.reason.manual");
       case "temporary_unblock":
-        return "desbloqueo 5m";
+        return t(lang, "overlay.reason.temp");
       case "schedule":
-        return "horario";
+        return t(lang, "overlay.reason.schedule");
       case "schedule_free":
-        return "horario";
+        return t(lang, "overlay.reason.schedule");
       default:
         return reason;
     }
@@ -216,13 +254,13 @@ export function initFloatingTimerOverlay() {
 
   // Poll al background para estado del timeline.
   function tick() {
-    line3.textContent = `Ahora: ${formatTimeAmPm(Date.now())}`;
+    line3.textContent = `${t(lang, "overlay.now")}: ${formatTimeAmPm(Date.now())}`;
     safeSendMessage<{ ok: boolean; timeline?: unknown }>({ type: "GET_TIMELINE" }, (res) => {
       if (!res?.ok || !res.timeline) {
-        line1.textContent = "No puedo leer estado (permisos?)";
+        line1.textContent = t(lang, "overlay.no_state");
         big.textContent = "--:--";
         line2.textContent = "";
-        line3.textContent = `Ahora: ${formatTimeAmPm(Date.now())}`;
+        line3.textContent = `${t(lang, "overlay.now")}: ${formatTimeAmPm(Date.now())}`;
         return;
       }
 
@@ -238,14 +276,16 @@ export function initFloatingTimerOverlay() {
       const until = t.currentUntil;
 
       if (t.state === "blocked") {
-        line1.textContent = "Bloqueado: falta";
+        line1.textContent = t(lang, "overlay.blocked");
         big.textContent = until ? formatDuration(until - now) : "ƒ^z";
-        line2.textContent = `Motivo: ${reasonLabel(t.reason)}`;
+        line2.textContent = `${t(lang, "overlay.reason")}: ${reasonLabel(t.reason)}`;
       } else {
-        line1.textContent = "Libre: te queda";
+        line1.textContent = t(lang, "overlay.free");
         big.textContent = until ? formatDuration(until - now) : "ƒ^z";
         if (t.nextBlockStart && t.nextBlockEnd) {
-          line2.textContent = `PrA3ximo bloque: ${formatDuration(t.nextBlockEnd - t.nextBlockStart)}`;
+          line2.textContent = tf(lang, "overlay.next_block", {
+            duration: formatDuration(t.nextBlockEnd - t.nextBlockStart)
+          });
         } else {
           line2.textContent = "";
         }
@@ -271,4 +311,43 @@ export function initFloatingTimerOverlay() {
       line-height: 1;
     `;
   }
+
+  function showRestoreButton() {
+    if (restoreBtn) {
+      restoreBtn.style.display = "block";
+      return;
+    }
+    restoreBtn = document.createElement("button");
+    restoreBtn.textContent = t(lang, "overlay.show");
+    restoreBtn.style.cssText = `
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 2147483647;
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(18,18,18,0.82);
+      color: rgba(255,255,255,0.92);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+    `;
+    restoreBtn.addEventListener("click", () => {
+      root.style.display = "block";
+      restoreBtn?.remove();
+      restoreBtn = null;
+    });
+    document.documentElement.appendChild(restoreBtn);
+  }
+
+  void loadLanguage();
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== "local" || !changes.settings) {
+      return;
+    }
+    void loadLanguage();
+  });
 }

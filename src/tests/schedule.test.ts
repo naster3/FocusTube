@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { isWithinBlockedSchedule, parseTimeToMinutes } from "./schedule";
+import type { IntervalWeek } from "../core/types";
+import { isWithinBlockedSchedule, parseTimeToMinutes } from "../core/schedule";
 
 // Fixture de intervalos para pruebas.
 const intervals = {
@@ -8,7 +9,7 @@ const intervals = {
     { id: "a2", start: "14:00", end: "16:00", mode: "blocked", enabled: true }
   ],
   2: [{ id: "b1", start: "22:00", end: "02:00", mode: "blocked", enabled: true }]
-};
+} satisfies IntervalWeek;
 
 // Suite de pruebas para utilidades de horarios.
 describe("schedule", () => {

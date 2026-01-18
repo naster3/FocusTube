@@ -1,4 +1,4 @@
-import { getSettings } from "../shared/storage";
+import { getSettings } from "../infrastructure/storage";
 
 let timeoutId: number | null = null;
 let intervalId: number | null = null;

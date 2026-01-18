@@ -1,5 +1,5 @@
-import { ensureDefaults } from "../shared/storage";
-import { ensureDbReady } from "../shared/db";
+import { ensureDefaults } from "../infrastructure/storage";
+import { ensureDbReady } from "../infrastructure/db";
 import { ensureSettingsLoaded } from "./state";
 
 // ID fijo para registrar content scripts de forma dinamica.

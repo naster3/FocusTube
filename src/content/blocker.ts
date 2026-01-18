@@ -8,7 +8,7 @@ export async function checkAndBlock() {
   const guard = ensureBlockingGuard();
 
   // Muestra guard de inmediato para evitar flash.
-  guard.show("Verificando reglasƒ?İ");
+  guard.show("Verificando reglas");
 
   // Atajo: permitir /watch si el canal esta en whitelist.
   if (isYouTubeWatchUrl(url)) {
@@ -21,7 +21,7 @@ export async function checkAndBlock() {
     } catch {
       // Si algo falla, seguimos con el flujo normal de bloqueo.
     }
-    guard.setLabel("Verificando reglasƒ?İ");
+    guard.setLabel("Verificando reglas");
   }
 
   // Fail-open si el background no responde rapido.
@@ -42,8 +42,8 @@ export async function checkAndBlock() {
     }
 
     // Redirecciona a pagina de bloqueo.
-    guard.setLabel("Bloqueado. Redirigiendoƒ?İ");
-    const blockedUrl = `${chrome.runtime.getURL("blocked.html")}?url=${encodeURIComponent(url)}`;
+    guard.setLabel("Bloqueado. Redirigiendo");
+    const blockedUrl = `${chrome.runtime.getURL("src/ui/blocked/index.html")}?url=${encodeURIComponent(url)}`;
     window.location.replace(blockedUrl);
   });
 }

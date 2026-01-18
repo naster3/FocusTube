@@ -14,6 +14,8 @@ export default defineConfig({
       input: {
         popup: resolve(__dirname, "src/ui/popup/index.html"),
         options: resolve(__dirname, "src/ui/options/index.html"),
+        dashboard: resolve(__dirname, "src/ui/dashboard/index.html"),
+        help: resolve(__dirname, "src/ui/help/index.html"),
         blocked: resolve(__dirname, "src/ui/blocked/index.html"),
         background: resolve(__dirname, "src/background/index.ts"),
         content: resolve(__dirname, "src/content/index.ts")

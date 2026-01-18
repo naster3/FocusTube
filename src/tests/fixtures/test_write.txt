@@ -1,0 +1,4 @@
+fixture: sample
+purpose: storage tests
+note: placeholder content
+ok

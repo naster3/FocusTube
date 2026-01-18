@@ -1,5 +1,5 @@
-import { getSettings } from "../shared/storage";
-import { isWhitelisted } from "../shared/url";
+import { getSettings } from "../infrastructure/storage";
+import { isWhitelisted } from "../core/url";
 
 // YouTube: permitir videos (/watch) por canal (handle @) aunque youtube.com estAc bloqueado.
 export function isYouTubeWatchUrl(urlString: string) {
@@ -141,3 +141,4 @@ export async function allowWhitelistedYouTubeWatchIfPossible(
 
   return false;
 }
+

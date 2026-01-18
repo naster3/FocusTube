@@ -1,4 +1,5 @@
-import { BlockDecision, BlockReason, Settings } from "./types";
+import { BlockDecision, BlockReason, Settings, Language } from "./types";
+import { t } from "./i18n";
 import { isWithinBlockedSchedule } from "./schedule";
 
 // Normaliza input a hostname base.
@@ -102,16 +103,16 @@ export function evaluateBlock(urlString: string, settings: Settings, now: number
 }
 
 // Etiquetas para UI.
-export function reasonLabel(reason?: BlockReason) {
+export function reasonLabel(reason?: BlockReason, lang: Language = "en") {
   switch (reason) {
     case "manual":
-      return "Manual";
+      return t(lang, "reason.manual");
     case "kids":
-      return "Kids";
+      return t(lang, "reason.kids");
     case "shorts":
-      return "Shorts";
+      return t(lang, "reason.shorts");
     case "schedule":
-      return "Horario";
+      return t(lang, "reason.schedule");
     case "not_target":
       return "";
     default:

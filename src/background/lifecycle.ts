@@ -1,5 +1,5 @@
-import { ensureDbReady } from "../shared/db";
-import { getSettings } from "../shared/storage";
+import { ensureDbReady } from "../infrastructure/db";
+import { getSettings } from "../infrastructure/storage";
 import { bootstrapContentScripts, reinjectContentScriptIntoOpenTabs, syncRegisteredContentScripts } from "./contentScripts";
 import { startBackgroundTasks } from "./backgroundTasks";
 import { ensureMetricsLoaded, setMetricsCache, setSettingsCache } from "./state";

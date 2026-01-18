@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { getMetrics, getSettings, updateSettings } from "../../shared/storage";
-import { evaluateBlock, reasonLabel } from "../../shared/url";
-import type { Settings } from "../../shared/types";
-import { computeScheduleTimeline, formatDuration } from "../../shared/timeline";
+import { getMetrics, getSettings, updateSettings } from "../../infrastructure/storage";
+import { evaluateBlock, reasonLabel } from "../../core/url";
+import type { Settings } from "../../core/types";
+import { computeScheduleTimeline, formatDuration } from "../../core/timeline";
+import { t } from "../../core/i18n";
 
 // Helpers de formateo para debug.
 function formatDateTimeAmPm(ts: number) {
@@ -34,6 +35,7 @@ export function Popup() {
   const [reason, setReason] = useState("");
   const [tabUrl, setTabUrl] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const lang = settings?.language ?? "en";
 
     // URL activa actual.
   useEffect(() => {
@@ -59,14 +61,14 @@ export function Popup() {
 
       if (tabUrl) {
         const decision = evaluateBlock(tabUrl, s, Date.now());
-        setStatus(decision.blocked ? "Bloqueado" : "Permitido");
-        setReason(decision.blocked ? reasonLabel(decision.reason) : "");
+        setStatus(decision.blocked ? t(lang, "popup.status.blocked") : t(lang, "popup.status.allowed"));
+        setReason(decision.blocked ? reasonLabel(decision.reason, lang) : "");
       } else {
-        setStatus("Sin pestana");
+        setStatus(t(lang, "popup.status.no_tab"));
       }
     };
     void load();
-  }, [tabUrl]);
+  }, [tabUrl, lang]);
 
     // Sincroniza cambios de settings.
   useEffect(() => {
@@ -108,12 +110,12 @@ export function Popup() {
   const scheduleLabel = useMemo(() => {
     if (!timeline) return "-";
     if (timeline.state === "blocked") {
-      if (timeline.reason === "manual") return "Bloqueado (manual)";
-      return "Bloqueado (horario)";
+      if (timeline.reason === "manual") return t(lang, "popup.schedule.manual");
+      return t(lang, "popup.schedule.schedule");
     }
-    if (timeline.reason === "temporary_unblock") return "Libre (desbloqueo temporal)";
-    return "Libre (fuera de horario)";
-  }, [timeline]);
+    if (timeline.reason === "temporary_unblock") return t(lang, "popup.schedule.temp_unblock");
+    return t(lang, "popup.schedule.free");
+  }, [timeline, lang]);
 
   // Cuenta regresiva del estado actual.
   const scheduleCountdown = useMemo(() => {
@@ -140,49 +142,49 @@ export function Popup() {
     <div className="popup">
       <header>
         <h1>FocusTube</h1>
-        <p>Bloqueo inteligente de YouTube</p>
+        <p>{t(lang, "popup.subtitle")}</p>
       </header>
 
       <div className="card">
         <div className="row">
-          <span>Estado pestaña</span>
+          <span>{t(lang, "popup.tab_status")}</span>
           <strong>{statusLabel}</strong>
         </div>
         <div className="row">
-          <span>Intentos hoy</span>
+          <span>{t(lang, "popup.attempts_today")}</span>
           <strong>{attemptsToday}</strong>
         </div>
       </div>
 
       <div className="card">
         <div className="row">
-          <span>Estado por horario</span>
+          <span>{t(lang, "popup.schedule_status")}</span>
           <strong>{scheduleLabel}</strong>
         </div>
         <div className="row">
-          <span>{timeline?.state === "blocked" ? "Falta" : "Te queda"}</span>
+          <span>{timeline?.state === "blocked" ? t(lang, "popup.time_remaining") : t(lang, "popup.time_left")}</span>
           <strong>{timeline ? scheduleCountdown : "-"}</strong>
         </div>
         {timeline?.state === "free" && nextBlockDuration && (
           <div className="row">
-            <span>Proximo bloqueo dura</span>
+            <span>{t(lang, "popup.next_block")}</span>
             <strong>{nextBlockDuration}</strong>
           </div>
         )}
       </div>
 
         <details style={{ marginTop: 8 }}>
-          <summary style={{ cursor: "pointer", fontSize: 12, opacity: 0.85 }}>Debug tiempo</summary>
+          <summary style={{ cursor: "pointer", fontSize: 12, opacity: 0.85 }}>{t(lang, "popup.debug.title")}</summary>
           <div className="row">
-            <span>Hora del navegador</span>
+            <span>{t(lang, "popup.debug.browser_time")}</span>
             <strong style={{ fontSize: 12 }}>{browserTimeText}</strong>
           </div>
           <div className="row">
-            <span>Offset TZ</span>
+            <span>{t(lang, "popup.debug.tz_offset")}</span>
             <strong style={{ fontSize: 12 }}>{tzOffsetMin} min</strong>
           </div>
           <div className="row">
-            <span>Próximo cambio</span>
+            <span>{t(lang, "popup.debug.next_change")}</span>
             <strong style={{ fontSize: 12 }}>{nextChangeText ?? "-"}</strong>
           </div>
         </details>
@@ -191,7 +193,7 @@ export function Popup() {
       <div className="toggle">
         <label>
           <input type="checkbox" checked={blockEnabled} onChange={handleToggle} />
-          Bloquear ahora
+          {t(lang, "popup.block_now")}
         </label>
       </div>
 
@@ -201,7 +203,7 @@ export function Popup() {
           chrome.runtime.openOptionsPage();
         }}
       >
-        Abrir configuracion
+        {t(lang, "popup.open_options")}
       </button>
     </div>
   );

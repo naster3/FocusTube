@@ -1,5 +1,5 @@
-import { DEFAULT_INTERVALS, DEFAULT_METRICS, DEFAULT_SETTINGS } from "./defaults";
-import { Interval, IntervalWeek, Metrics, Settings, WeekSchedule } from "./types";
+import { DEFAULT_INTERVALS, DEFAULT_METRICS, DEFAULT_SETTINGS } from "../core/defaults";
+import { Interval, IntervalWeek, Metrics, Settings, WeekSchedule } from "../core/types";
 
 // Keys fijos en storage.local.
 const SETTINGS_KEY = "settings";
