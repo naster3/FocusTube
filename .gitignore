@@ -5,7 +5,9 @@ dist/
 .DS_Store
 Thumbs.db
 *.log
+*.zip
 pnpm-debug.log*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+focustube_icons/

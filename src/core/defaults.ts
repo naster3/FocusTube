@@ -2,27 +2,13 @@ import { Interval, IntervalWeek, Settings, Metrics, WeekSchedule } from "./types
 
 // Schedules por defecto por dia.
 export const DEFAULT_SCHEDULES: WeekSchedule = {
-  0: [{ start: "10:30", end: "12:00" }],
-  1: [
-    { start: "10:30", end: "12:00" },
-    { start: "18:00", end: "22:30" }
-  ],
-  2: [
-    { start: "10:30", end: "12:00" },
-    { start: "18:00", end: "22:30" }
-  ],
-  3: [
-    { start: "10:30", end: "12:00" },
-    { start: "18:00", end: "22:30" }
-  ],
-  4: [
-    { start: "10:30", end: "12:00" },
-    { start: "18:00", end: "22:30" }
-  ],
-  5: [
-    { start: "10:30", end: "12:00" }
-  ],
-  6: [{ start: "10:30", end: "12:00" }]
+  0: [],
+  1: [],
+  2: [],
+  3: [],
+  4: [],
+  5: [],
+  6: []
 };
 
 // Intervalos por defecto derivados de schedules.
@@ -54,16 +40,7 @@ export const DEFAULT_SETTINGS: Settings = {
   language: "en",
   strictMode: false,
   pinHash: null,
-  blockedDomains: [
-    "youtube.com",
-    "youtubekids.com",
-    "instagram.com",
-    "xvideos.com",
-    "es.pornhub.com",
-    "e-hentai.org",
-    "nhentai.net",
-    "olympusbiblioteca.com"
-  ],
+  blockedDomains: [],
   whitelist: [],
   schedules: DEFAULT_SCHEDULES,
   intervalsByDay: DEFAULT_INTERVALS,
