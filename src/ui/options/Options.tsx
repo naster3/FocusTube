@@ -124,6 +124,31 @@ export function Options() {
           />
           {t(settings.language, "options.permanent.enable")}
         </label>
+        <div className="divider" />
+        <p>{t(settings.language, "options.weekly_unblock.desc")}</p>
+        <label>
+          <input
+            type="checkbox"
+            checked={settings.weeklyUnblockEnabled}
+            onChange={(event) => saveSettings({ ...settings, weeklyUnblockEnabled: event.target.checked })}
+          />
+          {t(settings.language, "options.weekly_unblock.enable")}
+        </label>
+        <label>
+          <span>{t(settings.language, "options.weekly_unblock.duration")}</span>
+          <input
+            type="number"
+            min={1}
+            step={1}
+            value={settings.weeklyUnblockDurationMinutes}
+            onChange={(event) => {
+              const raw = Number(event.target.value);
+              const next = Number.isFinite(raw) ? Math.max(1, Math.floor(raw)) : 1;
+              saveSettings({ ...settings, weeklyUnblockDurationMinutes: next });
+            }}
+          />
+          <span>{t(settings.language, "options.weekly_unblock.minutes")}</span>
+        </label>
       </section>
 
       <section className="panel">
@@ -175,9 +200,22 @@ export function Options() {
 
 // Normaliza settings importados contra defaults.
 function normalizeSettings(data: Partial<Settings>): Settings {
+  const weeklyDuration =
+    typeof data.weeklyUnblockDurationMinutes === "number" && Number.isFinite(data.weeklyUnblockDurationMinutes)
+      ? Math.max(1, Math.floor(data.weeklyUnblockDurationMinutes))
+      : DEFAULT_SETTINGS.weeklyUnblockDurationMinutes;
+  const weeklyUntil =
+    typeof data.weeklyUnblockUntil === "number" && Number.isFinite(data.weeklyUnblockUntil)
+      ? data.weeklyUnblockUntil
+      : null;
+  const weeklyLastWeek = typeof data.weeklyUnblockLastWeek === "string" ? data.weeklyUnblockLastWeek : null;
   const merged: Settings = {
     ...DEFAULT_SETTINGS,
     ...data,
+    weeklyUnblockEnabled: Boolean(data.weeklyUnblockEnabled),
+    weeklyUnblockDurationMinutes: weeklyDuration,
+    weeklyUnblockUntil: weeklyUntil,
+    weeklyUnblockLastWeek: weeklyLastWeek,
     language: data.language === "en" || data.language === "es" ? data.language : DEFAULT_SETTINGS.language,
     schedules: data.schedules || DEFAULT_SETTINGS.schedules,
     intervalsByDay: data.intervalsByDay || DEFAULT_SETTINGS.intervalsByDay,

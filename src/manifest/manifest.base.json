@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FocusTube Blocker",
-  "version": "2.2.6",
+  "version": "2.3.0",
   "description": "Bloquea YouTube por horarios con whitelist y modo estricto.",
   "permissions": [
     "permissions",

@@ -1,6 +1,7 @@
 import { BlockDecision, BlockReason, Settings, Language } from "./types";
 import { t } from "./i18n";
 import { isWithinBlockedSchedule } from "./schedule";
+import { isWeeklySessionActive } from "./weekly";
 
 // Normaliza input a hostname base.
 export function normalizeDomain(input: string): string | null {
@@ -76,6 +77,10 @@ export function evaluateBlock(urlString: string, settings: Settings, now: number
   }
 
   if (isWhitelisted(urlString, settings.whitelist)) {
+    return { blocked: false };
+  }
+
+  if (isWeeklySessionActive(settings, now)) {
     return { blocked: false };
   }
 

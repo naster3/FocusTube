@@ -1,7 +1,8 @@
 // Pantalla de bloqueo y desbloqueo temporal.
 import { getMetrics, getSettings, updateSettings } from "../../infrastructure/storage";
 import { formatDateTime } from "../../core/utils";
-import { t } from "../../core/i18n";
+import { t, tf } from "../../core/i18n";
+import { canStartWeeklySession, getWeeklySessionDurationMs, getWeeklySessionWeekKey, isWeeklySessionActive } from "../../core/weekly";
 
 // Acumula tiempo de pantalla bloqueada.
 function startBlockedTimer() {
@@ -131,6 +132,42 @@ async function render() {
     return;
   }
 
+  const now = Date.now();
+  if (settings.blockEnabled && settings.weeklyUnblockEnabled) {
+    const weeklyActive = isWeeklySessionActive(settings, now);
+    const weekKey = getWeeklySessionWeekKey(now);
+    const alreadyUsed = settings.weeklyUnblockLastWeek === weekKey;
+    const canStart = !weeklyActive && canStartWeeklySession(settings, now);
+    const durationMs = getWeeklySessionDurationMs(settings);
+    const durationMin = Math.max(1, Math.floor(durationMs / 60000));
+
+    if (!canStart) {
+      unblockBtn.disabled = true;
+      unblockBtn.textContent = weeklyActive
+        ? t(lang, "blocked.weekly.used")
+        : alreadyUsed
+          ? t(lang, "blocked.weekly.used")
+          : t(lang, "blocked.weekly.unavailable");
+      return;
+    }
+
+    unblockBtn.disabled = false;
+    unblockBtn.textContent = tf(lang, "blocked.weekly.unblock", { minutes: String(durationMin) });
+    unblockBtn.onclick = async () => {
+      await resolveBlockedUrl();
+      const start = Date.now();
+      const until = start + durationMs;
+      await updateSettings({
+        weeklyUnblockUntil: until,
+        weeklyUnblockLastWeek: getWeeklySessionWeekKey(start)
+      });
+      if (blockedUrl) {
+        window.location.href = blockedUrl;
+      }
+    };
+    return;
+  }
+
   if (settings.strictMode) {
     unblockBtn.disabled = true;
     unblockBtn.textContent = t(lang, "blocked.strict_active");
@@ -139,8 +176,8 @@ async function render() {
     unblockBtn.textContent = t(lang, "blocked.unblock");
     unblockBtn.onclick = async () => {
       await resolveBlockedUrl();
-      const now = Date.now();
-      await updateSettings({ unblockUntil: now + 5 * 60 * 1000 });
+      const start = Date.now();
+      await updateSettings({ unblockUntil: start + 5 * 60 * 1000 });
       if (blockedUrl) {
         window.location.href = blockedUrl;
       }

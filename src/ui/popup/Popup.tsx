@@ -114,6 +114,7 @@ export function Popup() {
       return t(lang, "popup.schedule.schedule");
     }
     if (timeline.reason === "temporary_unblock") return t(lang, "popup.schedule.temp_unblock");
+    if (timeline.reason === "weekly_unblock") return t(lang, "popup.schedule.weekly_unblock");
     return t(lang, "popup.schedule.free");
   }, [timeline, lang]);
 

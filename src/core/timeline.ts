@@ -1,10 +1,11 @@
 import type { IntervalWeek, Settings } from "./types";
 import { parseTimeToMinutes } from "./schedule";
+import { isWeeklySessionActive } from "./weekly";
 
 export type ScheduleTimeline = {
   state: "blocked" | "free";
   /** Por que el estado actual esta asi (solo por horario/manual/desbloqueo temporal). */
-  reason: "manual" | "schedule" | "temporary_unblock" | "schedule_free";
+  reason: "manual" | "schedule" | "temporary_unblock" | "schedule_free" | "weekly_unblock";
   /** Timestamp (ms) cuando termina el estado actual. */
   currentUntil: number | null;
   nextChangeAt: number | null;
@@ -93,6 +94,17 @@ function findNextWindow(now: number, intervalsByDay: IntervalWeek): AbsWindow | 
 // Calcula estado actual de bloqueo por horario.
 export function computeScheduleTimeline(settings: Settings, now = Date.now()): ScheduleTimeline {
   if (settings.blockEnabled) {
+    if (isWeeklySessionActive(settings, now)) {
+      const until = settings.weeklyUnblockUntil ?? null;
+      return {
+        state: "free",
+        reason: "weekly_unblock",
+        currentUntil: until,
+        nextChangeAt: until,
+        nextBlockStart: until,
+        nextBlockEnd: null
+      };
+    }
     return {
       state: "blocked",
       reason: "manual",

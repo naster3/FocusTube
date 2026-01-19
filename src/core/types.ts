@@ -31,6 +31,10 @@ export type Settings = {
   intervalsByDay: IntervalWeek;
   timeFormat12h: boolean;
   unblockUntil: number | null;
+  weeklyUnblockEnabled: boolean;
+  weeklyUnblockDurationMinutes: number;
+  weeklyUnblockUntil: number | null;
+  weeklyUnblockLastWeek: string | null;
 };
 
 export type Language = Settings["language"];

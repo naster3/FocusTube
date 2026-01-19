@@ -14,6 +14,13 @@ export const STRINGS = {
     es: "Fuerza el bloqueo en todo momento, sin importar horarios."
   },
   "options.permanent.enable": { en: "Enable permanent block", es: "Activar bloqueo permanente" },
+  "options.weekly_unblock.desc": {
+    en: "Allow a single Monday session while permanent block is enabled.",
+    es: "Permite una sesion los lunes cuando el bloqueo permanente esta activo."
+  },
+  "options.weekly_unblock.enable": { en: "Enable Monday session", es: "Activar sesion de lunes" },
+  "options.weekly_unblock.duration": { en: "Session duration", es: "Duracion de la sesion" },
+  "options.weekly_unblock.minutes": { en: "minutes", es: "minutos" },
   "options.time.title": { en: "Time format", es: "Formato de hora" },
   "options.time.use12h": { en: "Use 12-hour format (AM/PM)", es: "Usar formato 12 horas (AM/PM)" },
   "options.language.title": { en: "Language", es: "Idioma" },
@@ -119,6 +126,7 @@ export const STRINGS = {
   "popup.schedule.manual": { en: "Blocked (manual)", es: "Bloqueado (manual)" },
   "popup.schedule.schedule": { en: "Blocked (schedule)", es: "Bloqueado (horario)" },
   "popup.schedule.temp_unblock": { en: "Free (temporary unblock)", es: "Libre (desbloqueo temporal)" },
+  "popup.schedule.weekly_unblock": { en: "Free (weekly session)", es: "Libre (sesion semanal)" },
   "popup.schedule.free": { en: "Free (out of schedule)", es: "Libre (fuera de horario)" },
   "popup.debug.title": { en: "Debug time", es: "Debug tiempo" },
   "popup.debug.browser_time": { en: "Browser time", es: "Hora del navegador" },
@@ -129,6 +137,9 @@ export const STRINGS = {
   "blocked.attempts_today": { en: "Attempts today:", es: "Intentos hoy:" },
   "blocked.last_attempt": { en: "Last attempt:", es: "Ultimo intento:" },
   "blocked.unblock": { en: "Unblock 5 minutes", es: "Desbloquear 5 minutos" },
+  "blocked.weekly.unblock": { en: "Unblock weekly session ({minutes} min)", es: "Desbloquear sesion semanal ({minutes} min)" },
+  "blocked.weekly.unavailable": { en: "Weekly session available on Mondays", es: "La sesion semanal solo esta disponible los lunes" },
+  "blocked.weekly.used": { en: "Weekly session already used", es: "Sesion semanal ya usada" },
   "blocked.close": { en: "Close tab", es: "Cerrar pestana" },
   "blocked.strict_active": { en: "Strict mode active", es: "Modo estricto activo" },
   "blocked.url_prefix": { en: "URL:", es: "URL:" },

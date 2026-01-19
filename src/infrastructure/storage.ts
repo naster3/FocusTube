@@ -139,9 +139,22 @@ function mergeIntervalsByDay(input?: IntervalWeek, fallbackSchedules?: WeekSched
 
 // Merge de settings, con defaults y validacion basica.
 export function mergeSettings(input: Partial<Settings>): Settings {
+  const weeklyDuration =
+    typeof input.weeklyUnblockDurationMinutes === "number" && Number.isFinite(input.weeklyUnblockDurationMinutes)
+      ? Math.max(1, Math.floor(input.weeklyUnblockDurationMinutes))
+      : DEFAULT_SETTINGS.weeklyUnblockDurationMinutes;
+  const weeklyUntil =
+    typeof input.weeklyUnblockUntil === "number" && Number.isFinite(input.weeklyUnblockUntil)
+      ? input.weeklyUnblockUntil
+      : null;
+  const weeklyLastWeek = typeof input.weeklyUnblockLastWeek === "string" ? input.weeklyUnblockLastWeek : null;
   return {
     ...DEFAULT_SETTINGS,
     ...input,
+    weeklyUnblockEnabled: Boolean(input.weeklyUnblockEnabled),
+    weeklyUnblockDurationMinutes: weeklyDuration,
+    weeklyUnblockUntil: weeklyUntil,
+    weeklyUnblockLastWeek: weeklyLastWeek,
     schedules: mergeSchedules(input.schedules),
     intervalsByDay: mergeIntervalsByDay(input.intervalsByDay, input.schedules),
     whitelist: Array.isArray(input.whitelist) ? input.whitelist : DEFAULT_SETTINGS.whitelist,

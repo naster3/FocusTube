@@ -117,7 +117,8 @@
 
 .panel input[type="text"],
 .panel input[type="password"],
-.panel input[type="time"] {
+.panel input[type="time"],
+.panel input[type="number"] {
   border: 1px solid #cbd5f5;
   border-radius: 8px;
   padding: 6px 8px;

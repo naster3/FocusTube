@@ -45,7 +45,11 @@ export const DEFAULT_SETTINGS: Settings = {
   schedules: DEFAULT_SCHEDULES,
   intervalsByDay: DEFAULT_INTERVALS,
   timeFormat12h: false,
-  unblockUntil: null
+  unblockUntil: null,
+  weeklyUnblockEnabled: false,
+  weeklyUnblockDurationMinutes: 60,
+  weeklyUnblockUntil: null,
+  weeklyUnblockLastWeek: null
 };
 
 // Metrics por defecto (v2).
