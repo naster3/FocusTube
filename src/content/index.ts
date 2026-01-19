@@ -17,6 +17,13 @@ initFloatingTimerOverlay();
 void initUnblockExpiryWatcher(() => {
   void checkAndBlock();
 });
+// Revalida bloqueo periodicamente para cambios de horario.
+window.setInterval(() => {
+  if (!canUseExtension()) {
+    return;
+  }
+  void checkAndBlock({ showGuard: false });
+}, 30000);
 
 // Revalida bloqueo cuando cambian settings en storage.
 chrome.storage.onChanged.addListener((changes, area) => {

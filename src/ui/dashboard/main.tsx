@@ -41,6 +41,7 @@ export function Dashboard() {
   const [blockedDomainInput, setBlockedDomainInput] = useState("");
   const [status, setStatus] = useState("");
   const [blockedStatus, setBlockedStatus] = useState("");
+  const [blockedPermissions, setBlockedPermissions] = useState<Record<string, boolean>>({});
   const [pinInput, setPinInput] = useState("");
   const [pinConfirm, setPinConfirm] = useState("");
   const [pinCurrent, setPinCurrent] = useState("");
@@ -190,6 +191,31 @@ export function Dashboard() {
       chrome.permissions.remove({ origins: getDomainOrigins(domain) }, () => resolve());
     });
 
+  const readDomainPermission = (domain: string) =>
+    new Promise<boolean>((resolve) => {
+      chrome.permissions.contains({ origins: getDomainOrigins(domain) }, (granted) => resolve(Boolean(granted)));
+    });
+
+  useEffect(() => {
+    let cancelled = false;
+    const refreshPermissions = async () => {
+      if (settings.blockedDomains.length === 0) {
+        setBlockedPermissions({});
+        return;
+      }
+      const entries = await Promise.all(
+        settings.blockedDomains.map(async (domain) => [domain, await readDomainPermission(domain)] as const)
+      );
+      if (!cancelled) {
+        setBlockedPermissions(Object.fromEntries(entries));
+      }
+    };
+    void refreshPermissions();
+    return () => {
+      cancelled = true;
+    };
+  }, [settings.blockedDomains]);
+
   const addBlockedDomain = async () => {
     const domain = normalizeDomain(blockedDomainInput);
     if (!domain) {
@@ -258,7 +284,11 @@ export function Dashboard() {
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: {}
+        tooltip: {
+          callbacks: {
+            title: (items: { label?: string }[]) => (items[0]?.label ? `Fecha: ${items[0].label}` : "")
+          }
+        }
       },
       scales: {
         x: { ticks: { autoSkip: true, maxTicksLimit: 7 } },
@@ -275,7 +305,10 @@ export function Dashboard() {
           datasets: [
             {
               data: chartSeries.attempts,
-              backgroundColor: "#111827"
+              backgroundColor: "rgba(239, 68, 68, 0.35)",
+              borderColor: "rgba(239, 68, 68, 0.9)",
+              borderWidth: 1,
+              borderRadius: 8
             }
           ]
         },
@@ -312,7 +345,10 @@ export function Dashboard() {
           datasets: [
             {
               data: chartSeries.times,
-              backgroundColor: "#0f172a"
+              backgroundColor: "rgba(59, 130, 246, 0.35)",
+              borderColor: "rgba(59, 130, 246, 0.9)",
+              borderWidth: 1,
+              borderRadius: 8
             }
           ]
         },
@@ -401,12 +437,15 @@ export function Dashboard() {
         {blockedStatus ? <div className="status">{blockedStatus}</div> : null}
         <ul className="list">
           {settings.blockedDomains.length === 0 ? <li>{t(settings.language, "dashboard.empty")}</li> : null}
-          {settings.blockedDomains.map((entry) => (
-            <li key={entry}>
-              <span>{entry}</span>
-              <button onClick={() => removeBlockedDomain(entry)}>{t(settings.language, "dashboard.action.remove")}</button>
-            </li>
-          ))}
+          {settings.blockedDomains.map((entry) => {
+            const hasPermission = blockedPermissions[entry] ?? true;
+            return (
+              <li key={entry} className={hasPermission ? undefined : "blocked-permission-missing"}>
+                <span>{entry}</span>
+                <button onClick={() => removeBlockedDomain(entry)}>{t(settings.language, "dashboard.action.remove")}</button>
+              </li>
+            );
+          })}
         </ul>
       </section>
 
@@ -477,42 +516,84 @@ export function Dashboard() {
               {(() => {
                 const todayKey = getDayKey(new Date());
                 const last7 = getRecentDays(7);
+                const prev7 = getRecentDays(14).slice(7);
                 const last30 = getRecentDays(30);
                 const sum = (keys: string[], field: keyof Metrics) =>
                   keys.reduce((acc, key) => acc + ((metrics[field] as Record<string, number>)[key] || 0), 0);
+                const percentDelta = (current: number, previous: number) => {
+                  if (previous === 0) {
+                    return current === 0 ? "0%" : "+100%";
+                  }
+                  const delta = ((current - previous) / previous) * 100;
+                  const sign = delta > 0 ? "+" : "";
+                  return `${sign}${delta.toFixed(0)}%`;
+                };
+                const deltaClass = (current: number, previous: number) => {
+                  if (previous === 0) {
+                    return current === 0 ? "neutral" : "positive";
+                  }
+                  if (current === previous) return "neutral";
+                  return current > previous ? "positive" : "negative";
+                };
                 const attemptsToday = metrics.attemptsByDay[todayKey] || 0;
                 const timeToday = metrics.timeByDay[todayKey] || 0;
                 const sessionsToday = metrics.sessionsByDay[todayKey] || 0;
+                const attemptsWeek = sum(last7, "attemptsByDay");
+                const attemptsPrev = sum(prev7, "attemptsByDay");
+                const timeWeek = sum(last7, "timeByDay");
+                const timePrev = sum(prev7, "timeByDay");
+                const sessionsWeek = sum(last7, "sessionsByDay");
+                const sessionsPrev = sum(prev7, "sessionsByDay");
                 return (
                   <>
-                    <div className="summary-card">
+                    <div className="summary-card metric-card metric-attempts">
                       <h4>{t(settings.language, "dashboard.metrics.today")}</h4>
-                      <div>
-                        {t(settings.language, "dashboard.metrics.attempts")}: {attemptsToday}
+                      <div className="metric-row">
+                        <span className="metric-label">{t(settings.language, "dashboard.metrics.attempts")}</span>
+                        <span className="metric-value">{attemptsToday}</span>
                       </div>
-                      <div>
-                        {t(settings.language, "dashboard.metrics.time")}: {formatSeconds(timeToday)}
+                      <div className="metric-row">
+                        <span className="metric-label">{t(settings.language, "dashboard.metrics.time")}</span>
+                        <span className="metric-value">{formatSeconds(timeToday)}</span>
                       </div>
-                      <div>
-                        {t(settings.language, "dashboard.metrics.sessions")}: {sessionsToday}
+                      <div className="metric-row">
+                        <span className="metric-label">{t(settings.language, "dashboard.metrics.sessions")}</span>
+                        <span className="metric-value">{sessionsToday}</span>
                       </div>
                     </div>
-                    <div className="summary-card">
+                    <div className="summary-card metric-card metric-time">
                       <h4>{t(settings.language, "dashboard.metrics.last7")}</h4>
-                      <div>
-                        {t(settings.language, "dashboard.metrics.attempts")}: {sum(last7, "attemptsByDay")}
+                      <div className="metric-row">
+                        <span className="metric-label">{t(settings.language, "dashboard.metrics.attempts")}</span>
+                        <span className="metric-value">{attemptsWeek}</span>
+                        <span className={`metric-delta ${deltaClass(attemptsWeek, attemptsPrev)}`}>
+                          {percentDelta(attemptsWeek, attemptsPrev)}
+                        </span>
                       </div>
-                      <div>
-                        {t(settings.language, "dashboard.metrics.time")}: {formatSeconds(sum(last7, "timeByDay"))}
+                      <div className="metric-row">
+                        <span className="metric-label">{t(settings.language, "dashboard.metrics.time")}</span>
+                        <span className="metric-value">{formatSeconds(timeWeek)}</span>
+                        <span className={`metric-delta ${deltaClass(timeWeek, timePrev)}`}>
+                          {percentDelta(timeWeek, timePrev)}
+                        </span>
+                      </div>
+                      <div className="metric-row">
+                        <span className="metric-label">{t(settings.language, "dashboard.metrics.sessions")}</span>
+                        <span className="metric-value">{sessionsWeek}</span>
+                        <span className={`metric-delta ${deltaClass(sessionsWeek, sessionsPrev)}`}>
+                          {percentDelta(sessionsWeek, sessionsPrev)}
+                        </span>
                       </div>
                     </div>
-                    <div className="summary-card">
+                    <div className="summary-card metric-card metric-sessions">
                       <h4>{t(settings.language, "dashboard.metrics.last30")}</h4>
-                      <div>
-                        {t(settings.language, "dashboard.metrics.attempts")}: {sum(last30, "attemptsByDay")}
+                      <div className="metric-row">
+                        <span className="metric-label">{t(settings.language, "dashboard.metrics.attempts")}</span>
+                        <span className="metric-value">{sum(last30, "attemptsByDay")}</span>
                       </div>
-                      <div>
-                        {t(settings.language, "dashboard.metrics.time")}: {formatSeconds(sum(last30, "timeByDay"))}
+                      <div className="metric-row">
+                        <span className="metric-label">{t(settings.language, "dashboard.metrics.time")}</span>
+                        <span className="metric-value">{formatSeconds(sum(last30, "timeByDay"))}</span>
                       </div>
                     </div>
                   </>
@@ -520,20 +601,28 @@ export function Dashboard() {
               })()}
             </div>
 
-            <div className="charts">
-              <div className="chart">
-                <h4>{t(settings.language, "dashboard.metrics.attempts_day")}</h4>
-                <div className="chart-canvas">
-                  <canvas ref={attemptsCanvasRef} />
+            {chartSeries && (chartSeries.attempts.some((value) => value > 0) || chartSeries.times.some((value) => value > 0)) ? (
+              <div className="charts">
+                <div className="chart metric-attempts">
+                  <h4>{t(settings.language, "dashboard.metrics.attempts_day")}</h4>
+                  <div className="chart-canvas">
+                    <canvas ref={attemptsCanvasRef} />
+                  </div>
+                </div>
+                <div className="chart metric-time">
+                  <h4>{t(settings.language, "dashboard.metrics.time_day")}</h4>
+                  <div className="chart-canvas">
+                    <canvas ref={timeCanvasRef} />
+                  </div>
                 </div>
               </div>
-              <div className="chart">
-                <h4>{t(settings.language, "dashboard.metrics.time_day")}</h4>
-                <div className="chart-canvas">
-                  <canvas ref={timeCanvasRef} />
-                </div>
+            ) : (
+              <div className="metrics-empty">
+                <div className="metrics-empty-icon">o o</div>
+                <div className="metrics-empty-title">Sin datos aun</div>
+                <div className="metrics-empty-text">Navega y bloquea para ver tus metricas.</div>
               </div>
-            </div>
+            )}
 
             <div className="table">
               <div className="row header">

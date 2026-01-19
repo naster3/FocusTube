@@ -3,12 +3,15 @@ import { safeSendMessage } from "./extensionMessaging";
 import { allowWhitelistedYouTubeWatchIfPossible, isYouTubeWatchUrl } from "./youtubeWhitelist";
 
 // Consulta bloqueo y redirige a blocked.html si aplica.
-export async function checkAndBlock() {
+export async function checkAndBlock(options?: { showGuard?: boolean }) {
+  const showGuard = options?.showGuard !== false;
   const url = window.location.href;
   const guard = ensureBlockingGuard();
 
   // Muestra guard de inmediato para evitar flash.
-  guard.show("Verificando reglas");
+  if (showGuard) {
+    guard.show("Verificando reglas");
+  }
 
   // Atajo: permitir /watch si el canal esta en whitelist.
   if (isYouTubeWatchUrl(url)) {
@@ -42,7 +45,11 @@ export async function checkAndBlock() {
     }
 
     // Redirecciona a pagina de bloqueo.
-    guard.setLabel("Bloqueado. Redirigiendo");
+    if (!showGuard) {
+      guard.show("Bloqueado. Redirigiendo");
+    } else {
+      guard.setLabel("Bloqueado. Redirigiendo");
+    }
     const blockedUrl = `${chrome.runtime.getURL("src/ui/blocked/index.html")}?url=${encodeURIComponent(url)}`;
     window.location.replace(blockedUrl);
   });
