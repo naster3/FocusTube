@@ -8,6 +8,8 @@ export type TimeString = `${number}${number}:${number}${number}`;
 
 export type WeekSchedule = Record<number, TimeRange[]>;
 
+export type DomainTag = "intervalos" | "por_semana";
+
 export type Interval = {
   id: string;
   start: TimeString;
@@ -22,16 +24,18 @@ export type Settings = {
   blockEnabled: boolean;
   blockShorts: boolean;
   blockKids: boolean;
-  language: "en" | "es";
+  language: "en" | "es" | "pt" | "fr";
   strictMode: boolean;
   pinHash: string | null;
   blockedDomains: string[];
+  blockedDomainTags: Record<string, DomainTag[]>;
   whitelist: string[];
   schedules: WeekSchedule;
   intervalsByDay: IntervalWeek;
   timeFormat12h: boolean;
   unblockUntil: number | null;
   weeklyUnblockEnabled: boolean;
+  weeklyUnblockDays: number[];
   weeklyUnblockDurationMinutes: number;
   weeklyUnblockUntil: number | null;
   weeklyUnblockLastWeek: string | null;
@@ -50,7 +54,7 @@ export type Metrics = {
   lastUpdatedAt: number | null;
 };
 
-export type BlockReason = "manual" | "schedule" | "shorts" | "kids" | "not_target" | "unknown";
+export type BlockReason = "manual" | "schedule" | "shorts" | "kids" | "missing_tag" | "not_target" | "unknown";
 
 export type BlockDecision = {
   blocked: boolean;

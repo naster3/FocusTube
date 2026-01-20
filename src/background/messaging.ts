@@ -1,8 +1,8 @@
-import { DEFAULT_METRICS } from "../core/defaults";
+import { DEFAULT_METRICS } from "../domain/settings/defaults";
 import { clearDb } from "../infrastructure/db";
 import { resetMetrics } from "../infrastructure/storage";
-import { computeScheduleTimeline } from "../core/timeline";
-import { evaluateBlock } from "../core/url";
+import { computeScheduleTimeline } from "../domain/schedule/timeline";
+import { evaluateBlock } from "../domain/blocking/url";
 import { addAttempt, addBlockedTime } from "./metrics";
 import { ensureMetricsLoaded, ensureSettingsLoaded, getTabState, setMetricsCache, setMetricsDirty, tabStates } from "./state";
 import { updateTabTarget } from "./tabs";
@@ -69,6 +69,20 @@ export function registerMessageListener() {
       if (message?.type === "GET_LAST_ATTEMPT" && typeof message.tabId === "number") {
         const state = tabStates.get(message.tabId);
         sendResponse({ ok: true, url: state?.lastAttemptUrl ?? null, at: state?.lastAttemptAt ?? null });
+        return;
+      }
+
+      // Cierra la pestana activa desde blocked.html.
+      if (message?.type === "CLOSE_ACTIVE_TAB") {
+        let tabId = typeof message.tabId === "number" ? message.tabId : sender.tab?.id;
+        if (!tabId) {
+          const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+          tabId = tabs?.[0]?.id;
+        }
+        if (tabId) {
+          await chrome.tabs.remove(tabId);
+        }
+        sendResponse({ ok: true });
         return;
       }
 

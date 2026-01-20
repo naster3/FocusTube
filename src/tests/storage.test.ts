@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { DEFAULT_METRICS, DEFAULT_SETTINGS } from "../core/defaults";
+import { DEFAULT_METRICS, DEFAULT_SETTINGS } from "../domain/settings/defaults";
 import {
   ensureDefaults,
   getMetrics,
@@ -130,6 +130,21 @@ describe("storage settings", () => {
     const settings = await getSettings();
     expect(settings.intervalsByDay[1]?.[0]?.start).toBe("09:00");
     expect(settings.intervalsByDay[1]?.[0]?.end).toBe("10:00");
+  });
+
+  it("sanitizes blocked domain tags", async () => {
+    await chrome.storage.local.set({
+      settings: {
+        blockedDomains: ["youtube.com", "tiktok.com"],
+        blockedDomainTags: {
+          "youtube.com": ["intervalos", "bad", 1],
+          "tiktok.com": "nope"
+        }
+      }
+    });
+    const settings = await getSettings();
+    expect(settings.blockedDomainTags["youtube.com"]).toEqual(["intervalos"]);
+    expect(settings.blockedDomainTags["tiktok.com"]).toBeUndefined();
   });
 });
 

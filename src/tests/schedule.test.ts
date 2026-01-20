@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { IntervalWeek } from "../core/types";
-import { isWithinBlockedSchedule, parseTimeToMinutes } from "../core/schedule";
+import type { IntervalWeek } from "../domain/settings/types";
+import { isWithinBlockedSchedule, parseTimeToMinutes } from "../domain/schedule/schedule";
 
 // Fixture de intervalos para pruebas.
 const intervals = {

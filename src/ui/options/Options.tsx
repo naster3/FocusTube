@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { DEFAULT_SETTINGS } from "../../core/defaults";
-import { t } from "../../core/i18n";
+import { DEFAULT_SETTINGS } from "../../domain/settings/defaults";
+import { t, tf } from "../../shared/i18n";
+import { isDomainTag } from "../../domain/blocking/tags";
+import { formatDuration } from "../../domain/schedule/timeline";
+import { canStartWeeklySession, isWeeklySessionActive } from "../../domain/weekly/weekly";
 import { getSettings, setSettings } from "../../infrastructure/storage";
-import { Settings } from "../../core/types";
+import { DomainTag, Settings } from "../../domain/settings/types";
 
 // Pantalla principal de opciones.
 export function Options() {
@@ -78,6 +81,89 @@ export function Options() {
   const optionsHref = isDev ? "/src/ui/options/index.html" : "options.html";
   const helpHref = isDev ? "/src/ui/help/index.html" : "help.html";
   const dashboardHref = isDev ? "/src/ui/dashboard/index.html" : "dashboard.html";
+  const dayOptionsByLang: Record<Settings["language"], { value: number; label: string }[]> = {
+    es: [
+      { value: 0, label: "Dom" },
+      { value: 1, label: "Lun" },
+      { value: 2, label: "Mar" },
+      { value: 3, label: "Mie" },
+      { value: 4, label: "Jue" },
+      { value: 5, label: "Vie" },
+      { value: 6, label: "Sab" }
+    ],
+    en: [
+      { value: 0, label: "Sun" },
+      { value: 1, label: "Mon" },
+      { value: 2, label: "Tue" },
+      { value: 3, label: "Wed" },
+      { value: 4, label: "Thu" },
+      { value: 5, label: "Fri" },
+      { value: 6, label: "Sat" }
+    ],
+    pt: [
+      { value: 0, label: "Dom" },
+      { value: 1, label: "Seg" },
+      { value: 2, label: "Ter" },
+      { value: 3, label: "Qua" },
+      { value: 4, label: "Qui" },
+      { value: 5, label: "Sex" },
+      { value: 6, label: "Sab" }
+    ],
+    fr: [
+      { value: 0, label: "Dim" },
+      { value: 1, label: "Lun" },
+      { value: 2, label: "Mar" },
+      { value: 3, label: "Mer" },
+      { value: 4, label: "Jeu" },
+      { value: 5, label: "Ven" },
+      { value: 6, label: "Sam" }
+    ]
+  };
+  const dayOptions = dayOptionsByLang[settings.language] ?? dayOptionsByLang.en;
+
+  const now = Date.now();
+  const weeklyActive = isWeeklySessionActive(settings, now);
+  const canStartWeekly = canStartWeeklySession(settings, now);
+  const allowedDays = settings.weeklyUnblockDays ?? [];
+  const today = new Date(now).getDay();
+  const allowedToday = allowedDays.includes(today);
+  const dayLabelByValue = Object.fromEntries(dayOptions.map((day) => [day.value, day.label]));
+  const nextAllowedLabel = (() => {
+    if (allowedDays.length == 0) {
+      return null;
+    }
+    for (let offset = 1; offset <= 7; offset += 1) {
+      const day = (today + offset) % 7;
+      if (allowedDays.includes(day)) {
+        return dayLabelByValue[day] ?? null;
+      }
+    }
+    return null;
+  })();
+  let weeklyStatusText = t(settings.language, "options.weekly_unblock.status.disabled");
+  let weeklyStatusTone: "active" | "warn" | "muted" = "muted";
+
+  if (!settings.weeklyUnblockEnabled) {
+    weeklyStatusText = t(settings.language, "options.weekly_unblock.status.disabled");
+  } else if (allowedDays.length == 0) {
+    weeklyStatusText = t(settings.language, "options.weekly_unblock.status.no_days");
+    weeklyStatusTone = "warn";
+  } else if (weeklyActive && settings.weeklyUnblockUntil) {
+    weeklyStatusText = tf(settings.language, "options.weekly_unblock.status.active", {
+      duration: formatDuration(settings.weeklyUnblockUntil - now)
+    });
+    weeklyStatusTone = "active";
+  } else if (canStartWeekly) {
+    weeklyStatusText = t(settings.language, "options.weekly_unblock.status.available");
+    weeklyStatusTone = "active";
+  } else if (allowedToday) {
+    weeklyStatusText = t(settings.language, "options.weekly_unblock.status.used");
+    weeklyStatusTone = "warn";
+  } else {
+    weeklyStatusText = tf(settings.language, "options.weekly_unblock.status.not_today", {
+      day: nextAllowedLabel ?? "-"
+    });
+  }
 
   return (
     <div className="options">
@@ -134,6 +220,29 @@ export function Options() {
           />
           {t(settings.language, "options.weekly_unblock.enable")}
         </label>
+        <div className="weekly-days">
+          <span>{t(settings.language, "options.weekly_unblock.days")}</span>
+          <div className="weekly-days-list">
+            {dayOptions.map((day) => (
+              <label key={day.value} className="weekly-day">
+                <input
+                  type="checkbox"
+                  checked={settings.weeklyUnblockDays.includes(day.value)}
+                  onChange={() => {
+                    const set = new Set(settings.weeklyUnblockDays);
+                    if (set.has(day.value)) {
+                      set.delete(day.value);
+                    } else {
+                      set.add(day.value);
+                    }
+                    saveSettings({ ...settings, weeklyUnblockDays: Array.from(set).sort((a, b) => a - b) });
+                  }}
+                />
+                {day.label}
+              </label>
+            ))}
+          </div>
+        </div>
         <label>
           <span>{t(settings.language, "options.weekly_unblock.duration")}</span>
           <input
@@ -149,6 +258,10 @@ export function Options() {
           />
           <span>{t(settings.language, "options.weekly_unblock.minutes")}</span>
         </label>
+        <div className={`weekly-status ${weeklyStatusTone}`}>
+          <span className="weekly-status-label">{t(settings.language, "options.weekly_unblock.status.title")}</span>
+          <span className="weekly-status-value">{weeklyStatusText}</span>
+        </div>
       </section>
 
       <section className="panel">
@@ -175,6 +288,8 @@ export function Options() {
           >
             <option value="en">English</option>
             <option value="es">Espanol</option>
+            <option value="pt">Portugues</option>
+            <option value="fr">Francais</option>
           </select>
         </label>
       </section>
@@ -199,7 +314,35 @@ export function Options() {
 }
 
 // Normaliza settings importados contra defaults.
+function normalizeBlockedDomainTags(input?: Record<string, unknown>): Record<string, DomainTag[]> {
+  if (!input || typeof input !== "object") {
+    return {};
+  }
+  const next: Record<string, DomainTag[]> = {};
+  for (const [domain, value] of Object.entries(input)) {
+    if (!Array.isArray(value)) {
+      continue;
+    }
+    const tags = value.map((tag) => String(tag)).filter((tag) => isDomainTag(tag));
+    const unique = Array.from(new Set(tags));
+    if (unique.length > 0) {
+      next[domain] = unique;
+    }
+  }
+  return next;
+}
+
 function normalizeSettings(data: Partial<Settings>): Settings {
+  const blockedDomainTags = normalizeBlockedDomainTags(data.blockedDomainTags as Record<string, unknown>);
+  const weeklyDays = Array.isArray(data.weeklyUnblockDays)
+    ? Array.from(
+        new Set(
+          data.weeklyUnblockDays
+            .map((day) => Number(day))
+            .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6)
+        )
+      ).sort((a, b) => a - b)
+    : DEFAULT_SETTINGS.weeklyUnblockDays;
   const weeklyDuration =
     typeof data.weeklyUnblockDurationMinutes === "number" && Number.isFinite(data.weeklyUnblockDurationMinutes)
       ? Math.max(1, Math.floor(data.weeklyUnblockDurationMinutes))
@@ -213,10 +356,12 @@ function normalizeSettings(data: Partial<Settings>): Settings {
     ...DEFAULT_SETTINGS,
     ...data,
     weeklyUnblockEnabled: Boolean(data.weeklyUnblockEnabled),
+    weeklyUnblockDays: weeklyDays,
     weeklyUnblockDurationMinutes: weeklyDuration,
     weeklyUnblockUntil: weeklyUntil,
     weeklyUnblockLastWeek: weeklyLastWeek,
-    language: data.language === "en" || data.language === "es" ? data.language : DEFAULT_SETTINGS.language,
+    blockedDomainTags,
+    language: data.language === "en" || data.language === "es" || data.language === "pt" || data.language === "fr" ? data.language : DEFAULT_SETTINGS.language,
     schedules: data.schedules || DEFAULT_SETTINGS.schedules,
     intervalsByDay: data.intervalsByDay || DEFAULT_SETTINGS.intervalsByDay,
     whitelist: Array.isArray(data.whitelist) ? data.whitelist : DEFAULT_SETTINGS.whitelist,

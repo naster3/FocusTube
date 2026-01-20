@@ -1,15 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import Chart from "chart.js/auto";
-import { DEFAULT_INTERVALS, DEFAULT_SCHEDULES, DEFAULT_SETTINGS } from "../../core/defaults";
-import { hashPin } from "../../core/hash";
-import { t } from "../../core/i18n";
+import { DEFAULT_INTERVALS, DEFAULT_SCHEDULES, DEFAULT_SETTINGS } from "../../domain/settings/defaults";
+import { hashPin } from "../../shared/hash";
+import { t } from "../../shared/i18n";
 import { getMetrics, getSettings, resetMetrics, setSettings } from "../../infrastructure/storage";
-import { Metrics, Settings } from "../../core/types";
-import { normalizeDomain } from "../../core/url";
+import { DomainTag, Metrics, Settings } from "../../domain/settings/types";
+import { normalizeDomain } from "../../domain/blocking/url";
 import { ScheduleView } from "../options/schedule/ScheduleView";
+import { DOMAIN_TAGS } from "../../domain/blocking/tags";
 import "./dashboard.css";
 
+// Helpers de formato y fechas.
 function formatSeconds(totalSeconds: number) {
   const safe = Math.max(0, Math.floor(totalSeconds));
   const hours = Math.floor(safe / 3600);
@@ -35,10 +37,12 @@ function getRecentDays(count: number) {
 }
 
 export function Dashboard() {
+  // Estado
   const [settings, setLocalSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [whitelistInput, setWhitelistInput] = useState("");
   const [blockedDomainInput, setBlockedDomainInput] = useState("");
+  const [blockedTagInput, setBlockedTagInput] = useState<DomainTag[]>([]);
   const [status, setStatus] = useState("");
   const [blockedStatus, setBlockedStatus] = useState("");
   const [blockedPermissions, setBlockedPermissions] = useState<Record<string, boolean>>({});
@@ -52,6 +56,21 @@ export function Dashboard() {
   const attemptsChartRef = useRef<Chart | null>(null);
   const timeChartRef = useRef<Chart | null>(null);
 
+  // Etiquetas para dominios bloqueados
+  const tagLabels = useMemo(
+    () => ({
+      intervalos: t(settings.language, "tag.intervalos"),
+      por_semana: t(settings.language, "tag.por_semana")
+    }),
+    [settings.language]
+  );
+
+  const tagOptions = useMemo(
+    () => DOMAIN_TAGS.map((tag) => ({ value: tag, label: tagLabels[tag] })),
+    [tagLabels]
+  );
+
+  // Carga inicial de settings y metrics.
   useEffect(() => {
     void (async () => {
       const [stored, metricsStored] = await Promise.all([getSettings(), getMetrics()]);
@@ -60,6 +79,7 @@ export function Dashboard() {
     })();
   }, []);
 
+  // Sincroniza settings/metrics desde storage.
   useEffect(() => {
     const listener = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
       if (area !== "local") {
@@ -82,6 +102,7 @@ export function Dashboard() {
     return () => chrome.storage.onChanged.removeListener(listener);
   }, []);
 
+  // Helpers de mensajes UI.
   const showStatus = (message: string) => {
     setStatus(message);
     setTimeout(() => setStatus(""), 2000);
@@ -92,6 +113,7 @@ export function Dashboard() {
     setTimeout(() => setBlockedStatus(""), 2000);
   };
 
+  // Persistencia de settings.
   const saveSettings = async (next: Settings, message?: string) => {
     setLocalSettings(next);
     await setSettings(next);
@@ -100,6 +122,7 @@ export function Dashboard() {
     }
   };
 
+  // Acciones de horarios.
   const resetSchedules = async () => {
     if (!window.confirm("Restablecer horarios por defecto?")) {
       return;
@@ -114,6 +137,7 @@ export function Dashboard() {
     );
   };
 
+  // Acciones de whitelist.
   const addWhitelist = async () => {
     const value = whitelistInput.trim();
     if (!value) {
@@ -133,6 +157,7 @@ export function Dashboard() {
     await saveSettings({ ...settings, whitelist: next }, t(settings.language, "dashboard.whitelist.updated"));
   };
 
+  // Acciones de modo estricto.
   const enableStrictMode = async () => {
     if (!pinInput || pinInput !== pinConfirm) {
       showStatus(t(settings.language, "dashboard.strict.pin_mismatch"));
@@ -177,6 +202,7 @@ export function Dashboard() {
     setPinChangeConfirm("");
   };
 
+  // Helpers de permisos por dominio.
   const getDomainOrigins = (domain: string) => [`*://${domain}/*`, `*://*.${domain}/*`];
 
   const requestDomainPermission = (domain: string) =>
@@ -196,6 +222,7 @@ export function Dashboard() {
       chrome.permissions.contains({ origins: getDomainOrigins(domain) }, (granted) => resolve(Boolean(granted)));
     });
 
+  // Actualiza permisos de dominios bloqueados.
   useEffect(() => {
     let cancelled = false;
     const refreshPermissions = async () => {
@@ -216,10 +243,15 @@ export function Dashboard() {
     };
   }, [settings.blockedDomains]);
 
+  // Acciones de dominios bloqueados.
   const addBlockedDomain = async () => {
     const domain = normalizeDomain(blockedDomainInput);
     if (!domain) {
       showBlockedStatus(t(settings.language, "dashboard.domain.invalid"));
+      return;
+    }
+    if (blockedTagInput.length === 0) {
+      showBlockedStatus(t(settings.language, "dashboard.domain.tag_required"));
       return;
     }
     if (settings.blockedDomains.includes(domain)) {
@@ -232,17 +264,33 @@ export function Dashboard() {
       return;
     }
     const next = Array.from(new Set([...settings.blockedDomains, domain]));
+    const nextTags = { ...settings.blockedDomainTags, [domain]: blockedTagInput };
     setBlockedDomainInput("");
-    await saveSettings({ ...settings, blockedDomains: next });
+    setBlockedTagInput([]);
+    await saveSettings({ ...settings, blockedDomains: next, blockedDomainTags: nextTags });
     showBlockedStatus(t(settings.language, "dashboard.domain.added"));
   };
 
   const removeBlockedDomain = async (domain: string) => {
     const next = settings.blockedDomains.filter((entry) => entry !== domain);
-    await saveSettings({ ...settings, blockedDomains: next }, t(settings.language, "dashboard.domain.removed"));
+    const { [domain]: _removed, ...restTags } = settings.blockedDomainTags;
+    await saveSettings(
+      { ...settings, blockedDomains: next, blockedDomainTags: restTags },
+      t(settings.language, "dashboard.domain.removed")
+    );
     void removeDomainPermission(domain);
   };
 
+  const toggleDomainTag = async (domain: string, tag: DomainTag, enabled: boolean) => {
+    const current = settings.blockedDomainTags[domain] ?? [];
+    const nextTags = enabled
+      ? Array.from(new Set([...current, tag]))
+      : current.filter((entry) => entry !== tag);
+    const nextMap = { ...settings.blockedDomainTags, [domain]: nextTags };
+    await saveSettings({ ...settings, blockedDomainTags: nextMap });
+  };
+
+  // Acciones de metricas.
   const exportMetrics = () => {
     if (!metrics) {
       return;
@@ -266,6 +314,7 @@ export function Dashboard() {
     showStatus(t(settings.language, "dashboard.metrics.reset"));
   };
 
+  // Datos derivados para charts.
   const chartSeries = useMemo(() => {
     if (!metrics) return null;
     const days = getRecentDays(14).reverse();
@@ -276,6 +325,7 @@ export function Dashboard() {
     };
   }, [metrics]);
 
+  // Renderiza charts cuando hay datos.
   useEffect(() => {
     if (!chartSeries) return;
 
@@ -374,11 +424,13 @@ export function Dashboard() {
     };
   }, [chartSeries]);
 
+  // Links de navegacion.
   const isDev = window.location.pathname.includes("/src/ui/");
   const optionsHref = isDev ? "/src/ui/options/index.html" : "options.html";
   const helpHref = isDev ? "/src/ui/help/index.html" : "help.html";
   const dashboardHref = isDev ? "/src/ui/dashboard/index.html" : "dashboard.html";
 
+  // Render UI.
   return (
     <div className="options">
       <header className="options-header">
@@ -425,7 +477,7 @@ export function Dashboard() {
 
       <section className="panel">
         <h3>{t(settings.language, "dashboard.blocked.title")}</h3>
-        <div className="row">
+        <div className="row blocked-input-row">
           <input
             type="text"
             placeholder={t(settings.language, "dashboard.blocked.placeholder")}
@@ -434,15 +486,86 @@ export function Dashboard() {
           />
           <button onClick={addBlockedDomain}>{t(settings.language, "dashboard.action.add")}</button>
         </div>
+        <div className="tag-picker">
+          <span>{t(settings.language, "dashboard.domain.tags_label")}</span>
+          <div className="tag-list">
+            {tagOptions.map((tag) => {
+              const active = blockedTagInput.includes(tag.value);
+              return (
+                <label key={tag.value} className={`tag-chip ${active ? "active" : "inactive"}`}>
+                  <input
+                    type="checkbox"
+                    checked={active}
+                    onChange={() => {
+                      const set = new Set(blockedTagInput);
+                      if (set.has(tag.value)) {
+                        set.delete(tag.value);
+                      } else {
+                        set.add(tag.value);
+                      }
+                      setBlockedTagInput(Array.from(set));
+                    }}
+                  />
+                  {tag.label}
+                </label>
+              );
+            })}
+          </div>
+        </div>
         {blockedStatus ? <div className="status">{blockedStatus}</div> : null}
         <ul className="list">
           {settings.blockedDomains.length === 0 ? <li>{t(settings.language, "dashboard.empty")}</li> : null}
           {settings.blockedDomains.map((entry) => {
             const hasPermission = blockedPermissions[entry] ?? true;
+            const tags = settings.blockedDomainTags[entry] ?? [];
             return (
-              <li key={entry} className={hasPermission ? undefined : "blocked-permission-missing"}>
-                <span>{entry}</span>
-                <button onClick={() => removeBlockedDomain(entry)}>{t(settings.language, "dashboard.action.remove")}</button>
+              <li
+                key={entry}
+                className={`blocked-card ${hasPermission ? "" : "blocked-card-missing"}`}
+              >
+                <div className="blocked-card-header">
+                  <div className="blocked-domain-main">
+                    <span className="blocked-domain-text">{entry}</span>
+                    <span
+                      className={`perm-dot ${hasPermission ? "perm-ok" : "perm-missing"}`}
+                      title={t(
+                        settings.language,
+                        hasPermission ? "dashboard.domain.permission_ok" : "dashboard.domain.permission_missing"
+                      )}
+                      aria-label={t(
+                        settings.language,
+                        hasPermission ? "dashboard.domain.permission_ok" : "dashboard.domain.permission_missing"
+                      )}
+                    />
+                  </div>
+                  <button
+                    className="btn-ghost btn-small"
+                    onClick={() => removeBlockedDomain(entry)}
+                  >
+                    {t(settings.language, "dashboard.action.remove")}
+                  </button>
+                </div>
+                <div className="tag-list">
+                  {tagOptions.map((tag) => {
+                    const active = tags.includes(tag.value);
+                    return (
+                      <label
+                        key={`${entry}-${tag.value}`}
+                        className={`tag-chip ${active ? "active" : "inactive"}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={active}
+                          onChange={(event) => toggleDomainTag(entry, tag.value, event.target.checked)}
+                        />
+                        {tag.label}
+                      </label>
+                    );
+                  })}
+                  {tags.length === 0 ? (
+                    <span className="tag-warning">{t(settings.language, "dashboard.domain.tag_required")}</span>
+                  ) : null}
+                </div>
               </li>
             );
           })}

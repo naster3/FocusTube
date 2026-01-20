@@ -1,12 +1,40 @@
 import React, { useMemo, useState, useEffect } from "react";
-import type { Interval, IntervalWeek, Language } from "../../../core/types";
-import { t, tf } from "../../../core/i18n";
+import type { Interval, IntervalWeek, Language } from "../../../domain/settings/types";
+import { t, tf } from "../../../shared/i18n";
 import { Segment, computeTotals, detectOverlaps, minutesToTime, normalizeIntervals, parseTimeToMinutes } from "./helpers";
 
 // Orden visual Lunes a Domingo.
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
-const DAY_LABELS_ES = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"];
-const DAY_LABELS_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAY_LABELS_BY_LANG: Record<Language, string[]> = {
+  es: ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"],
+  en: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  pt: ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"],
+  fr: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
+};
+
+const PERIOD_LABELS_BY_LANG: Record<string, Record<string, string>> = {
+  en: {
+    Madrugada: "Early morning",
+    Manana: "Morning",
+    Mediodia: "Midday",
+    Tarde: "Afternoon",
+    Noche: "Night"
+  },
+  pt: {
+    Madrugada: "Madrugada",
+    Manana: "Manha",
+    Mediodia: "Meio-dia",
+    Tarde: "Tarde",
+    Noche: "Noite"
+  },
+  fr: {
+    Madrugada: "Nuit",
+    Manana: "Matin",
+    Mediodia: "Midi",
+    Tarde: "Apres-midi",
+    Noche: "Soir"
+  }
+};
 
 type ScheduleViewProps = {
   intervalsByDay: IntervalWeek;
@@ -230,7 +258,8 @@ function WeekTimelineBars({
     <div className="grid gap-3">
       {DAY_ORDER.map((day, idx) => {
         const segments = normalizeIntervals(intervalsByDay[day] || []);
-        const dayLabel = language === "es" ? DAY_LABELS_ES[idx] : DAY_LABELS_EN[idx];
+        const dayLabels = DAY_LABELS_BY_LANG[language] ?? DAY_LABELS_BY_LANG.en;
+        const dayLabel = dayLabels[idx];
         const isActive = day === selectedDay;
         return (
           <button
@@ -484,20 +513,7 @@ function translatePeriodLabel(label: string, language: Language) {
   if (language === "es") {
     return label;
   }
-  switch (label) {
-    case "Madrugada":
-      return "Early morning";
-    case "Manana":
-      return "Morning";
-    case "Mediodia":
-      return "Midday";
-    case "Tarde":
-      return "Afternoon";
-    case "Noche":
-      return "Night";
-    default:
-      return label;
-  }
+  return PERIOD_LABELS_BY_LANG[language]?.[label] ?? label;
 }
 
 function formatMinuteLabel(totalMinutes: number, use12h: boolean) {

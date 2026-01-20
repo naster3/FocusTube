@@ -1,4 +1,4 @@
-import { IntervalWeek } from "./types";
+import { IntervalWeek } from "../settings/types";
 
 // Convierte HH:MM a minutos.
 export function parseTimeToMinutes(value: string) {

@@ -1,8 +1,9 @@
 // Pantalla de bloqueo y desbloqueo temporal.
 import { getMetrics, getSettings, updateSettings } from "../../infrastructure/storage";
-import { formatDateTime } from "../../core/utils";
-import { t, tf } from "../../core/i18n";
-import { canStartWeeklySession, getWeeklySessionDurationMs, getWeeklySessionWeekKey, isWeeklySessionActive } from "../../core/weekly";
+import { formatDateTime } from "../../shared/utils";
+import { t, tf } from "../../shared/i18n";
+import { canStartWeeklySession, getWeeklySessionDurationMs, getWeeklySessionWeekKey, isWeeklySessionActive } from "../../domain/weekly/weekly";
+import { hostnameMatches } from "../../domain/blocking/url";
 
 // Acumula tiempo de pantalla bloqueada.
 function startBlockedTimer() {
@@ -65,6 +66,8 @@ const messageEl = document.getElementById("message");
 const attemptsEl = document.getElementById("attempts");
 const lastAttemptEl = document.getElementById("last-attempt");
 const blockedUrlEl = document.getElementById("blocked-url");
+const blockedUrlLabelEl = document.getElementById("blocked-url-label");
+const copyUrlBtn = document.getElementById("copy-url-btn") as HTMLButtonElement | null;
 const unblockBtn = document.getElementById("unblock-btn") as HTMLButtonElement | null;
 const closeBtn = document.getElementById("close-btn") as HTMLButtonElement | null;
 const blockedTagEl = document.getElementById("blocked-tag");
@@ -72,10 +75,25 @@ const blockedTitleEl = document.getElementById("blocked-title");
 const attemptsLabelEl = document.getElementById("attempts-label");
 const lastAttemptLabelEl = document.getElementById("last-attempt-label");
 
+let allowScheduleAutoUnblock = false;
+
+function matchBlockedDomain(urlString: string, blockedDomains: string[]) {
+  try {
+    const url = new URL(urlString);
+    const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
+    return blockedDomains.find((domain) => hostnameMatches(hostname, domain)) || null;
+  } catch {
+    return null;
+  }
+}
+
 // Libera automaticamente cuando el horario deja de bloquear.
 function startScheduleAutoUnblock() {
   const intervalMs = 15000;
   window.setInterval(async () => {
+    if (!allowScheduleAutoUnblock) {
+      return;
+    }
     await resolveBlockedUrl();
     if (!blockedUrl) return;
     try {
@@ -118,6 +136,9 @@ async function render() {
   if (lastAttemptLabelEl) {
     lastAttemptLabelEl.textContent = t(lang, "blocked.last_attempt");
   }
+  if (blockedUrlLabelEl) {
+    blockedUrlLabelEl.textContent = t(lang, "blocked.url_prefix");
+  }
   if (attemptsEl) {
     attemptsEl.textContent = String(attempts);
   }
@@ -125,18 +146,57 @@ async function render() {
     lastAttemptEl.textContent = metrics.lastAttemptAt ? formatDateTime(metrics.lastAttemptAt) : "-";
   }
   if (blockedUrlEl) {
-    blockedUrlEl.textContent = blockedUrl ? `${t(lang, "blocked.url_prefix")} ${blockedUrl}` : "";
+    blockedUrlEl.textContent = blockedUrl || "";
+  }
+  if (copyUrlBtn) {
+    copyUrlBtn.textContent = t(lang, "blocked.copy");
+    copyUrlBtn.disabled = !blockedUrl;
+    copyUrlBtn.onclick = async () => {
+      if (!blockedUrl) {
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(blockedUrl);
+        copyUrlBtn.textContent = t(lang, "blocked.copied");
+        window.setTimeout(() => {
+          if (copyUrlBtn) {
+            copyUrlBtn.textContent = t(lang, "blocked.copy");
+          }
+        }, 1500);
+      } catch {
+        // ignore
+      }
+    };
   }
 
   if (!unblockBtn) {
     return;
   }
 
+  const matchedDomain = blockedUrl ? matchBlockedDomain(blockedUrl, settings.blockedDomains) : null;
+  const tags = matchedDomain ? settings.blockedDomainTags?.[matchedDomain] ?? [] : [];
+  const hasIntervals = tags.includes("intervalos");
+  const hasWeekly = tags.includes("por_semana");
+  allowScheduleAutoUnblock = hasIntervals;
+
+  if (!tags.length) {
+    unblockBtn.disabled = true;
+    unblockBtn.textContent = t(lang, "blocked.missing_tag");
+    return;
+  }
+
   const now = Date.now();
-  if (settings.blockEnabled && settings.weeklyUnblockEnabled) {
+  if (hasWeekly && !hasIntervals) {
+    if (!settings.weeklyUnblockEnabled) {
+      unblockBtn.disabled = true;
+      unblockBtn.textContent = t(lang, "blocked.weekly.disabled");
+      return;
+    }
     const weeklyActive = isWeeklySessionActive(settings, now);
     const weekKey = getWeeklySessionWeekKey(now);
     const alreadyUsed = settings.weeklyUnblockLastWeek === weekKey;
+    const allowedDays = settings.weeklyUnblockDays ?? [];
+    const allowedToday = allowedDays.includes(new Date(now).getDay());
     const canStart = !weeklyActive && canStartWeeklySession(settings, now);
     const durationMs = getWeeklySessionDurationMs(settings);
     const durationMin = Math.max(1, Math.floor(durationMs / 60000));
@@ -147,7 +207,9 @@ async function render() {
         ? t(lang, "blocked.weekly.used")
         : alreadyUsed
           ? t(lang, "blocked.weekly.used")
-          : t(lang, "blocked.weekly.unavailable");
+          : allowedToday
+            ? t(lang, "blocked.weekly.used")
+            : t(lang, "blocked.weekly.unavailable_day");
       return;
     }
 
@@ -189,8 +251,41 @@ async function render() {
   }
 }
 
+async function closeBlockedTab() {
+  try {
+    window.close();
+  } catch {
+    // ignore
+  }
+  try {
+    const currentTab = await chrome.tabs.getCurrent();
+    const tabId = currentTab?.id;
+    if (tabId) {
+      await chrome.tabs.remove(tabId);
+      return;
+    }
+  } catch {
+    // ignore
+  }
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tabId = tabs?.[0]?.id;
+    if (tabId) {
+      await chrome.tabs.remove(tabId);
+      return;
+    }
+  } catch {
+    // ignore
+  }
+  try {
+    await chrome.runtime.sendMessage({ type: "CLOSE_ACTIVE_TAB" });
+  } catch {
+    // ignore
+  }
+}
+
 closeBtn?.addEventListener("click", () => {
-  window.close();
+  void closeBlockedTab();
 });
 
 render();

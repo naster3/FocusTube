@@ -1,5 +1,5 @@
 import { getMetrics, getSettings } from "../infrastructure/storage";
-import type { Metrics, Settings } from "../core/types";
+import type { Metrics, Settings } from "../domain/settings/types";
 
 // Estado en memoria por pestana para tracking de tiempo.
 export type TabState = {

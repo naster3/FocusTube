@@ -1,4 +1,4 @@
-import type { Interval, TimeString } from "../../../core/types";
+import type { Interval, TimeString } from "../../../domain/settings/types";
 
 export type Segment = {
   id: string;

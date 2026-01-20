@@ -1,6 +1,6 @@
 import { safeSendMessage } from "./extensionMessaging";
-import { t, tf } from "../core/i18n";
-import type { Language } from "../core/types";
+import { t, tf } from "../shared/i18n";
+import type { Language } from "../domain/settings/types";
 
 // Formatea hora AM/PM para el widget.
 function formatTimeAmPm(ts: number) {

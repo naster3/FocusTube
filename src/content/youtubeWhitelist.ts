@@ -1,5 +1,5 @@
 import { getSettings } from "../infrastructure/storage";
-import { isWhitelisted } from "../core/url";
+import { isWhitelisted } from "../domain/blocking/url";
 
 // YouTube: permitir videos (/watch) por canal (handle @) aunque youtube.com estAc bloqueado.
 export function isYouTubeWatchUrl(urlString: string) {

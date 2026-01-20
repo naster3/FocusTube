@@ -1,6 +1,4 @@
-import type { Settings } from "./types";
-
-const WEEKLY_UNBLOCK_DAY = 1;
+import type { Settings } from "../settings/types";
 
 function getIsoWeekKey(date: Date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -18,7 +16,8 @@ export function isWeeklySessionActive(settings: Settings, now = Date.now()) {
 export function canStartWeeklySession(settings: Settings, now = Date.now()) {
   if (!settings.weeklyUnblockEnabled) return false;
   const today = new Date(now);
-  if (today.getDay() !== WEEKLY_UNBLOCK_DAY) return false;
+  const allowedDays = settings.weeklyUnblockDays ?? [];
+  if (!allowedDays.includes(today.getDay())) return false;
   const weekKey = getIsoWeekKey(today);
   return settings.weeklyUnblockLastWeek !== weekKey;
 }
@@ -31,4 +30,3 @@ export function getWeeklySessionDurationMs(settings: Settings) {
   const minutes = Math.max(1, Math.floor(settings.weeklyUnblockDurationMinutes));
   return minutes * 60 * 1000;
 }
-

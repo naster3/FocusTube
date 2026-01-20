@@ -11,7 +11,7 @@
       body {
         margin: 0;
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: radial-gradient(circle at top left, #f8f1e7, #f3f6ff);
+        background: radial-gradient(circle at top left, #fff1e8, #ffe7d7, #f7f4ff);
         color: #1f2937;
       }
       .wrap {
@@ -25,26 +25,112 @@
         width: min(560px, 100%);
         background: #ffffff;
         border-radius: 16px;
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
         padding: 28px;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #f1c0a8;
+        position: relative;
+        overflow: hidden;
+      }
+      .card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-top: 6px solid #ef4444;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .card > * {
+        position: relative;
+        z-index: 1;
+      }
+      .hero {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .alert-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .alert-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: #fee2e2;
+        color: #b91c1c;
+        font-weight: 800;
+        font-size: 20px;
+        border: 1px solid #fecaca;
       }
       h1 {
-        font-size: 24px;
-        margin: 0 0 8px 0;
+        font-size: 26px;
+        margin: 0;
+        letter-spacing: -0.3px;
       }
       p {
-        margin: 0 0 12px 0;
+        margin: 0;
         line-height: 1.5;
       }
-      .meta {
+      .message {
+        font-size: 15px;
+        color: #7c2d12;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        padding: 10px 12px;
+        border-radius: 12px;
+      }
+      .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      .meta-card {
+        background: #fff;
+        border: 1px solid #f3e8e4;
+        border-radius: 12px;
+        padding: 10px 12px;
         display: grid;
         gap: 6px;
-        font-size: 14px;
-        color: #4b5563;
+      }
+      .meta-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #9a3412;
+      }
+      .meta-value {
+        font-size: 18px;
+        font-weight: 700;
+        color: #111827;
+      }
+      .url-card {
+        border: 1px dashed #f3c2a6;
+        background: #fff7ed;
+        border-radius: 12px;
+        padding: 10px 12px;
+        display: grid;
+        gap: 8px;
+      }
+      .url-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .url {
+        font-family: "Cascadia Mono", "Consolas", "Courier New", monospace;
+        font-size: 12px;
+        color: #6b7280;
+        word-break: break-all;
+        flex: 1;
+        min-width: 120px;
       }
       .actions {
-        margin-top: 16px;
+        margin-top: 18px;
         display: flex;
         gap: 12px;
         flex-wrap: wrap;
@@ -57,40 +143,93 @@
         border-radius: 10px;
         cursor: pointer;
         font-size: 14px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+      }
+      button.primary {
+        background: #b91c1c;
+        box-shadow: 0 10px 18px rgba(185, 28, 28, 0.25);
+      }
+      button.ghost {
+        background: transparent;
+        border: 1px solid #e5e7eb;
+        color: #374151;
+      }
+      button.small {
+        padding: 6px 10px;
+        font-size: 12px;
       }
       button[disabled] {
         background: #9ca3af;
         cursor: not-allowed;
       }
+      button.ghost[disabled] {
+        background: transparent;
+        border-color: #d1d5db;
+        color: #9ca3af;
+      }
+      button:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.35);
+      }
+      button:hover:not([disabled]) {
+        transform: translateY(-1px);
+        filter: brightness(0.98);
+      }
       .tag {
         display: inline-block;
-        background: #fef3c7;
-        color: #92400e;
+        background: #fee2e2;
+        color: #b91c1c;
         padding: 4px 8px;
         border-radius: 999px;
         font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
       }
-      .url {
-        word-break: break-all;
-        font-size: 12px;
-        color: #6b7280;
+      @media (max-width: 540px) {
+        .actions {
+          flex-direction: column;
+        }
+        .actions button {
+          width: 100%;
+        }
+        .url-row {
+          flex-direction: column;
+          align-items: flex-start;
+        }
       }
     </style>
   </head>
   <body>
     <div class="wrap">
       <div class="card">
-        <div class="tag" id="blocked-tag">FocusTube Blocker</div>
-        <h1 id="blocked-title">Bloqueado por tus horarios</h1>
-        <p id="message">Respira, enfoca y vuelve con un objetivo claro.</p>
-        <div class="meta">
-          <div><strong id="attempts-label">Intentos hoy:</strong> <span id="attempts">0</span></div>
-          <div><strong id="last-attempt-label">Ultimo intento:</strong> <span id="last-attempt">-</span></div>
-          <div class="url" id="blocked-url"></div>
+        <div class="hero">
+          <div class="tag" id="blocked-tag">FocusTube Blocker</div>
+          <div class="alert-row">
+            <div class="alert-icon" aria-hidden="true">!</div>
+            <h1 id="blocked-title">Bloqueado por tus horarios</h1>
+          </div>
+          <p class="message" id="message">Respira, enfoca y vuelve con un objetivo claro.</p>
+        </div>
+        <div class="meta-grid">
+          <div class="meta-card">
+            <span class="meta-label" id="attempts-label">Intentos hoy</span>
+            <span class="meta-value" id="attempts">0</span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label" id="last-attempt-label">Ultimo intento</span>
+            <span class="meta-value" id="last-attempt">-</span>
+          </div>
+        </div>
+        <div class="url-card">
+          <span class="meta-label" id="blocked-url-label">URL</span>
+          <div class="url-row">
+            <span class="url" id="blocked-url"></span>
+            <button class="ghost small" id="copy-url-btn" type="button">Copiar</button>
+          </div>
         </div>
         <div class="actions">
-          <button id="unblock-btn">Desbloquear 5 minutos</button>
-          <button id="close-btn">Cerrar pestana</button>
+          <button class="primary" id="unblock-btn">Desbloquear 5 minutos</button>
+          <button class="ghost" id="close-btn">Cerrar pestana</button>
         </div>
       </div>
     </div>

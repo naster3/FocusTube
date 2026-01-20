@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { getMetrics, getSettings, updateSettings } from "../../infrastructure/storage";
-import { evaluateBlock, reasonLabel } from "../../core/url";
-import type { Settings } from "../../core/types";
-import { computeScheduleTimeline, formatDuration } from "../../core/timeline";
-import { t } from "../../core/i18n";
+import { evaluateBlock, reasonLabel } from "../../domain/blocking/url";
+import type { Settings } from "../../domain/settings/types";
+import { computeScheduleTimeline, formatDuration } from "../../domain/schedule/timeline";
+import { t } from "../../shared/i18n";
 
 // Helpers de formateo para debug.
 function formatDateTimeAmPm(ts: number) {

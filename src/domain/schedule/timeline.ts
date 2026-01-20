@@ -1,6 +1,6 @@
-import type { IntervalWeek, Settings } from "./types";
+import type { IntervalWeek, Settings } from "../settings/types";
 import { parseTimeToMinutes } from "./schedule";
-import { isWeeklySessionActive } from "./weekly";
+import { isWeeklySessionActive } from "../weekly/weekly";
 
 export type ScheduleTimeline = {
   state: "blocked" | "free";
