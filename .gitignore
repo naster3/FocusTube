@@ -13,3 +13,14 @@ yarn-debug.log*
 yarn-error.log*
 focustube_icons/
 focus-tube-settings.json
+focus-tube-metrics.json
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+*.db-wal
+*.db-shm
+*.sql
+*.dump
+*.bak
+*.csv
