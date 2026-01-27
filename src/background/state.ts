@@ -1,4 +1,5 @@
 import { getMetrics, getSettings } from "../infrastructure/storage";
+import { DEFAULT_METRICS, DEFAULT_SETTINGS } from "../domain/settings/defaults";
 import type { Metrics, Settings } from "../domain/settings/types";
 
 // Estado en memoria por pestana para tracking de tiempo.
@@ -46,7 +47,11 @@ export function getTabState(tabId: number): TabState {
 // Caches perezosos de settings/metrics.
 export async function ensureSettingsLoaded() {
   if (!settingsCache) {
-    settingsCache = await getSettings();
+    try {
+      settingsCache = await getSettings();
+    } catch {
+      settingsCache = DEFAULT_SETTINGS;
+    }
   }
   return settingsCache;
 }
@@ -54,7 +59,11 @@ export async function ensureSettingsLoaded() {
 // Caches perezosos de settings/metrics.
 export async function ensureMetricsLoaded() {
   if (!metricsCache) {
-    metricsCache = await getMetrics();
+    try {
+      metricsCache = await getMetrics();
+    } catch {
+      metricsCache = DEFAULT_METRICS;
+    }
   }
   return metricsCache;
 }

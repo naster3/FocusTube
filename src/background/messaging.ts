@@ -11,6 +11,11 @@ import { updateTabTarget } from "./tabs";
 export function registerMessageListener() {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     void (async () => {
+      if (sender.id && sender.id !== chrome.runtime.id) {
+        sendResponse({ ok: false });
+        return;
+      }
+
       // Verifica bloqueo por URL.
       if (message?.type === "CHECK_BLOCK" && typeof message.url === "string") {
         const settings = await ensureSettingsLoaded();

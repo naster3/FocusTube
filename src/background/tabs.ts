@@ -32,6 +32,35 @@ export async function updateTabTarget(tabId: number, url: string | null) {
   }
 }
 
+export async function primeActiveTabState() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      const now = Date.now();
+      setActiveTabId(tab.id);
+      const state = getTabState(tab.id);
+      state.active = true;
+      state.visible = true;
+      state.lastTick = now;
+      state.lastActiveAt = now;
+      if (typeof tab.url === "string") {
+        await updateTabTarget(tab.id, tab.url);
+      }
+    }
+  } catch {
+    // Best effort.
+  }
+
+  try {
+    const win = await chrome.windows.getCurrent();
+    if (typeof win?.focused === "boolean") {
+      setWindowFocused(win.focused);
+    }
+  } catch {
+    // Best effort.
+  }
+}
+
 // Registro de listeners de tabs/ventanas.
 export function registerTabListeners() {
   chrome.tabs.onActivated.addListener((info) => {
@@ -45,7 +74,19 @@ export function registerTabListeners() {
     setActiveTabId(info.tabId);
     const state = getTabState(info.tabId);
     state.active = true;
+    state.visible = true;
     state.lastTick = now;
+    state.lastActiveAt = now;
+    void (async () => {
+      try {
+        const tab = await chrome.tabs.get(info.tabId);
+        if (tab?.url) {
+          await updateTabTarget(info.tabId, tab.url);
+        }
+      } catch {
+        // Best effort.
+      }
+    })();
   });
 
   chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {

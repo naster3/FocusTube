@@ -6,7 +6,7 @@ import { hashPin } from "../../shared/hash";
 import { t } from "../../shared/i18n";
 import { getMetrics, getSettings, resetMetrics, setSettings } from "../../infrastructure/storage";
 import { DomainTag, Metrics, Settings } from "../../domain/settings/types";
-import { normalizeDomain } from "../../domain/blocking/url";
+import { normalizeDomain, normalizeWhitelistEntry } from "../../domain/blocking/url";
 import { ScheduleView } from "../options/schedule/ScheduleView";
 import { DOMAIN_TAGS } from "../../domain/blocking/tags";
 import "./dashboard.css";
@@ -143,11 +143,12 @@ export function Dashboard() {
     if (!value) {
       return;
     }
-    if (!isWhitelistValid(value)) {
+    const normalized = normalizeWhitelistEntry(value);
+    if (!isWhitelistValid(value) || !normalized) {
       showStatus(t(settings.language, "dashboard.whitelist.invalid"));
       return;
     }
-    const next = Array.from(new Set([...settings.whitelist, value]));
+    const next = Array.from(new Set([...settings.whitelist, normalized]));
     setWhitelistInput("");
     await saveSettings({ ...settings, whitelist: next }, t(settings.language, "dashboard.whitelist.added"));
   };

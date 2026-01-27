@@ -2,7 +2,7 @@
 import { getMetrics, getSettings, updateSettings } from "../../infrastructure/storage";
 import { formatDateTime } from "../../shared/utils";
 import { t, tf } from "../../shared/i18n";
-import { canStartWeeklySession, getWeeklySessionDurationMs, getWeeklySessionWeekKey, isWeeklySessionActive } from "../../domain/weekly/weekly";
+import { canStartWeeklySession, getWeeklySessionDayKey, getWeeklySessionDurationMs, isWeeklySessionActive } from "../../domain/weekly/weekly";
 import { hostnameMatches } from "../../domain/blocking/url";
 
 // Acumula tiempo de pantalla bloqueada.
@@ -193,8 +193,8 @@ async function render() {
       return;
     }
     const weeklyActive = isWeeklySessionActive(settings, now);
-    const weekKey = getWeeklySessionWeekKey(now);
-    const alreadyUsed = settings.weeklyUnblockLastWeek === weekKey;
+    const dayKey = getWeeklySessionDayKey(now);
+    const alreadyUsed = settings.weeklyUnblockLastWeek === dayKey;
     const allowedDays = settings.weeklyUnblockDays ?? [];
     const allowedToday = allowedDays.includes(new Date(now).getDay());
     const canStart = !weeklyActive && canStartWeeklySession(settings, now);
@@ -221,7 +221,7 @@ async function render() {
       const until = start + durationMs;
       await updateSettings({
         weeklyUnblockUntil: until,
-        weeklyUnblockLastWeek: getWeeklySessionWeekKey(start)
+        weeklyUnblockLastWeek: getWeeklySessionDayKey(start)
       });
       if (blockedUrl) {
         window.location.href = blockedUrl;

@@ -123,15 +123,8 @@ export async function allowWhitelistedYouTubeWatchIfPossible(
     const ab = url.searchParams.get("ab_channel");
     if (ab) {
       const abNorm = ab.trim().toLowerCase();
-      const hit = settings.whitelist.some((entryRaw) => {
-        const entry = entryRaw.trim().toLowerCase();
-        if (!entry) return false;
-        if (entry.startsWith("@")) {
-          return entry.slice(1) === abNorm;
-        }
-        return entry === abNorm;
-      });
-      if (hit) {
+      const channelUrl = `https://www.youtube.com/@${abNorm}`;
+      if (isWhitelisted(channelUrl, settings.whitelist)) {
         return true;
       }
     }

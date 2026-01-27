@@ -1,6 +1,7 @@
 import { DEFAULT_INTERVALS, DEFAULT_METRICS, DEFAULT_SETTINGS } from "../domain/settings/defaults";
 import { DomainTag, Interval, IntervalWeek, Metrics, Settings, WeekSchedule } from "../domain/settings/types";
 import { isDomainTag } from "../domain/blocking/tags";
+import { normalizeDomain, normalizeWhitelistEntry } from "../domain/blocking/url";
 
 // Keys fijos en storage.local.
 const SETTINGS_KEY = "settings";
@@ -138,12 +139,22 @@ function mergeIntervalsByDay(input?: IntervalWeek, fallbackSchedules?: WeekSched
   return next;
 }
 
-function normalizeBlockedDomainTags(input?: Record<string, unknown>): Record<string, DomainTag[]> {
+function normalizeBlockedDomainTags(
+  input?: Record<string, unknown>,
+  allowedDomains?: Set<string>
+): Record<string, DomainTag[]> {
   if (!input || typeof input !== "object") {
     return {};
   }
   const next: Record<string, DomainTag[]> = {};
   for (const [domain, value] of Object.entries(input)) {
+    const normalizedDomain = normalizeDomain(domain);
+    if (!normalizedDomain) {
+      continue;
+    }
+    if (allowedDomains && !allowedDomains.has(normalizedDomain)) {
+      continue;
+    }
     if (!Array.isArray(value)) {
       continue;
     }
@@ -152,7 +163,7 @@ function normalizeBlockedDomainTags(input?: Record<string, unknown>): Record<str
       .filter((tag): tag is DomainTag => isDomainTag(tag));
     const unique = Array.from(new Set(tags));
     if (unique.length > 0) {
-      next[domain] = unique;
+      next[normalizedDomain] = unique;
     }
   }
   return next;
@@ -160,6 +171,15 @@ function normalizeBlockedDomainTags(input?: Record<string, unknown>): Record<str
 
 // Merge de settings, con defaults y validacion basica.
 export function mergeSettings(input: Partial<Settings>): Settings {
+  const blockedDomains = Array.isArray(input.blockedDomains)
+    ? Array.from(new Set(input.blockedDomains.map((domain) => normalizeDomain(domain)).filter(Boolean)))
+    : DEFAULT_SETTINGS.blockedDomains;
+  const whitelist = Array.isArray(input.whitelist)
+    ? Array.from(
+        new Set(input.whitelist.map((entry) => normalizeWhitelistEntry(entry)).filter(Boolean))
+      )
+    : DEFAULT_SETTINGS.whitelist;
+  const blockedDomainsSet = new Set(blockedDomains);
   const weeklyDays = Array.isArray(input.weeklyUnblockDays)
     ? Array.from(
         new Set(
@@ -178,21 +198,23 @@ export function mergeSettings(input: Partial<Settings>): Settings {
       ? input.weeklyUnblockUntil
       : null;
   const weeklyLastWeek = typeof input.weeklyUnblockLastWeek === "string" ? input.weeklyUnblockLastWeek : null;
-  const blockedDomainTags = normalizeBlockedDomainTags(input.blockedDomainTags as Record<string, unknown>);
+  const blockedDomainTags = normalizeBlockedDomainTags(
+    input.blockedDomainTags as Record<string, unknown>,
+    blockedDomainsSet
+  );
   return {
     ...DEFAULT_SETTINGS,
     ...input,
     weeklyUnblockEnabled: Boolean(input.weeklyUnblockEnabled),
+    blockInstagramReels: Boolean(input.blockInstagramReels),
     weeklyUnblockDays: weeklyDays,
     weeklyUnblockDurationMinutes: weeklyDuration,
     weeklyUnblockUntil: weeklyUntil,
     weeklyUnblockLastWeek: weeklyLastWeek,
     schedules: mergeSchedules(input.schedules),
     intervalsByDay: mergeIntervalsByDay(input.intervalsByDay, input.schedules),
-    whitelist: Array.isArray(input.whitelist) ? input.whitelist : DEFAULT_SETTINGS.whitelist,
-    blockedDomains: Array.isArray(input.blockedDomains)
-      ? input.blockedDomains
-      : DEFAULT_SETTINGS.blockedDomains,
+    whitelist,
+    blockedDomains,
     blockedDomainTags
   };
 }

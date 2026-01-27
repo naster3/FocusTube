@@ -1,12 +1,10 @@
 import type { Settings } from "../settings/types";
 
-function getIsoWeekKey(date: Date) {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const day = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - day);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+function getLocalDayKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function isWeeklySessionActive(settings: Settings, now = Date.now()) {
@@ -18,12 +16,12 @@ export function canStartWeeklySession(settings: Settings, now = Date.now()) {
   const today = new Date(now);
   const allowedDays = settings.weeklyUnblockDays ?? [];
   if (!allowedDays.includes(today.getDay())) return false;
-  const weekKey = getIsoWeekKey(today);
-  return settings.weeklyUnblockLastWeek !== weekKey;
+  const dayKey = getLocalDayKey(today);
+  return settings.weeklyUnblockLastWeek !== dayKey;
 }
 
-export function getWeeklySessionWeekKey(now = Date.now()) {
-  return getIsoWeekKey(new Date(now));
+export function getWeeklySessionDayKey(now = Date.now()) {
+  return getLocalDayKey(new Date(now));
 }
 
 export function getWeeklySessionDurationMs(settings: Settings) {

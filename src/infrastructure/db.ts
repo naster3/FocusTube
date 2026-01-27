@@ -1,37 +1,11 @@
 // Base de datos en IndexedDB para guardar data (eventos + agregados diarios).
 // En extensiones Chrome MV3, IndexedDB funciona tanto en service worker como en pages.
+// SQLite se usa como almacenamiento permanente.
 
-export type DbEventType = "attempt" | "time" | "blocked_time" | "session_start";
+import type { DailyDelta, DailyStats, DbEvent } from "./dbTypes";
+import { clearSqlite, ensureSqliteReady, flushToSqlite } from "./sqlite";
 
-export type DbEvent = {
-  id?: number;
-  ts: number;
-  day: string; // YYYY-MM-DD
-  type: DbEventType;
-  domain?: string | null;
-  url?: string | null;
-  deltaSec?: number | null;
-  tabId?: number | null;
-};
-
-export type DailyStats = {
-  day: string;
-  attempts: number;
-  time: number;
-  blockedTime: number;
-  sessions: number;
-  timeByDomain: Record<string, number>;
-  updatedAt: number;
-};
-
-export type DailyDelta = {
-  attempts?: number;
-  time?: number;
-  blockedTime?: number;
-  sessions?: number;
-  timeByDomain?: Record<string, number>;
-  updatedAt?: number;
-};
+export type { DailyDelta, DailyStats, DbEvent, DbEventType } from "./dbTypes";
 
 const DB_NAME = "focus-tube-blocker";
 const DB_VERSION = 1;
@@ -91,6 +65,11 @@ async function openDb(): Promise<IDBDatabase> {
 
 export async function ensureDbReady() {
   await openDb();
+  try {
+    await ensureSqliteReady();
+  } catch (error) {
+    console.warn("SQLite init failed", error);
+  }
 }
 
 function defaultDaily(day: string, now: number): DailyStats {
@@ -105,7 +84,7 @@ function defaultDaily(day: string, now: number): DailyStats {
   };
 }
 
-export async function flushToDb(events: Omit<DbEvent, "id">[], dailyDeltas: Map<string, DailyDelta>) {
+async function flushToIndexedDb(events: Omit<DbEvent, "id">[], dailyDeltas: Map<string, DailyDelta>) {
   if (events.length === 0 && dailyDeltas.size === 0) {
     return;
   }
@@ -143,10 +122,24 @@ export async function flushToDb(events: Omit<DbEvent, "id">[], dailyDeltas: Map<
   await txDone(tx);
 }
 
+export async function flushToDb(events: Omit<DbEvent, "id">[], dailyDeltas: Map<string, DailyDelta>) {
+  await flushToIndexedDb(events, dailyDeltas);
+  try {
+    await flushToSqlite(events, dailyDeltas);
+  } catch (error) {
+    console.warn("SQLite flush failed", error);
+  }
+}
+
 export async function clearDb() {
   const db = await openDb();
   const tx = db.transaction([STORE_EVENTS, STORE_DAILY], "readwrite");
   tx.objectStore(STORE_EVENTS).clear();
   tx.objectStore(STORE_DAILY).clear();
   await txDone(tx);
+  try {
+    await clearSqlite();
+  } catch (error) {
+    console.warn("SQLite clear failed", error);
+  }
 }

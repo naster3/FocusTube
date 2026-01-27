@@ -24,6 +24,7 @@ export type Settings = {
   blockEnabled: boolean;
   blockShorts: boolean;
   blockKids: boolean;
+  blockInstagramReels: boolean;
   language: "en" | "es" | "pt" | "fr";
   strictMode: boolean;
   pinHash: string | null;

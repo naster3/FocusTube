@@ -6,9 +6,22 @@ import { resolve } from "path";
 export default defineConfig({
   plugins: [react()],
   base: "./",
+  resolve: {
+    alias: {
+      fs: resolve(__dirname, "src/shims/fs.ts"),
+      path: resolve(__dirname, "src/shims/path.ts"),
+      crypto: resolve(__dirname, "src/shims/crypto.ts")
+    }
+  },
+  optimizeDeps: {
+    exclude: ["sql.js"]
+  },
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    commonjsOptions: {
+      include: [/sql\.js/, /node_modules/]
+    },
     // Entradas para popup/options/blocked y scripts de background/content.
     rollupOptions: {
       input: {
@@ -22,7 +35,7 @@ export default defineConfig({
       },
       output: {
         entryFileNames: "[name].js",
-        chunkFileNames: "[name].js",
+        chunkFileNames: "chunk-[name].js",
         assetFileNames: "[name].[ext]"
       }
     }

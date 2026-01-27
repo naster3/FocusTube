@@ -61,6 +61,34 @@ function Help() {
       </section>
 
       <section className="panel">
+        <h3>{t(lang, "help.quick_blocks.title")}</h3>
+        <p>{t(lang, "help.quick_blocks.line1")}</p>
+        <p>{t(lang, "help.quick_blocks.line2")}</p>
+        <p>{t(lang, "help.quick_blocks.line3")}</p>
+      </section>
+
+      <section className="panel">
+        <h3>{t(lang, "help.weekly.title")}</h3>
+        <p>{t(lang, "help.weekly.line1")}</p>
+        <p>{t(lang, "help.weekly.line2")}</p>
+        <p>{t(lang, "help.weekly.line3")}</p>
+      </section>
+
+      <section className="panel">
+        <h3>{t(lang, "help.strict.title")}</h3>
+        <p>{t(lang, "help.strict.line1")}</p>
+        <p>{t(lang, "help.strict.line2")}</p>
+        <p>{t(lang, "help.strict.line3")}</p>
+      </section>
+
+      <section className="panel">
+        <h3>{t(lang, "help.temp_unblock.title")}</h3>
+        <p>{t(lang, "help.temp_unblock.line1")}</p>
+        <p>{t(lang, "help.temp_unblock.line2")}</p>
+        <p>{t(lang, "help.temp_unblock.line3")}</p>
+      </section>
+
+      <section className="panel">
         <h3>{t(lang, "help.schedule.title")}</h3>
         <p>{t(lang, "help.schedule.line1")}</p>
         <p>{t(lang, "help.schedule.line2")}</p>
@@ -79,10 +107,24 @@ function Help() {
       </section>
 
       <section className="panel">
-        <h3>{t(lang, "dashboard.whitelist.title")}</h3>
+        <h3>{t(lang, "help.whitelist.title")}</h3>
         <p>{t(lang, "help.whitelist.line1")}</p>
         <p>{t(lang, "help.whitelist.line2")}</p>
         <p>{t(lang, "help.whitelist.line3")}</p>
+      </section>
+
+      <section className="panel">
+        <h3>{t(lang, "help.blocked_page.title")}</h3>
+        <p>{t(lang, "help.blocked_page.line1")}</p>
+        <p>{t(lang, "help.blocked_page.line2")}</p>
+        <p>{t(lang, "help.blocked_page.line3")}</p>
+      </section>
+
+      <section className="panel">
+        <h3>{t(lang, "help.import_export.title")}</h3>
+        <p>{t(lang, "help.import_export.line1")}</p>
+        <p>{t(lang, "help.import_export.line2")}</p>
+        <p>{t(lang, "help.import_export.line3")}</p>
       </section>
 
       <section className="panel">
@@ -103,6 +145,13 @@ function Help() {
         <p>{t(lang, "help.metrics.line3")}</p>
         <p>{t(lang, "help.metrics.line4")}</p>
         <p>{t(lang, "help.metrics.line5")}</p>
+      </section>
+
+      <section className="panel">
+        <h3>{t(lang, "help.troubleshoot.title")}</h3>
+        <p>{t(lang, "help.troubleshoot.line1")}</p>
+        <p>{t(lang, "help.troubleshoot.line2")}</p>
+        <p>{t(lang, "help.troubleshoot.line3")}</p>
       </section>
     </div>
   );

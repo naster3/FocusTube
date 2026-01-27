@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_SETTINGS } from "../domain/settings/defaults";
 import type { DomainTag, Interval } from "../domain/settings/types";
 import { evaluateBlock } from "../domain/blocking/url";
-import { canStartWeeklySession, getWeeklySessionWeekKey, isWeeklySessionActive } from "../domain/weekly/weekly";
+import { canStartWeeklySession, getWeeklySessionDayKey, isWeeklySessionActive } from "../domain/weekly/weekly";
 
 describe("weekly session rules", () => {
   it("allows weekly session only on configured days", () => {
@@ -18,14 +18,14 @@ describe("weekly session rules", () => {
     expect(canStartWeeklySession(settings, tuesday.getTime())).toBe(false);
   });
 
-  it("blocks weekly session if already used in the same week", () => {
+  it("blocks weekly session if already used on the same day", () => {
     const monday = new Date(2024, 0, 1, 12, 0, 0);
-    const usedWeek = getWeeklySessionWeekKey(monday.getTime());
+    const usedDay = getWeeklySessionDayKey(monday.getTime());
     const settings = {
       ...DEFAULT_SETTINGS,
       weeklyUnblockEnabled: true,
       weeklyUnblockDays: [1],
-      weeklyUnblockLastWeek: usedWeek
+      weeklyUnblockLastWeek: usedDay
     };
 
     expect(canStartWeeklySession(settings, monday.getTime())).toBe(false);

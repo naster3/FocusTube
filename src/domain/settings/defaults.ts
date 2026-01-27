@@ -37,6 +37,7 @@ export const DEFAULT_SETTINGS: Settings = {
   blockEnabled: false,
   blockShorts: true,
   blockKids: false,
+  blockInstagramReels: false,
   language: "en",
   strictMode: false,
   pinHash: null,

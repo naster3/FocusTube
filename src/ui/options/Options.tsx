@@ -3,9 +3,10 @@ import { DEFAULT_SETTINGS } from "../../domain/settings/defaults";
 import { t, tf } from "../../shared/i18n";
 import { isDomainTag } from "../../domain/blocking/tags";
 import { formatDuration } from "../../domain/schedule/timeline";
-import { canStartWeeklySession, isWeeklySessionActive } from "../../domain/weekly/weekly";
+import { canStartWeeklySession, getWeeklySessionDayKey, getWeeklySessionDurationMs, isWeeklySessionActive } from "../../domain/weekly/weekly";
 import { getSettings, setSettings } from "../../infrastructure/storage";
 import { DomainTag, Settings } from "../../domain/settings/types";
+import { normalizeWhitelistEntry } from "../../domain/blocking/url";
 
 // Pantalla principal de opciones.
 export function Options() {
@@ -38,6 +39,7 @@ export function Options() {
     return () => chrome.storage.onChanged.removeListener(listener);
   }, []);
 
+
   // Mensajes breves en UI.
   const showStatus = (message: string) => {
     setStatus(message);
@@ -50,6 +52,67 @@ export function Options() {
     await setSettings(next);
     if (message) {
       showStatus(message);
+    }
+  };
+
+
+  const getDomainOrigins = (domain: string) => [`*://${domain}/*`, `*://*.${domain}/*`];
+
+  const requestDomainPermission = async (domains: string[]) =>
+    await new Promise<boolean>((resolve) => {
+      chrome.permissions.request({ origins: domains.flatMap(getDomainOrigins) }, (granted) => {
+        resolve(Boolean(granted));
+      });
+    });
+
+  const removeDomainPermissions = async (domains: string[]) =>
+    await new Promise<void>((resolve) => {
+      chrome.permissions.remove({ origins: domains.flatMap(getDomainOrigins) }, () => resolve());
+    });
+
+  const socialBlocks = [
+    { key: "tiktok", label: t(settings.language, "options.blocks.tiktok"), domains: ["tiktok.com"] },
+    { key: "instagram", label: t(settings.language, "options.blocks.instagram"), domains: ["instagram.com"] },
+    { key: "facebook", label: t(settings.language, "options.blocks.facebook"), domains: ["facebook.com"] },
+    { key: "x", label: t(settings.language, "options.blocks.x"), domains: ["x.com", "twitter.com"] }
+  ];
+
+  const toggleSocialBlock = async (domains: string[], enabled: boolean) => {
+    const tag: DomainTag = "intervalos";
+    if (enabled) {
+      const granted = await requestDomainPermission(domains);
+      if (!granted) {
+        showStatus(t(settings.language, "options.blocks.permission_denied"));
+        return;
+      }
+      const nextDomains = Array.from(new Set([...settings.blockedDomains, ...domains]));
+      const nextTags = { ...settings.blockedDomainTags };
+      domains.forEach((domain) => {
+        const current = nextTags[domain] ?? [];
+        const next = Array.from(new Set([...current, tag]));
+        nextTags[domain] = next;
+      });
+      await saveSettings({ ...settings, blockedDomains: nextDomains, blockedDomainTags: nextTags });
+      return;
+    }
+    const nextTags = { ...settings.blockedDomainTags };
+    const remainingDomains = new Set(settings.blockedDomains);
+    const removed: string[] = [];
+    domains.forEach((domain) => {
+      const current = nextTags[domain] ?? [];
+      const next = current.filter((entry) => entry !== tag);
+      if (next.length > 0) {
+        nextTags[domain] = next;
+        return;
+      }
+      delete nextTags[domain];
+      if (remainingDomains.delete(domain)) {
+        removed.push(domain);
+      }
+    });
+    await saveSettings({ ...settings, blockedDomains: Array.from(remainingDomains), blockedDomainTags: nextTags });
+    if (removed.length > 0) {
+      await removeDomainPermissions(removed);
     }
   };
 
@@ -142,6 +205,14 @@ export function Options() {
   })();
   let weeklyStatusText = t(settings.language, "options.weekly_unblock.status.disabled");
   let weeklyStatusTone: "active" | "warn" | "muted" = "muted";
+  const startWeeklySession = async () => {
+    const start = Date.now();
+    const until = start + getWeeklySessionDurationMs(settings);
+    await saveSettings(
+      { ...settings, weeklyUnblockUntil: until, weeklyUnblockLastWeek: getWeeklySessionDayKey(start) },
+      t(settings.language, "options.weekly_unblock.started")
+    );
+  };
 
   if (!settings.weeklyUnblockEnabled) {
     weeklyStatusText = t(settings.language, "options.weekly_unblock.status.disabled");
@@ -197,6 +268,27 @@ export function Options() {
           />
           {t(settings.language, "options.blocks.kids")}
         </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={settings.blockInstagramReels}
+            onChange={(event) => saveSettings({ ...settings, blockInstagramReels: event.target.checked })}
+          />
+          {t(settings.language, "options.blocks.instagram_reels")}
+        </label>
+        {socialBlocks.map((block) => {
+          const checked = block.domains.every((domain) => settings.blockedDomains.includes(domain));
+          return (
+            <label key={block.key}>
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={(event) => toggleSocialBlock(block.domains, event.target.checked)}
+              />
+              {block.label}
+            </label>
+          );
+        })}
       </section>
 
       <section className="panel">
@@ -262,6 +354,11 @@ export function Options() {
           <span className="weekly-status-label">{t(settings.language, "options.weekly_unblock.status.title")}</span>
           <span className="weekly-status-value">{weeklyStatusText}</span>
         </div>
+        {settings.weeklyUnblockEnabled && canStartWeekly ? (
+          <button type="button" onClick={startWeeklySession}>
+            {t(settings.language, "options.weekly_unblock.action.start")}
+          </button>
+        ) : null}
       </section>
 
       <section className="panel">
@@ -356,6 +453,7 @@ function normalizeSettings(data: Partial<Settings>): Settings {
     ...DEFAULT_SETTINGS,
     ...data,
     weeklyUnblockEnabled: Boolean(data.weeklyUnblockEnabled),
+    blockInstagramReels: Boolean(data.blockInstagramReels),
     weeklyUnblockDays: weeklyDays,
     weeklyUnblockDurationMinutes: weeklyDuration,
     weeklyUnblockUntil: weeklyUntil,
@@ -364,7 +462,9 @@ function normalizeSettings(data: Partial<Settings>): Settings {
     language: data.language === "en" || data.language === "es" || data.language === "pt" || data.language === "fr" ? data.language : DEFAULT_SETTINGS.language,
     schedules: data.schedules || DEFAULT_SETTINGS.schedules,
     intervalsByDay: data.intervalsByDay || DEFAULT_SETTINGS.intervalsByDay,
-    whitelist: Array.isArray(data.whitelist) ? data.whitelist : DEFAULT_SETTINGS.whitelist,
+    whitelist: Array.isArray(data.whitelist)
+      ? Array.from(new Set(data.whitelist.map((entry) => normalizeWhitelistEntry(entry)).filter(Boolean)))
+      : DEFAULT_SETTINGS.whitelist,
     blockedDomains: Array.isArray(data.blockedDomains)
       ? data.blockedDomains
       : DEFAULT_SETTINGS.blockedDomains
