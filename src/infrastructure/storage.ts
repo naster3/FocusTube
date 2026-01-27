@@ -172,11 +172,21 @@ function normalizeBlockedDomainTags(
 // Merge de settings, con defaults y validacion basica.
 export function mergeSettings(input: Partial<Settings>): Settings {
   const blockedDomains = Array.isArray(input.blockedDomains)
-    ? Array.from(new Set(input.blockedDomains.map((domain) => normalizeDomain(domain)).filter(Boolean)))
+    ? Array.from(
+        new Set(
+          input.blockedDomains
+            .map((domain) => normalizeDomain(domain))
+            .filter((domain): domain is string => Boolean(domain))
+        )
+      )
     : DEFAULT_SETTINGS.blockedDomains;
   const whitelist = Array.isArray(input.whitelist)
     ? Array.from(
-        new Set(input.whitelist.map((entry) => normalizeWhitelistEntry(entry)).filter(Boolean))
+        new Set(
+          input.whitelist
+            .map((entry) => normalizeWhitelistEntry(entry))
+            .filter((entry): entry is string => Boolean(entry))
+        )
       )
     : DEFAULT_SETTINGS.whitelist;
   const blockedDomainsSet = new Set(blockedDomains);

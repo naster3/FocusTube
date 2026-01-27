@@ -2,6 +2,7 @@
 import { getMetrics, getSettings, updateSettings } from "../../infrastructure/storage";
 import { formatDateTime } from "../../shared/utils";
 import { t, tf } from "../../shared/i18n";
+import type { Language } from "../../domain/settings/types";
 import { canStartWeeklySession, getWeeklySessionDayKey, getWeeklySessionDurationMs, isWeeklySessionActive } from "../../domain/weekly/weekly";
 import { hostnameMatches } from "../../domain/blocking/url";
 
@@ -108,7 +109,7 @@ function startScheduleAutoUnblock() {
 }
 
 // Mensaje motivacional aleatorio.
-function pickMessage(lang: "en" | "es") {
+function pickMessage(lang: Language) {
   const index = Math.floor(Math.random() * messages.length);
   return t(lang, messages[index]);
 }

@@ -6,7 +6,6 @@
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
     "strict": true,
-    "types": ["chrome"],
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,

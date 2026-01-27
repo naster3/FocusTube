@@ -6,7 +6,7 @@ import { formatDuration } from "../../domain/schedule/timeline";
 import { canStartWeeklySession, getWeeklySessionDayKey, getWeeklySessionDurationMs, isWeeklySessionActive } from "../../domain/weekly/weekly";
 import { getSettings, setSettings } from "../../infrastructure/storage";
 import { DomainTag, Settings } from "../../domain/settings/types";
-import { normalizeWhitelistEntry } from "../../domain/blocking/url";
+import { normalizeDomain, normalizeWhitelistEntry } from "../../domain/blocking/url";
 
 // Pantalla principal de opciones.
 export function Options() {
@@ -463,10 +463,22 @@ function normalizeSettings(data: Partial<Settings>): Settings {
     schedules: data.schedules || DEFAULT_SETTINGS.schedules,
     intervalsByDay: data.intervalsByDay || DEFAULT_SETTINGS.intervalsByDay,
     whitelist: Array.isArray(data.whitelist)
-      ? Array.from(new Set(data.whitelist.map((entry) => normalizeWhitelistEntry(entry)).filter(Boolean)))
+      ? Array.from(
+          new Set(
+            data.whitelist
+              .map((entry) => normalizeWhitelistEntry(entry))
+              .filter((entry): entry is string => Boolean(entry))
+          )
+        )
       : DEFAULT_SETTINGS.whitelist,
     blockedDomains: Array.isArray(data.blockedDomains)
-      ? data.blockedDomains
+      ? Array.from(
+          new Set(
+            data.blockedDomains
+              .map((domain) => normalizeDomain(domain))
+              .filter((domain): domain is string => Boolean(domain))
+          )
+        )
       : DEFAULT_SETTINGS.blockedDomains
   };
   return merged;
