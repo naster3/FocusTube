@@ -4,9 +4,10 @@ import { t, tf } from "../../shared/i18n";
 import { isDomainTag } from "../../domain/blocking/tags";
 import { formatDuration } from "../../domain/schedule/timeline";
 import { canStartWeeklySession, getWeeklySessionDayKey, getWeeklySessionDurationMs, isWeeklySessionActive } from "../../domain/weekly/weekly";
-import { getSettings, setSettings } from "../../infrastructure/storage";
+import { getSettings, onStorageChanged, setSettings } from "../../infrastructure/storage";
 import { DomainTag, Settings } from "../../domain/settings/types";
 import { normalizeDomain, normalizeWhitelistEntry } from "../../domain/blocking/url";
+import { devLog } from "../../shared/devLogger";
 
 // Pantalla principal de opciones.
 export function Options() {
@@ -35,8 +36,7 @@ export function Options() {
         })();
       }
     };
-    chrome.storage.onChanged.addListener(listener);
-    return () => chrome.storage.onChanged.removeListener(listener);
+    return onStorageChanged(listener);
   }, []);
 
 
@@ -58,17 +58,27 @@ export function Options() {
 
   const getDomainOrigins = (domain: string) => [`*://${domain}/*`, `*://*.${domain}/*`];
 
-  const requestDomainPermission = async (domains: string[]) =>
-    await new Promise<boolean>((resolve) => {
+  const requestDomainPermission = async (domains: string[]) => {
+    if (typeof chrome === "undefined" || !chrome.permissions?.request) {
+      devLog("chrome.permissions.request not available; skipping permission prompt (dev only).");
+      return true;
+    }
+    return await new Promise<boolean>((resolve) => {
       chrome.permissions.request({ origins: domains.flatMap(getDomainOrigins) }, (granted) => {
         resolve(Boolean(granted));
       });
     });
+  };
 
-  const removeDomainPermissions = async (domains: string[]) =>
+  const removeDomainPermissions = async (domains: string[]) => {
+    if (typeof chrome === "undefined" || !chrome.permissions?.remove) {
+      devLog("chrome.permissions.remove not available; skipping permission cleanup (dev only).");
+      return;
+    }
     await new Promise<void>((resolve) => {
       chrome.permissions.remove({ origins: domains.flatMap(getDomainOrigins) }, () => resolve());
     });
+  };
 
   const socialBlocks = [
     { key: "tiktok", label: t(settings.language, "options.blocks.tiktok"), domains: ["tiktok.com"] },
@@ -431,6 +441,7 @@ function normalizeBlockedDomainTags(input?: Record<string, unknown>): Record<str
 
 function normalizeSettings(data: Partial<Settings>): Settings {
   const blockedDomainTags = normalizeBlockedDomainTags(data.blockedDomainTags as Record<string, unknown>);
+  const pinHash = typeof data.pinHash === "string" ? data.pinHash : null;
   const weeklyDays = Array.isArray(data.weeklyUnblockDays)
     ? Array.from(
         new Set(
@@ -452,6 +463,7 @@ function normalizeSettings(data: Partial<Settings>): Settings {
   const merged: Settings = {
     ...DEFAULT_SETTINGS,
     ...data,
+    pinHash,
     weeklyUnblockEnabled: Boolean(data.weeklyUnblockEnabled),
     blockInstagramReels: Boolean(data.blockInstagramReels),
     weeklyUnblockDays: weeklyDays,
@@ -483,4 +495,3 @@ function normalizeSettings(data: Partial<Settings>): Settings {
   };
   return merged;
 }
-

@@ -1,3 +1,4 @@
+// Vista de horarios: timeline diario/semanal y CRUD de intervalos.
 import React, { useMemo, useState, useEffect } from "react";
 import type { Interval, IntervalWeek, Language } from "../../../domain/settings/types";
 import { t, tf } from "../../../shared/i18n";
@@ -5,6 +6,7 @@ import { Segment, computeTotals, detectOverlaps, minutesToTime, normalizeInterva
 
 // Orden visual Lunes a Domingo.
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+// Etiquetas cortas por idioma para la vista semanal.
 const DAY_LABELS_BY_LANG: Record<Language, string[]> = {
   es: ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"],
   en: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -12,6 +14,7 @@ const DAY_LABELS_BY_LANG: Record<Language, string[]> = {
   fr: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
 };
 
+// Traducciones de periodos del dia para el tooltip del timeline.
 const PERIOD_LABELS_BY_LANG: Record<string, Record<string, string>> = {
   en: {
     Madrugada: "Early morning",
@@ -125,6 +128,7 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, language, onChange
 
       {activeTab === "day" ? (
         <>
+          {/* Timeline del dia seleccionado */}
           <DayTimelineBar intervals={intervals} timeFormat12h={timeFormat12h} language={language} />
           <div className="mt-3 text-sm text-slate-700">
             {tf(language, "schedule.blocked_free", {
@@ -134,9 +138,11 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, language, onChange
           </div>
 
           <div className="mt-6">
+            {/* Tabla de intervalos con acciones */}
             <IntervalList
               intervals={intervals}
               language={language}
+              timeFormat12h={timeFormat12h}
               onEdit={handleEdit}
               onDelete={handleDelete}
               onToggle={handleToggle}
@@ -169,6 +175,7 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, language, onChange
         />
       )}
 
+      {/* Modal para agregar/editar intervalos */}
       <AddEditIntervalModal
         open={modalOpen}
         interval={editing}
@@ -183,6 +190,7 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, language, onChange
   );
 }
 
+// Barra de timeline del dia con segmentos y marcador "Ahora".
 function DayTimelineBar({
   intervals,
   timeFormat12h,
@@ -241,6 +249,7 @@ function DayTimelineBar({
   );
 }
 
+// Barras compactas por dia para vista semanal.
 function WeekTimelineBars({
   intervalsByDay,
   selectedDay,
@@ -290,6 +299,7 @@ function WeekTimelineBars({
   );
 }
 
+// Segmento individual (bloqueado/libre) del timeline.
 function TimeBlockSegment({
   segment,
   compact,
@@ -327,15 +337,18 @@ function TimeBlockSegment({
   );
 }
 
+// Lista de intervalos con toggle de estado y acciones.
 function IntervalList({
   intervals,
   language,
+  timeFormat12h,
   onEdit,
   onDelete,
   onToggle
 }: {
   intervals: Interval[];
   language: Language;
+  timeFormat12h: boolean;
   onEdit: (interval: Interval) => void;
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
@@ -354,8 +367,8 @@ function IntervalList({
       ) : (
         intervals.map((interval) => (
           <div key={interval.id} className="grid grid-cols-5 gap-2 px-4 py-2 text-sm border-t border-slate-100">
-            <span>{interval.start}</span>
-            <span>{interval.end}</span>
+            <span>{formatIntervalTime(interval.start, timeFormat12h)}</span>
+            <span>{formatIntervalTime(interval.end, timeFormat12h)}</span>
             <span className="capitalize">{interval.mode}</span>
             <button
               className={`w-fit rounded px-2 py-1 text-xs ${
@@ -380,6 +393,7 @@ function IntervalList({
   );
 }
 
+// Modal para crear o editar un intervalo.
 function AddEditIntervalModal({
   open,
   interval,
@@ -509,6 +523,7 @@ function AddEditIntervalModal({
   );
 }
 
+// Traduce etiquetas de periodo si no es espanol.
 function translatePeriodLabel(label: string, language: Language) {
   if (language === "es") {
     return label;
@@ -516,6 +531,7 @@ function translatePeriodLabel(label: string, language: Language) {
   return PERIOD_LABELS_BY_LANG[language]?.[label] ?? label;
 }
 
+// Formatea minutos en etiqueta HH:MM (12/24h).
 function formatMinuteLabel(totalMinutes: number, use12h: boolean) {
   if (!use12h) {
     return minutesToTime(totalMinutes);
@@ -527,12 +543,14 @@ function formatMinuteLabel(totalMinutes: number, use12h: boolean) {
   return `${hour12}:${String(mm).padStart(2, "0")} ${period}`;
 }
 
+function formatIntervalTime(value: Interval["start"], use12h: boolean) {
+  const minutes = parseTimeToMinutes(value);
+  return formatMinuteLabel(minutes, use12h);
+}
+
+// Formatea minutos totales como "Xh Ym".
 function formatMinutes(total: number) {
   const h = Math.floor(total / 60);
   const m = total % 60;
   return `${h}h ${m}m`;
 }
-
-
-
-

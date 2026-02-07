@@ -2,6 +2,7 @@ import { BlockDecision, BlockReason, Settings, Language, DomainTag } from "../se
 import { t } from "../../shared/i18n";
 import { isWithinBlockedSchedule } from "../schedule/schedule";
 import { isWeeklySessionActive } from "../weekly/weekly";
+import { devLog } from "../../shared/devLogger";
 
 // Normaliza input a hostname base.
 export function normalizeDomain(input: string): string | null {
@@ -230,15 +231,21 @@ export function evaluateBlock(urlString: string, settings: Settings, now: number
     const url = new URL(urlString);
     hostname = url.hostname.toLowerCase();
   } catch {
-    return { blocked: false, reason: "not_target" };
+    const decision = { blocked: false, reason: "not_target" } as const;
+    devLog("blocking.evaluate", { url: urlString, ...decision });
+    return decision;
   }
   const matchedDomain = hostname ? matchDomain(hostname, settings.blockedDomains) : null;
   if (!matchedDomain) {
-    return { blocked: false, reason: "not_target" };
+    const decision = { blocked: false, reason: "not_target" } as const;
+    devLog("blocking.evaluate", { url: urlString, ...decision });
+    return decision;
   }
 
   if (isWhitelisted(urlString, settings.whitelist)) {
-    return { blocked: false };
+    const decision = { blocked: false } as const;
+    devLog("blocking.evaluate", { url: urlString, ...decision, reason: "whitelist" });
+    return decision;
   }
 
   const tags = getDomainTags(settings, matchedDomain);
@@ -250,52 +257,78 @@ export function evaluateBlock(urlString: string, settings: Settings, now: number
 
   if (hasIntervals) {
     if (!settings.strictMode && settings.unblockUntil && now < settings.unblockUntil) {
-      return { blocked: false };
+      const decision = { blocked: false } as const;
+      devLog("blocking.evaluate", { url: urlString, ...decision, reason: "temporary_unblock" });
+      return decision;
     }
 
     if (settings.blockKids && isKidsDomain(urlString)) {
-      return { blocked: true, reason: "kids" };
+      const decision = { blocked: true, reason: "kids" } as const;
+      devLog("blocking.evaluate", { url: urlString, ...decision });
+      return decision;
     }
 
     if (settings.blockShorts && isShortsUrl(urlString)) {
-      return { blocked: true, reason: "shorts" };
+      const decision = { blocked: true, reason: "shorts" } as const;
+      devLog("blocking.evaluate", { url: urlString, ...decision });
+      return decision;
     }
 
     if (settings.blockInstagramReels && isInstagramReelsUrl(urlString)) {
-      return { blocked: true, reason: "manual" };
+      const decision = { blocked: true, reason: "manual" } as const;
+      devLog("blocking.evaluate", { url: urlString, ...decision, note: "instagram_reels" });
+      return decision;
     }
 
     if (isWithinBlockedSchedule(new Date(now), settings.intervalsByDay)) {
-      return { blocked: true, reason: "schedule" };
+      const decision = { blocked: true, reason: "schedule" } as const;
+      devLog("blocking.evaluate", { url: urlString, ...decision });
+      return decision;
     }
 
-    return { blocked: false };
+    const decision = { blocked: false } as const;
+    devLog("blocking.evaluate", { url: urlString, ...decision, reason: "intervals_free" });
+    return decision;
   }
 
   if (hasWeekly) {
     if (settings.weeklyUnblockEnabled && isWeeklySessionActive(settings, now)) {
-      return { blocked: false };
+      const decision = { blocked: false } as const;
+      devLog("blocking.evaluate", { url: urlString, ...decision, reason: "weekly_unblock" });
+      return decision;
     }
-    return { blocked: true, reason: "manual" };
+    const decision = { blocked: true, reason: "manual" } as const;
+    devLog("blocking.evaluate", { url: urlString, ...decision, note: "weekly_tag" });
+    return decision;
   }
 
   if (!settings.strictMode && settings.unblockUntil && now < settings.unblockUntil) {
-    return { blocked: false };
+    const decision = { blocked: false } as const;
+    devLog("blocking.evaluate", { url: urlString, ...decision, reason: "temporary_unblock" });
+    return decision;
   }
 
   if (settings.blockEnabled) {
-    return { blocked: true, reason: "manual" };
+    const decision = { blocked: true, reason: "manual" } as const;
+    devLog("blocking.evaluate", { url: urlString, ...decision, note: "block_enabled" });
+    return decision;
   }
 
   if (settings.blockKids && isKidsDomain(urlString)) {
-    return { blocked: true, reason: "kids" };
+    const decision = { blocked: true, reason: "kids" } as const;
+    devLog("blocking.evaluate", { url: urlString, ...decision });
+    return decision;
   }
 
   if (settings.blockShorts && isShortsUrl(urlString)) {
-    return { blocked: true, reason: "shorts" };
+    const decision = { blocked: true, reason: "shorts" } as const;
+    devLog("blocking.evaluate", { url: urlString, ...decision });
+    return decision;
   }
 
-  return { blocked: false };
+  const decision = { blocked: false } as const;
+  devLog("blocking.evaluate", { url: urlString, ...decision, reason: "no_rule" });
+  return decision;
 }
 
 // Etiquetas para UI.

@@ -1,3 +1,4 @@
+// Cadenas de UI en portugues (pt).
 export const PT = {
   "nav.config": "Configuracao",
   "nav.dashboard": "Painel",
@@ -144,6 +145,9 @@ export const PT = {
   "popup.debug.browser_time": "Hora do navegador",
   "popup.debug.tz_offset": "Offset TZ",
   "popup.debug.next_change": "Proxima mudanca",
+  "toast.blocked": "Bloqueado por {duration}",
+  "toast.free": "Livre por {duration}",
+  "toast.duration_unknown": "sem limite",
   "blocked.title": "Bloqueado pelo seu horario",
   "blocked.tag": "FocusTube Blocker",
   "blocked.attempts_today": "Tentativas hoje:",

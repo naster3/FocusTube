@@ -1,3 +1,4 @@
+// Cadenas de UI en frances (fr).
 export const FR = {
   "nav.config": "Configuration",
   "nav.dashboard": "Tableau de bord",
@@ -144,6 +145,9 @@ export const FR = {
   "popup.debug.browser_time": "Heure du navigateur",
   "popup.debug.tz_offset": "Decalage TZ",
   "popup.debug.next_change": "Prochain changement",
+  "toast.blocked": "Bloque pour {duration}",
+  "toast.free": "Libre pour {duration}",
+  "toast.duration_unknown": "sans limite",
   "blocked.title": "Bloque par votre horaire",
   "blocked.tag": "FocusTube Blocker",
   "blocked.attempts_today": "Tentatives aujourd'hui:",

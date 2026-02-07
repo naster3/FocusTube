@@ -1,3 +1,4 @@
+// Punto de entrada del content script.
 import { checkAndBlock } from "./blocker";
 import { canUseExtension, sendPageHello, trackUrlChanges, trackVisibilityChanges } from "./extensionMessaging";
 import { initFloatingTimerOverlay } from "./overlay";

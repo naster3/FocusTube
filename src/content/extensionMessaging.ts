@@ -1,3 +1,5 @@
+import { isValidOutgoingMessage } from "../shared/messages";
+
 // Evita llamadas cuando el contexto de la extension se invalida.
 export function canUseExtension() {
   return Boolean(chrome?.runtime?.id);
@@ -9,6 +11,9 @@ export function safeSendMessage<T>(
   callback: (response: T | undefined) => void
 ) {
   if (!canUseExtension()) {
+    return;
+  }
+  if (!isValidOutgoingMessage(message, "content")) {
     return;
   }
   try {

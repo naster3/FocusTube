@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { getMetrics, getSettings, updateSettings } from "../../infrastructure/storage";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { getMetrics, getSettings, onStorageChanged, updateSettings } from "../../infrastructure/storage";
 import { evaluateBlock, reasonLabel } from "../../domain/blocking/url";
 import type { Settings } from "../../domain/settings/types";
 import { computeScheduleTimeline, formatDuration } from "../../domain/schedule/timeline";
-import { t } from "../../shared/i18n";
+import { t, tf } from "../../shared/i18n";
+import { devLog } from "../../shared/devLogger";
 
 // Helpers de formateo para debug.
 function formatDateTimeAmPm(ts: number) {
@@ -35,10 +36,18 @@ export function Popup() {
   const [reason, setReason] = useState("");
   const [tabUrl, setTabUrl] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [toast, setToast] = useState("");
+  const toastTimerRef = useRef<number | null>(null);
+  const lastStateRef = useRef<"blocked" | "free" | null>(null);
   const lang = settings?.language ?? "en";
 
     // URL activa actual.
   useEffect(() => {
+    if (typeof chrome === "undefined" || !chrome.tabs?.query) {
+      devLog("chrome.tabs.query not available; popup dev view has no active tab.");
+      setTabUrl(null);
+      return;
+    }
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       setTabUrl(tabs[0]?.url || null);
     });
@@ -78,8 +87,7 @@ export function Popup() {
         setSettings(s);
       })();
     };
-    chrome.storage.onChanged.addListener(listener);
-    return () => chrome.storage.onChanged.removeListener(listener);
+    return onStorageChanged(listener);
   }, []);
 
   // Flag de bloqueo manual.
@@ -125,6 +133,41 @@ export function Popup() {
     return formatDuration(timeline.currentUntil - now);
   }, [timeline, now]);
 
+  const showToast = (message: string) => {
+    setToast(message);
+    if (toastTimerRef.current) {
+      window.clearTimeout(toastTimerRef.current);
+    }
+    toastTimerRef.current = window.setTimeout(() => setToast(""), 2500);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        window.clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!timeline) return;
+    if (!lastStateRef.current) {
+      lastStateRef.current = timeline.state;
+      return;
+    }
+    if (lastStateRef.current === timeline.state) {
+      return;
+    }
+    lastStateRef.current = timeline.state;
+    const remainingMs = timeline.currentUntil ? Math.max(0, timeline.currentUntil - Date.now()) : null;
+    const duration = remainingMs !== null ? formatDuration(remainingMs) : t(lang, "toast.duration_unknown");
+    const message =
+      timeline.state === "blocked"
+        ? tf(lang, "toast.blocked", { duration })
+        : tf(lang, "toast.free", { duration });
+    showToast(message);
+  }, [timeline?.state, lang]);
+
   // Duracion del proximo bloque si aplica.
   const nextBlockDuration = useMemo(() => {
     if (!timeline?.nextBlockStart || !timeline?.nextBlockEnd) return null;
@@ -141,6 +184,7 @@ export function Popup() {
 
   return (
     <div className="popup">
+      {toast ? <div className="toast">{toast}</div> : null}
       <header>
         <h1>FocusTube</h1>
         <p>{t(lang, "popup.subtitle")}</p>
@@ -201,6 +245,10 @@ export function Popup() {
       <button
         className="primary"
         onClick={() => {
+          if (typeof chrome === "undefined" || !chrome.runtime?.openOptionsPage) {
+            devLog("chrome.runtime.openOptionsPage not available; ignored in dev.");
+            return;
+          }
           chrome.runtime.openOptionsPage();
         }}
       >
@@ -209,4 +257,3 @@ export function Popup() {
     </div>
   );
 }
-

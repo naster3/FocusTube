@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { getSettings } from "../../infrastructure/storage";
+import { getSettings, onStorageChanged } from "../../infrastructure/storage";
 import { DEFAULT_SETTINGS } from "../../domain/settings/defaults";
 import { t } from "../../shared/i18n";
 import "./help.css";
@@ -25,8 +25,7 @@ function Help() {
         setLang(settings.language);
       })();
     };
-    chrome.storage.onChanged.addListener(listener);
-    return () => chrome.storage.onChanged.removeListener(listener);
+    return onStorageChanged(listener);
   }, []);
 
   const isDev = window.location.pathname.includes("/src/ui/");

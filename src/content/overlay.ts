@@ -1,3 +1,4 @@
+// Overlay flotante para mostrar estado y countdown en paginas objetivo.
 import { safeSendMessage } from "./extensionMessaging";
 import { t, tf } from "../shared/i18n";
 import type { Language } from "../domain/settings/types";
@@ -13,23 +14,19 @@ function formatTimeAmPm(ts: number) {
 }
 
 /**
- * Floating, draggable countdown widget shown directly on YouTube pages.
- * It reads the same schedule timeline as the popup (via background).
+ * Widget flotante y draggable que se muestra en YouTube.
+ * Lee el timeline de horarios desde background (igual que el popup).
  */
 export function initFloatingTimerOverlay() {
-  // Evita duplicados en SPA.
-  // Evita duplicados (YouTube es SPA y re-renderiza seguido).
-  // Avoid duplicates (YouTube is SPA and re-renders a lot)
+  // Evita duplicados en SPA (YouTube re-renderiza seguido).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const w = window as any;
   if (w.__FOCUSTUBE_OVERLAY__) return;
   w.__FOCUSTUBE_OVERLAY__ = true;
 
   // No ejecutar en iframes.
-  // No ejecutar en iframes.
   if (window.top !== window) return;
 
-  // DOM base del widget.
   // DOM base del widget.
   const root = document.createElement("div");
   root.id = "focustube-overlay";
@@ -126,7 +123,6 @@ export function initFloatingTimerOverlay() {
   document.documentElement.appendChild(root);
 
   // Restaura posicion guardada.
-  // Restaura posicion guardada.
   void chrome.storage.local.get("overlayPos").then((res) => {
     const pos = res.overlayPos as { left: number; top: number } | undefined;
     if (!pos) return;
@@ -134,7 +130,6 @@ export function initFloatingTimerOverlay() {
     root.style.top = `${pos.top}px`;
   });
 
-  // Minimizar / ocultar.
   // Minimizar / ocultar.
   let minimized = false;
   let restoreBtn: HTMLButtonElement | null = null;
@@ -159,7 +154,7 @@ export function initFloatingTimerOverlay() {
         lang = next;
       }
     } catch {
-      // ignore
+      // ignorar
     }
     applyStaticLabels();
   };
@@ -177,7 +172,6 @@ export function initFloatingTimerOverlay() {
   });
 
   // Drag del widget.
-  // Dragging del widget.
   let dragging = false;
   let startX = 0;
   let startY = 0;
@@ -226,8 +220,7 @@ export function initFloatingTimerOverlay() {
     });
   });
 
-  // Helpers y tick del timeline.
-  // Helpers para duracion y etiquetas.
+  // Helpers para duracion, etiquetas y tick del timeline.
   function formatDuration(ms: number) {
     const s = Math.max(0, Math.floor(ms / 1000));
     const hh = Math.floor(s / 3600);
@@ -351,4 +344,3 @@ export function initFloatingTimerOverlay() {
     void loadLanguage();
   });
 }
-

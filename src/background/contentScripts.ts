@@ -1,3 +1,4 @@
+// Helpers de background para registro y reinyeccion dinamica de content scripts.
 import { ensureDefaults } from "../infrastructure/storage";
 import { ensureDbReady } from "../infrastructure/db";
 import { ensureSettingsLoaded } from "./state";

@@ -1,3 +1,4 @@
+// Utilidades de horarios: parseo de hora y deteccion de bloqueos activos.
 import { IntervalWeek } from "../settings/types";
 
 // Convierte HH:MM a minutos.

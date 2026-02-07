@@ -1,0 +1,188 @@
+{
+  "blockEnabled": false,
+  "blockShorts": true,
+  "blockKids": true,
+  "blockInstagramReels": true,
+  "language": "es",
+  "strictMode": false,
+  "pinHash": null,
+  "blockedDomains": [
+    "tiktok.com",
+    "facebook.com",
+    "x.com",
+    "twitter.com",
+    "olympusbiblioteca.com",
+    "instagram.com",
+    "xvideos.com",
+    "es.pornhub.com",
+    "nhentai.net",
+    "hitomi.la",
+    "xnxx.es",
+    "erome.com",
+    "e-hentai.org",
+    "hentaihaven.xxx"
+  ],
+  "blockedDomainTags": {
+    "e-hentai.org": [
+      "por_semana"
+    ],
+    "erome.com": [
+      "por_semana"
+    ],
+    "es.pornhub.com": [
+      "por_semana"
+    ],
+    "facebook.com": [
+      "intervalos"
+    ],
+    "hentaihaven.xxx": [
+      "por_semana"
+    ],
+    "hitomi.la": [
+      "por_semana"
+    ],
+    "instagram.com": [
+      "intervalos"
+    ],
+    "nhentai.net": [
+      "por_semana"
+    ],
+    "olympusbiblioteca.com": [
+      "intervalos"
+    ],
+    "tiktok.com": [
+      "intervalos"
+    ],
+    "twitter.com": [
+      "intervalos"
+    ],
+    "x.com": [
+      "intervalos"
+    ],
+    "xnxx.es": [
+      "por_semana"
+    ],
+    "xvideos.com": [
+      "por_semana"
+    ]
+  },
+  "whitelist": [],
+  "schedules": {
+    "0": [],
+    "1": [],
+    "2": [],
+    "3": [],
+    "4": [],
+    "5": [],
+    "6": []
+  },
+  "intervalsByDay": {
+    "0": [
+      {
+        "id": "id-1769482878523-343",
+        "start": "22:30",
+        "end": "12:00",
+        "mode": "blocked",
+        "enabled": true
+      }
+    ],
+    "1": [
+      {
+        "id": "id-1769482835633-633",
+        "start": "22:30",
+        "end": "12:00",
+        "mode": "blocked",
+        "enabled": true
+      },
+      {
+        "id": "id-1769482910885-112",
+        "start": "17:00",
+        "end": "22:30",
+        "mode": "blocked",
+        "enabled": true
+      }
+    ],
+    "2": [
+      {
+        "id": "id-1769482850357-237",
+        "start": "22:30",
+        "end": "12:00",
+        "mode": "blocked",
+        "enabled": true
+      },
+      {
+        "id": "id-1769482937844-539",
+        "start": "17:00",
+        "end": "22:30",
+        "mode": "blocked",
+        "enabled": true
+      }
+    ],
+    "3": [
+      {
+        "id": "id-1769482854776-30",
+        "start": "22:30",
+        "end": "12:00",
+        "mode": "blocked",
+        "enabled": true
+      },
+      {
+        "id": "id-1769482943658-480",
+        "start": "17:00",
+        "end": "22:30",
+        "mode": "blocked",
+        "enabled": true
+      }
+    ],
+    "4": [
+      {
+        "id": "id-1769482860014-924",
+        "start": "22:30",
+        "end": "12:00",
+        "mode": "blocked",
+        "enabled": true
+      },
+      {
+        "id": "id-1769482949278-79",
+        "start": "17:00",
+        "end": "22:30",
+        "mode": "blocked",
+        "enabled": true
+      }
+    ],
+    "5": [
+      {
+        "id": "id-1769482867609-739",
+        "start": "22:30",
+        "end": "12:00",
+        "mode": "blocked",
+        "enabled": true
+      },
+      {
+        "id": "id-1769482954386-108",
+        "start": "17:00",
+        "end": "22:30",
+        "mode": "blocked",
+        "enabled": true
+      }
+    ],
+    "6": [
+      {
+        "id": "id-1769482872907-457",
+        "start": "22:30",
+        "end": "12:00",
+        "mode": "blocked",
+        "enabled": true
+      }
+    ]
+  },
+  "timeFormat12h": true,
+  "unblockUntil": null,
+  "weeklyUnblockEnabled": true,
+  "weeklyUnblockDays": [
+    6
+  ],
+  "weeklyUnblockDurationMinutes": 60,
+  "weeklyUnblockUntil": null,
+  "weeklyUnblockLastWeek": null
+}

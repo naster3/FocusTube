@@ -1,3 +1,4 @@
+// Scheduler de tareas de background para tracking periodico de metricas.
 import { FLUSH_MS, TICK_MS, flushMetrics, tickMetrics } from "./metrics";
 import { isBackgroundStarted, setBackgroundStarted } from "./state";
 

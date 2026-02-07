@@ -1,3 +1,4 @@
+// Utilidades para calcular el timeline de bloqueo segun horarios y modos especiales.
 import type { IntervalWeek, Settings } from "../settings/types";
 import { parseTimeToMinutes } from "./schedule";
 import { isWeeklySessionActive } from "../weekly/weekly";
@@ -23,11 +24,13 @@ function minutesToDate(baseDay: Date, minutes: number) {
   return d;
 }
 
+// Filtra intervalos activos marcados como bloqueados para un dia.
 function getBlockedIntervalsForDay(intervalsByDay: IntervalWeek, dayIdx: number) {
   const intervals = intervalsByDay[dayIdx] ?? [];
   return intervals.filter((i) => i.enabled && i.mode === "blocked");
 }
 
+// Construye ventanas absolutas (timestamps) de bloqueo para un dia, considerando cruces de medianoche.
 function buildDayWindows(dayStart: Date, intervalsByDay: IntervalWeek): AbsWindow[] {
   const day0 = new Date(dayStart);
   day0.setHours(0, 0, 0, 0);
@@ -57,6 +60,7 @@ function buildDayWindows(dayStart: Date, intervalsByDay: IntervalWeek): AbsWindo
   return out.sort((a, b) => a.start - b.start);
 }
 
+// Busca la ventana de bloqueo actual, considerando el dia anterior (cruce de medianoche).
 function findCurrentWindow(now: number, intervalsByDay: IntervalWeek): AbsWindow | null {
   const d = new Date(now);
   const today = new Date(d);
@@ -75,6 +79,7 @@ function findCurrentWindow(now: number, intervalsByDay: IntervalWeek): AbsWindow
   return null;
 }
 
+// Busca la proxima ventana de bloqueo a partir de "now".
 function findNextWindow(now: number, intervalsByDay: IntervalWeek): AbsWindow | null {
   const base = new Date(now);
   base.setHours(0, 0, 0, 0);
@@ -91,9 +96,10 @@ function findNextWindow(now: number, intervalsByDay: IntervalWeek): AbsWindow | 
   return null;
 }
 
-// Calcula estado actual de bloqueo por horario.
+// Calcula el estado actual segun bloqueo manual, desbloqueo semanal y horarios.
 export function computeScheduleTimeline(settings: Settings, now = Date.now()): ScheduleTimeline {
   if (settings.blockEnabled) {
+    // Bloqueo permanente: puede habilitar excepcion por sesion semanal.
     if (isWeeklySessionActive(settings, now)) {
       const until = settings.weeklyUnblockUntil ?? null;
       return {
@@ -118,6 +124,7 @@ export function computeScheduleTimeline(settings: Settings, now = Date.now()): S
   const current = findCurrentWindow(now, settings.intervalsByDay);
 
   if (current) {
+    // Dentro de un intervalo bloqueado, puede haber desbloqueo temporal.
     if (!settings.strictMode && settings.unblockUntil && now < settings.unblockUntil) {
       const freeUntil = Math.min(settings.unblockUntil, current.end);
       return {

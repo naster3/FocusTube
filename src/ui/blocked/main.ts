@@ -5,13 +5,18 @@ import { t, tf } from "../../shared/i18n";
 import type { Language } from "../../domain/settings/types";
 import { canStartWeeklySession, getWeeklySessionDayKey, getWeeklySessionDurationMs, isWeeklySessionActive } from "../../domain/weekly/weekly";
 import { hostnameMatches } from "../../domain/blocking/url";
+import { isValidOutgoingMessage } from "../../shared/messages";
 
 // Acumula tiempo de pantalla bloqueada.
 function startBlockedTimer() {
   let lastTick = Date.now();
   const sendTick = (deltaSec: number) => {
     try {
-      chrome.runtime.sendMessage({ type: "BLOCKED_PAGE_TICK", deltaSec }, () => undefined);
+      const message = { type: "BLOCKED_PAGE_TICK", deltaSec };
+      if (!isValidOutgoingMessage(message, "blocked")) {
+        return;
+      }
+      chrome.runtime.sendMessage(message, () => undefined);
     } catch {
       // Ignore if extension context is invalidated.
     }
@@ -52,7 +57,11 @@ async function resolveBlockedUrl(): Promise<string> {
     if (!tabId) {
       return "";
     }
-    const res = await chrome.runtime.sendMessage({ type: "GET_LAST_ATTEMPT", tabId }) as { ok?: boolean; url?: string | null } | undefined;
+    const message = { type: "GET_LAST_ATTEMPT", tabId };
+    if (!isValidOutgoingMessage(message, "blocked")) {
+      return "";
+    }
+    const res = await chrome.runtime.sendMessage(message) as { ok?: boolean; url?: string | null } | undefined;
     if (res?.ok && typeof res.url === "string") {
       blockedUrl = res.url;
       return blockedUrl;
@@ -98,7 +107,11 @@ function startScheduleAutoUnblock() {
     await resolveBlockedUrl();
     if (!blockedUrl) return;
     try {
-      const res = await chrome.runtime.sendMessage({ type: "GET_TIMELINE" }) as { ok?: boolean; timeline?: { state?: string } } | undefined;
+      const message = { type: "GET_TIMELINE" };
+      if (!isValidOutgoingMessage(message, "blocked")) {
+        return;
+      }
+      const res = await chrome.runtime.sendMessage(message) as { ok?: boolean; timeline?: { state?: string } } | undefined;
       if (res?.ok && res.timeline?.state === "free") {
         window.location.href = blockedUrl;
       }
@@ -279,7 +292,11 @@ async function closeBlockedTab() {
     // ignore
   }
   try {
-    await chrome.runtime.sendMessage({ type: "CLOSE_ACTIVE_TAB" });
+    const message = { type: "CLOSE_ACTIVE_TAB" };
+    if (!isValidOutgoingMessage(message, "blocked")) {
+      return;
+    }
+    await chrome.runtime.sendMessage(message);
   } catch {
     // ignore
   }
@@ -292,4 +309,3 @@ closeBtn?.addEventListener("click", () => {
 render();
 startBlockedTimer();
 startScheduleAutoUnblock();
-

@@ -1,3 +1,4 @@
+// Observa el vencimiento del desbloqueo temporal y reprograma timers.
 import { getSettings } from "../infrastructure/storage";
 
 let timeoutId: number | null = null;

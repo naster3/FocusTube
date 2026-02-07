@@ -2,13 +2,14 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import Chart from "chart.js/auto";
 import { DEFAULT_INTERVALS, DEFAULT_SCHEDULES, DEFAULT_SETTINGS } from "../../domain/settings/defaults";
-import { hashPin } from "../../shared/hash";
+import { hashPin, verifyPin } from "../../shared/hash";
 import { t } from "../../shared/i18n";
-import { getMetrics, getSettings, resetMetrics, setSettings } from "../../infrastructure/storage";
+import { getMetrics, getSettings, onStorageChanged, resetMetrics, setSettings } from "../../infrastructure/storage";
 import { DomainTag, Metrics, Settings } from "../../domain/settings/types";
 import { normalizeDomain, normalizeWhitelistEntry } from "../../domain/blocking/url";
 import { ScheduleView } from "../options/schedule/ScheduleView";
 import { DOMAIN_TAGS } from "../../domain/blocking/tags";
+import { devLog } from "../../shared/devLogger";
 import "./dashboard.css";
 
 // Helpers de formato y fechas.
@@ -98,8 +99,7 @@ export function Dashboard() {
         })();
       }
     };
-    chrome.storage.onChanged.addListener(listener);
-    return () => chrome.storage.onChanged.removeListener(listener);
+    return onStorageChanged(listener);
   }, []);
 
   // Helpers de mensajes UI.
@@ -174,12 +174,13 @@ export function Dashboard() {
     if (!settings.pinHash) {
       return;
     }
-    const pinHash = await hashPin(pinCurrent);
-    if (pinHash !== settings.pinHash) {
+    const verification = await verifyPin(pinCurrent, settings.pinHash);
+    if (!verification.ok) {
       showStatus(t(settings.language, "dashboard.strict.pin_incorrect"));
       return;
     }
-    await saveSettings({ ...settings, strictMode: false }, t(settings.language, "dashboard.strict.disable"));
+    const nextPinHash = verification.needsUpgrade ? await hashPin(pinCurrent) : settings.pinHash;
+    await saveSettings({ ...settings, strictMode: false, pinHash: nextPinHash }, t(settings.language, "dashboard.strict.disable"));
     setPinCurrent("");
   };
 
@@ -187,8 +188,8 @@ export function Dashboard() {
     if (!settings.pinHash) {
       return;
     }
-    const currentHash = await hashPin(pinCurrent);
-    if (currentHash !== settings.pinHash) {
+    const verification = await verifyPin(pinCurrent, settings.pinHash);
+    if (!verification.ok) {
       showStatus(t(settings.language, "dashboard.strict.pin_incorrect"));
       return;
     }
@@ -206,22 +207,37 @@ export function Dashboard() {
   // Helpers de permisos por dominio.
   const getDomainOrigins = (domain: string) => [`*://${domain}/*`, `*://*.${domain}/*`];
 
-  const requestDomainPermission = (domain: string) =>
-    new Promise<boolean>((resolve) => {
+  const requestDomainPermission = (domain: string) => {
+    if (typeof chrome === "undefined" || !chrome.permissions?.request) {
+      devLog("chrome.permissions.request not available; skipping permission prompt (dev only).");
+      return Promise.resolve(true);
+    }
+    return new Promise<boolean>((resolve) => {
       chrome.permissions.request({ origins: getDomainOrigins(domain) }, (granted) => {
         resolve(Boolean(granted));
       });
     });
+  };
 
-  const removeDomainPermission = (domain: string) =>
-    new Promise<void>((resolve) => {
+  const removeDomainPermission = (domain: string) => {
+    if (typeof chrome === "undefined" || !chrome.permissions?.remove) {
+      devLog("chrome.permissions.remove not available; skipping permission cleanup (dev only).");
+      return Promise.resolve();
+    }
+    return new Promise<void>((resolve) => {
       chrome.permissions.remove({ origins: getDomainOrigins(domain) }, () => resolve());
     });
+  };
 
-  const readDomainPermission = (domain: string) =>
-    new Promise<boolean>((resolve) => {
+  const readDomainPermission = (domain: string) => {
+    if (typeof chrome === "undefined" || !chrome.permissions?.contains) {
+      devLog("chrome.permissions.contains not available; assuming granted (dev only).");
+      return Promise.resolve(true);
+    }
+    return new Promise<boolean>((resolve) => {
       chrome.permissions.contains({ origins: getDomainOrigins(domain) }, (granted) => resolve(Boolean(granted)));
     });
+  };
 
   // Actualiza permisos de dominios bloqueados.
   useEffect(() => {

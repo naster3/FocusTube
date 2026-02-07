@@ -12,23 +12,46 @@ export function registerMessageListener() {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     void (async () => {
       if (sender.id && sender.id !== chrome.runtime.id) {
-        sendResponse({ ok: false });
+        sendResponse({ ok: false, error: "invalid_sender" });
         return;
       }
 
+      const msg = message as { type?: unknown; [key: string]: unknown } | null | undefined;
+      const type = typeof msg?.type === "string" ? msg.type : null;
+      if (!type) {
+        sendResponse({ ok: false, error: "invalid_message" });
+        return;
+      }
+
+      const hasString = (value: unknown): value is string => typeof value === "string";
+      const hasNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
+      const hasBoolean = (value: unknown): value is boolean => typeof value === "boolean";
+
+      const isCheckBlock = type === "CHECK_BLOCK" && hasString(msg?.url);
+      const isGetTimeline = type === "GET_TIMELINE";
+      const isPageHello =
+        type === "PAGE_HELLO" && hasString(msg?.url) && (typeof msg?.visible === "undefined" || hasBoolean(msg?.visible));
+      const isVisibilityChanged = type === "VISIBILITY_CHANGED" && hasBoolean(msg?.visible);
+      const isBlockedTick = type === "BLOCKED_PAGE_TICK" && hasNumber(msg?.deltaSec);
+      const isGetLastAttempt = type === "GET_LAST_ATTEMPT" && hasNumber(msg?.tabId);
+      const isCloseTab =
+        type === "CLOSE_ACTIVE_TAB" && (typeof msg?.tabId === "undefined" || hasNumber(msg?.tabId));
+      const isMetricsGet = type === "METRICS_GET";
+      const isMetricsReset = type === "METRICS_RESET";
+
       // Verifica bloqueo por URL.
-      if (message?.type === "CHECK_BLOCK" && typeof message.url === "string") {
+      if (isCheckBlock) {
         const settings = await ensureSettingsLoaded();
-        const decision = evaluateBlock(message.url, settings, Date.now());
+        const decision = evaluateBlock(String(msg?.url), settings, Date.now());
         if (decision.blocked && sender.tab?.id) {
-          await addAttempt(sender.tab.id, message.url, Date.now());
+          await addAttempt(sender.tab.id, String(msg?.url), Date.now());
         }
         sendResponse(decision);
         return;
       }
 
       // Timeline para overlay y popup.
-      if (message?.type === "GET_TIMELINE") {
+      if (isGetTimeline) {
         const settings = await ensureSettingsLoaded();
         const timeline = computeScheduleTimeline(settings, Date.now());
         sendResponse({ ok: true, timeline });
@@ -36,12 +59,12 @@ export function registerMessageListener() {
       }
 
       // Handshake desde content (url + visibilidad).
-      if (message?.type === "PAGE_HELLO") {
+      if (isPageHello) {
         const tabId = sender.tab?.id;
-        if (tabId && typeof message.url === "string") {
-          await updateTabTarget(tabId, message.url);
+        if (tabId) {
+          await updateTabTarget(tabId, String(msg?.url));
           const state = getTabState(tabId);
-          state.visible = message.visible !== false;
+          state.visible = msg?.visible !== false;
           state.active = Boolean(sender.tab?.active);
           state.lastTick = Date.now();
         }
@@ -50,12 +73,12 @@ export function registerMessageListener() {
       }
 
       // Visibilidad real de la pagina.
-      if (message?.type === "VISIBILITY_CHANGED") {
+      if (isVisibilityChanged) {
         const tabId = sender.tab?.id;
-        if (tabId && typeof message.visible === "boolean") {
+        if (tabId) {
           const state = getTabState(tabId);
-          state.visible = message.visible;
-          if (!message.visible) {
+          state.visible = Boolean(msg?.visible);
+          if (!msg?.visible) {
             state.lastTick = Date.now();
           }
         }
@@ -64,22 +87,22 @@ export function registerMessageListener() {
       }
 
       // Tiempo en pantalla de bloqueo.
-      if (message?.type === "BLOCKED_PAGE_TICK" && typeof message.deltaSec === "number") {
-        await addBlockedTime(message.deltaSec, Date.now());
+      if (isBlockedTick) {
+        await addBlockedTime(Number(msg?.deltaSec), Date.now());
         sendResponse({ ok: true });
         return;
       }
 
       // Permite al blocked.html recuperar la URL intentada (cuando no viene en querystring).
-      if (message?.type === "GET_LAST_ATTEMPT" && typeof message.tabId === "number") {
-        const state = tabStates.get(message.tabId);
+      if (isGetLastAttempt) {
+        const state = tabStates.get(Number(msg?.tabId));
         sendResponse({ ok: true, url: state?.lastAttemptUrl ?? null, at: state?.lastAttemptAt ?? null });
         return;
       }
 
       // Cierra la pestana activa desde blocked.html.
-      if (message?.type === "CLOSE_ACTIVE_TAB") {
-        let tabId = typeof message.tabId === "number" ? message.tabId : sender.tab?.id;
+      if (isCloseTab) {
+        let tabId = hasNumber(msg?.tabId) ? Number(msg?.tabId) : sender.tab?.id;
         if (!tabId) {
           const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
           tabId = tabs?.[0]?.id;
@@ -92,14 +115,14 @@ export function registerMessageListener() {
       }
 
       // API simple para dashboard.
-      if (message?.type === "METRICS_GET") {
+      if (isMetricsGet) {
         const metrics = await ensureMetricsLoaded();
         sendResponse({ ok: true, metrics });
         return;
       }
 
       // Reset total de metricas y DB.
-      if (message?.type === "METRICS_RESET") {
+      if (isMetricsReset) {
         await resetMetrics();
         await clearDb();
         setMetricsCache(DEFAULT_METRICS);
@@ -109,7 +132,7 @@ export function registerMessageListener() {
       }
 
       // Mensaje no manejado.
-      sendResponse({ ok: false });
+      sendResponse({ ok: false, error: "unknown_message" });
     })().catch((e) => {
       sendResponse({ ok: false, error: String(e) });
     });

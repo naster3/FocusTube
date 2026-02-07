@@ -2,37 +2,180 @@ import { DEFAULT_INTERVALS, DEFAULT_METRICS, DEFAULT_SETTINGS } from "../domain/
 import { DomainTag, Interval, IntervalWeek, Metrics, Settings, WeekSchedule } from "../domain/settings/types";
 import { isDomainTag } from "../domain/blocking/tags";
 import { normalizeDomain, normalizeWhitelistEntry } from "../domain/blocking/url";
+import { devLog } from "../shared/devLogger";
 
 // Keys fijos en storage.local.
 const SETTINGS_KEY = "settings";
 const METRICS_KEY = "metrics";
+const LOCAL_PREFIX = "focustube:";
+const DEV_FALLBACK = import.meta.env.DEV;
+let loggedFallback = false;
+let loggedNoChromeListener = false;
+
+type StorageAreaLike = {
+  get: (keys?: string | string[] | Record<string, unknown>) => Promise<Record<string, unknown>>;
+  set: (items: Record<string, unknown>) => Promise<void>;
+  remove: (keys: string | string[]) => Promise<void>;
+  clear: () => Promise<void>;
+};
+
+function asObject(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+  return value as Record<string, unknown>;
+}
+
+function asSettingsCandidate(value: unknown): Partial<Settings> | null {
+  const obj = asObject(value);
+  return obj ? (obj as Partial<Settings>) : null;
+}
+
+function asMetricsCandidate(value: unknown): Partial<Metrics> | null {
+  const obj = asObject(value);
+  return obj ? (obj as Partial<Metrics>) : null;
+}
+
+function hasChromeStorage() {
+  return typeof chrome !== "undefined" && Boolean(chrome?.storage?.local);
+}
+
+function normalizeKeys(keys?: string | string[] | Record<string, unknown>) {
+  if (!keys) {
+    return [SETTINGS_KEY, METRICS_KEY];
+  }
+  if (Array.isArray(keys)) {
+    return keys.map(String);
+  }
+  if (typeof keys === "string") {
+    return [keys];
+  }
+  return Object.keys(keys);
+}
+
+function localKey(key: string) {
+  return `${LOCAL_PREFIX}${key}`;
+}
+
+function createLocalStorageArea(): StorageAreaLike {
+  const localStorageRef = typeof window === "undefined" ? null : window.localStorage;
+  return {
+    async get(keys) {
+      const result: Record<string, unknown> = {};
+      if (!localStorageRef) {
+        return result;
+      }
+      for (const key of normalizeKeys(keys)) {
+        const raw = localStorageRef.getItem(localKey(key));
+        if (raw !== null) {
+          try {
+            result[key] = JSON.parse(raw);
+          } catch {
+            // Ignore invalid JSON; treat as missing.
+          }
+        }
+      }
+      return result;
+    },
+    async set(items) {
+      if (!localStorageRef) {
+        return;
+      }
+      for (const [key, value] of Object.entries(items)) {
+        localStorageRef.setItem(localKey(key), JSON.stringify(value));
+      }
+    },
+    async remove(keys) {
+      if (!localStorageRef) {
+        return;
+      }
+      for (const key of normalizeKeys(keys)) {
+        localStorageRef.removeItem(localKey(key));
+      }
+    },
+    async clear() {
+      if (!localStorageRef) {
+        return;
+      }
+      for (const key of [SETTINGS_KEY, METRICS_KEY]) {
+        localStorageRef.removeItem(localKey(key));
+      }
+    }
+  };
+}
+
+function getStorageArea(): StorageAreaLike {
+  if (hasChromeStorage()) {
+    return chrome.storage.local;
+  }
+  if (!DEV_FALLBACK) {
+    throw new Error("chrome.storage.local is not available outside the extension context.");
+  }
+  if (!loggedFallback) {
+    devLog("Using localStorage fallback for settings/metrics.");
+    loggedFallback = true;
+  }
+  return createLocalStorageArea();
+}
+
+export function onStorageChanged(listener: (changes: Record<string, chrome.storage.StorageChange>, area: string) => void) {
+  if (!hasChromeStorage()) {
+    if (!DEV_FALLBACK) {
+      throw new Error("chrome.storage.onChanged is not available outside the extension context.");
+    }
+    if (!loggedNoChromeListener) {
+      devLog("chrome.storage.onChanged not available; using no-op listener in dev.");
+      loggedNoChromeListener = true;
+    }
+    return () => undefined;
+  }
+  chrome.storage.onChanged.addListener(listener);
+  return () => chrome.storage.onChanged.removeListener(listener);
+}
 
 // Inicializa defaults y migra estructuras antiguas.
 export async function ensureDefaults() {
-  const stored = await chrome.storage.local.get([SETTINGS_KEY, METRICS_KEY]);
-  if (!stored[SETTINGS_KEY]) {
-    await chrome.storage.local.set({ [SETTINGS_KEY]: DEFAULT_SETTINGS });
-  } else if (!Array.isArray(stored[SETTINGS_KEY].blockedDomains)) {
-    const merged = mergeSettings(stored[SETTINGS_KEY]);
-    await chrome.storage.local.set({ [SETTINGS_KEY]: merged });
+  const storage = getStorageArea();
+  const stored = await storage.get([SETTINGS_KEY, METRICS_KEY]);
+  const storedSettings = asSettingsCandidate(stored[SETTINGS_KEY]);
+  if (!storedSettings) {
+    await storage.set({ [SETTINGS_KEY]: DEFAULT_SETTINGS });
+    devLog("storage.ensureDefaults: settings initialized");
+  } else if (!Array.isArray(storedSettings.blockedDomains)) {
+    const merged = mergeSettings(storedSettings);
+    await storage.set({ [SETTINGS_KEY]: merged });
+    devLog("storage.ensureDefaults: settings migrated");
   }
-  if (!stored[METRICS_KEY]) {
-    await chrome.storage.local.set({ [METRICS_KEY]: DEFAULT_METRICS });
-  } else if (stored[METRICS_KEY].version !== 2) {
-    const mergedMetrics = mergeMetrics(stored[METRICS_KEY]);
-    await chrome.storage.local.set({ [METRICS_KEY]: mergedMetrics });
+  const storedMetrics = asMetricsCandidate(stored[METRICS_KEY]);
+  if (!storedMetrics) {
+    await storage.set({ [METRICS_KEY]: DEFAULT_METRICS });
+    devLog("storage.ensureDefaults: metrics initialized");
+  } else if (storedMetrics.version !== 2) {
+    const mergedMetrics = mergeMetrics(storedMetrics);
+    await storage.set({ [METRICS_KEY]: mergedMetrics });
+    devLog("storage.ensureDefaults: metrics migrated");
   }
 }
 
 // Settings completos con merge de defaults.
 export async function getSettings(): Promise<Settings> {
-  const stored = await chrome.storage.local.get(SETTINGS_KEY);
-  return stored[SETTINGS_KEY] ? mergeSettings(stored[SETTINGS_KEY]) : DEFAULT_SETTINGS;
+  const storage = getStorageArea();
+  const stored = await storage.get(SETTINGS_KEY);
+  const storedSettings = asSettingsCandidate(stored[SETTINGS_KEY]);
+  const settings = storedSettings ? mergeSettings(storedSettings) : DEFAULT_SETTINGS;
+  devLog("storage.getSettings");
+  return settings;
 }
 
 // Guarda settings completos.
 export async function setSettings(settings: Settings) {
-  await chrome.storage.local.set({ [SETTINGS_KEY]: settings });
+  const storage = getStorageArea();
+  await storage.set({ [SETTINGS_KEY]: settings });
+  devLog("storage.setSettings", {
+    blockEnabled: settings.blockEnabled,
+    blockedDomains: settings.blockedDomains.length,
+    whitelist: settings.whitelist.length
+  });
 }
 
 // Aplica patch y guarda settings completos.
@@ -40,18 +183,28 @@ export async function updateSettings(patch: Partial<Settings>) {
   const settings = await getSettings();
   const next = mergeSettings({ ...settings, ...patch });
   await setSettings(next);
+  devLog("storage.updateSettings", Object.keys(patch));
   return next;
 }
 
 // Metrics completos con merge/migracion.
 export async function getMetrics(): Promise<Metrics> {
-  const stored = await chrome.storage.local.get(METRICS_KEY);
-  return stored[METRICS_KEY] ? mergeMetrics(stored[METRICS_KEY]) : DEFAULT_METRICS;
+  const storage = getStorageArea();
+  const stored = await storage.get(METRICS_KEY);
+  const storedMetrics = asMetricsCandidate(stored[METRICS_KEY]);
+  const metrics = storedMetrics ? mergeMetrics(storedMetrics) : DEFAULT_METRICS;
+  devLog("storage.getMetrics");
+  return metrics;
 }
 
 // Guarda metrics completos.
 export async function setMetrics(metrics: Metrics) {
-  await chrome.storage.local.set({ [METRICS_KEY]: metrics });
+  const storage = getStorageArea();
+  await storage.set({ [METRICS_KEY]: metrics });
+  devLog("storage.setMetrics", {
+    attemptsByDay: Object.keys(metrics.attemptsByDay).length,
+    timeByDay: Object.keys(metrics.timeByDay).length
+  });
 }
 
 // Aplica patch y guarda metrics completos.
@@ -59,12 +212,14 @@ export async function updateMetrics(patch: Partial<Metrics>) {
   const metrics = await getMetrics();
   const next = mergeMetrics({ ...metrics, ...patch });
   await setMetrics(next);
+  devLog("storage.updateMetrics", Object.keys(patch));
   return next;
 }
 
 // Reinicia metrics a defaults.
 export async function resetMetrics() {
   await setMetrics(DEFAULT_METRICS);
+  devLog("storage.resetMetrics");
 }
 
 // Incrementa intentos bloqueados.
@@ -79,6 +234,7 @@ export async function incrementAttempt(timestamp: number) {
     lastUpdatedAt: timestamp
   });
   await setMetrics(next);
+  devLog("metrics.incrementAttempt", { dateKey, count: nextCount });
 }
 
 // Merge profundo de schedules por dia.
@@ -171,6 +327,7 @@ function normalizeBlockedDomainTags(
 
 // Merge de settings, con defaults y validacion basica.
 export function mergeSettings(input: Partial<Settings>): Settings {
+  const pinHash = typeof input.pinHash === "string" ? input.pinHash : null;
   const blockedDomains = Array.isArray(input.blockedDomains)
     ? Array.from(
         new Set(
@@ -215,6 +372,7 @@ export function mergeSettings(input: Partial<Settings>): Settings {
   return {
     ...DEFAULT_SETTINGS,
     ...input,
+    pinHash,
     weeklyUnblockEnabled: Boolean(input.weeklyUnblockEnabled),
     blockInstagramReels: Boolean(input.blockInstagramReels),
     weeklyUnblockDays: weeklyDays,
