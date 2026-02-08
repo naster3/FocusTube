@@ -1,1 +1,96 @@
 @import "../options/options.css";
+
+.help {
+  display: grid;
+  gap: 18px;
+}
+
+.help-hero {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #eff6ff, #fff7ed);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.help-hero:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 30px rgba(15, 23, 42, 0.12);
+}
+
+.help-hero h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #0f172a;
+}
+
+.help-hero p {
+  margin: 0;
+  color: #475569;
+}
+
+.help-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.help-card {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.help-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 18px 30px rgba(15, 23, 42, 0.12);
+}
+
+.help-card h3 {
+  margin-top: 0;
+}
+
+.help-card p {
+  margin: 6px 0 0;
+  color: #475569;
+}
+
+.help-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #475569;
+}
+
+.help-list li {
+  margin: 6px 0;
+}
+
+.help-note {
+  border-left: 4px solid #60a5fa;
+  background: #eff6ff;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #1e3a8a;
+  font-size: 13px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.help-note:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 20px rgba(15, 23, 42, 0.12);
+}
+
+.help-code {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  overflow-x: auto;
+  font-size: 12px;
+}

@@ -14,8 +14,45 @@ export function Options() {
   // Estado base de UI.
   const [settings, setLocalSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [status, setStatus] = useState("");
+  const [guideActive, setGuideActive] = useState(false);
+  const [guideStepIndex, setGuideStepIndex] = useState(0);
+  const [guideSeen, setGuideSeen] = useState(false);
+  const [guideReady, setGuideReady] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
-    // Carga inicial de settings y metrics.
+  const readGuideSeen = async () => {
+    try {
+      if (typeof chrome !== "undefined" && chrome.storage?.local) {
+        const stored = await chrome.storage.local.get("onboardingSeen");
+        return Boolean(stored.onboardingSeen);
+      }
+    } catch {
+      // ignore
+    }
+    try {
+      return window.localStorage.getItem("onboardingSeen") === "1";
+    } catch {
+      return false;
+    }
+  };
+
+  const writeGuideSeen = async (value: boolean) => {
+    try {
+      if (typeof chrome !== "undefined" && chrome.storage?.local) {
+        await chrome.storage.local.set({ onboardingSeen: value });
+        return;
+      }
+    } catch {
+      // ignore
+    }
+    try {
+      window.localStorage.setItem("onboardingSeen", value ? "1" : "0");
+    } catch {
+      // ignore
+    }
+  };
+
+  // Carga inicial de settings y metrics.
   useEffect(() => {
     void (async () => {
       const stored = await getSettings();
@@ -39,6 +76,31 @@ export function Options() {
     return onStorageChanged(listener);
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const seen = await readGuideSeen();
+      if (cancelled) {
+        return;
+      }
+      setGuideSeen(seen);
+      setGuideActive(!seen);
+      setGuideReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setShowScrollTop(window.scrollY > 200);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
 
   // Mensajes breves en UI.
   const showStatus = (message: string) => {
@@ -53,6 +115,10 @@ export function Options() {
     if (message) {
       showStatus(message);
     }
+  };
+
+  const setLanguage = (language: Settings["language"]) => {
+    void saveSettings({ ...settings, language });
   };
 
 
@@ -180,7 +246,7 @@ export function Options() {
       { value: 3, label: "Qua" },
       { value: 4, label: "Qui" },
       { value: 5, label: "Sex" },
-      { value: 6, label: "Sab" }
+      { value: 6, label: "Sáb" }
     ],
     fr: [
       { value: 0, label: "Dim" },
@@ -193,6 +259,92 @@ export function Options() {
     ]
   };
   const dayOptions = dayOptionsByLang[settings.language] ?? dayOptionsByLang.en;
+
+  const guideSteps = [
+    {
+      id: "nav",
+      target: "nav",
+      title: t(settings.language, "options.guide.step.nav.title"),
+      desc: t(settings.language, "options.guide.step.nav.desc")
+    },
+    {
+      id: "blocks",
+      target: "blocks",
+      title: t(settings.language, "options.guide.step.blocks.title"),
+      desc: t(settings.language, "options.guide.step.blocks.desc")
+    },
+    {
+      id: "permanent",
+      target: "permanent",
+      title: t(settings.language, "options.guide.step.permanent.title"),
+      desc: t(settings.language, "options.guide.step.permanent.desc")
+    },
+    {
+      id: "time",
+      target: "time",
+      title: t(settings.language, "options.guide.step.time.title"),
+      desc: t(settings.language, "options.guide.step.time.desc")
+    },
+    {
+      id: "language",
+      target: "language",
+      title: t(settings.language, "options.guide.step.language.title"),
+      desc: t(settings.language, "options.guide.step.language.desc")
+    },
+    {
+      id: "export",
+      target: "export",
+      title: t(settings.language, "options.guide.step.export.title"),
+      desc: t(settings.language, "options.guide.step.export.desc")
+    }
+  ];
+
+  const guideStep = guideSteps[guideStepIndex];
+  const totalGuideSteps = guideSteps.length;
+
+  useEffect(() => {
+    if (!guideActive || !guideStep) {
+      return;
+    }
+    const el = document.querySelector<HTMLElement>(`[data-guide="${guideStep.target}"]`);
+    if (!el) {
+      return;
+    }
+    el.classList.add("guide-highlight");
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    return () => {
+      el.classList.remove("guide-highlight");
+    };
+  }, [guideActive, guideStep]);
+
+  const startGuide = () => {
+    setGuideStepIndex(0);
+    setGuideActive(true);
+  };
+
+  const finishGuide = async () => {
+    setGuideActive(false);
+    setGuideStepIndex(0);
+    setGuideSeen(true);
+    await writeGuideSeen(true);
+  };
+
+  const skipGuide = async () => {
+    await finishGuide();
+  };
+
+  const restartGuide = async () => {
+    await writeGuideSeen(false);
+    setGuideSeen(false);
+    setGuideStepIndex(0);
+    setGuideActive(true);
+  };
+
+  const dismissGuide = async () => {
+    setGuideActive(false);
+    setGuideSeen(true);
+    await writeGuideSeen(true);
+  };
 
   const now = Date.now();
   const weeklyActive = isWeeklySessionActive(settings, now);
@@ -251,127 +403,178 @@ export function Options() {
       <header className="options-header">
         <h1>FocusTube Blocker</h1>
         <p>{t(settings.language, "options.subtitle")}</p>
-        <nav className="options-nav">
+        <nav className="options-nav" data-guide="nav">
           <a href={optionsHref}>{t(settings.language, "nav.config")}</a>
           <a href={dashboardHref}>{t(settings.language, "nav.dashboard")}</a>
           <a href={helpHref}>{t(settings.language, "nav.help")}</a>
         </nav>
+        <div className="guide-trigger">
+          <button type="button" className="btn-ghost" onClick={startGuide} disabled={!guideReady || guideActive}>
+            {t(settings.language, "options.guide.show")}
+          </button>
+        </div>
       </header>
+
+      {!guideSeen || guideActive ? (
+        <section className="panel guide-panel">
+          <div className="guide-header">
+            <div>
+              <h3>{t(settings.language, "options.guide.title")}</h3>
+              <p className="guide-sub">{t(settings.language, "options.guide.subtitle")}</p>
+            </div>
+            <div className="guide-actions">
+              <button onClick={startGuide} disabled={!guideReady || guideActive}>
+                {t(settings.language, "options.guide.start")}
+              </button>
+              {guideSeen ? (
+                <button type="button" className="btn-ghost" onClick={restartGuide}>
+                  {t(settings.language, "options.guide.restart")}
+                </button>
+              ) : (
+                <button type="button" className="btn-ghost" onClick={dismissGuide}>
+                  {t(settings.language, "options.guide.dismiss")}
+                </button>
+              )}
+            </div>
+          </div>
+          <ol className="guide-steps">
+            <li>{t(settings.language, "options.guide.step1")}</li>
+            <li>{t(settings.language, "options.guide.step2")}</li>
+            <li>{t(settings.language, "options.guide.step3")}</li>
+          </ol>
+        </section>
+      ) : null}
 
       {status ? <div className="status">{status}</div> : null}
 
-      <section className="panel">
+      <section className="panel blocks-panel" data-guide="blocks">
         <h3>{t(settings.language, "options.blocks.title")}</h3>
-        <label>
-          <input
-            type="checkbox"
-            checked={settings.blockShorts}
-            onChange={(event) => saveSettings({ ...settings, blockShorts: event.target.checked })}
-          />
-          {t(settings.language, "options.blocks.shorts")}
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={settings.blockKids}
-            onChange={(event) => saveSettings({ ...settings, blockKids: event.target.checked })}
-          />
-          {t(settings.language, "options.blocks.kids")}
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={settings.blockInstagramReels}
-            onChange={(event) => saveSettings({ ...settings, blockInstagramReels: event.target.checked })}
-          />
-          {t(settings.language, "options.blocks.instagram_reels")}
-        </label>
-        {socialBlocks.map((block) => {
-          const checked = block.domains.every((domain) => settings.blockedDomains.includes(domain));
-          return (
-            <label key={block.key}>
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={(event) => toggleSocialBlock(block.domains, event.target.checked)}
-              />
-              {block.label}
-            </label>
-          );
-        })}
-      </section>
-
-      <section className="panel">
-        <h3>{t(settings.language, "options.permanent.title")}</h3>
-        <p>{t(settings.language, "options.permanent.desc")}</p>
-        <label>
-          <input
-            type="checkbox"
-            checked={settings.blockEnabled}
-            onChange={(event) => saveSettings({ ...settings, blockEnabled: event.target.checked })}
-          />
-          {t(settings.language, "options.permanent.enable")}
-        </label>
-        <div className="divider" />
-        <p>{t(settings.language, "options.weekly_unblock.desc")}</p>
-        <label>
-          <input
-            type="checkbox"
-            checked={settings.weeklyUnblockEnabled}
-            onChange={(event) => saveSettings({ ...settings, weeklyUnblockEnabled: event.target.checked })}
-          />
-          {t(settings.language, "options.weekly_unblock.enable")}
-        </label>
-        <div className="weekly-days">
-          <span>{t(settings.language, "options.weekly_unblock.days")}</span>
-          <div className="weekly-days-list">
-            {dayOptions.map((day) => (
-              <label key={day.value} className="weekly-day">
+        <div className="option-grid">
+          <label className="option-toggle option-toggle-lite">
+            <input
+              type="checkbox"
+              checked={settings.blockShorts}
+              onChange={(event) => saveSettings({ ...settings, blockShorts: event.target.checked })}
+            />
+            {t(settings.language, "options.blocks.shorts")}
+          </label>
+          <label className="option-toggle option-toggle-lite">
+            <input
+              type="checkbox"
+              checked={settings.blockKids}
+              onChange={(event) => saveSettings({ ...settings, blockKids: event.target.checked })}
+            />
+            {t(settings.language, "options.blocks.kids")}
+          </label>
+          <label className="option-toggle option-toggle-lite">
+            <input
+              type="checkbox"
+              checked={settings.blockInstagramReels}
+              onChange={(event) => saveSettings({ ...settings, blockInstagramReels: event.target.checked })}
+            />
+            {t(settings.language, "options.blocks.instagram_reels")}
+          </label>
+          {socialBlocks.map((block) => {
+            const checked = block.domains.every((domain) => settings.blockedDomains.includes(domain));
+            return (
+              <label key={block.key} className="option-toggle option-toggle-lite">
                 <input
                   type="checkbox"
-                  checked={settings.weeklyUnblockDays.includes(day.value)}
-                  onChange={() => {
-                    const set = new Set(settings.weeklyUnblockDays);
-                    if (set.has(day.value)) {
-                      set.delete(day.value);
-                    } else {
-                      set.add(day.value);
-                    }
-                    saveSettings({ ...settings, weeklyUnblockDays: Array.from(set).sort((a, b) => a - b) });
-                  }}
+                  checked={checked}
+                  onChange={(event) => toggleSocialBlock(block.domains, event.target.checked)}
                 />
-                {day.label}
+                {block.label}
               </label>
-            ))}
-          </div>
+            );
+          })}
         </div>
-        <label>
-          <span>{t(settings.language, "options.weekly_unblock.duration")}</span>
-          <input
-            type="number"
-            min={1}
-            step={1}
-            value={settings.weeklyUnblockDurationMinutes}
-            onChange={(event) => {
-              const raw = Number(event.target.value);
-              const next = Number.isFinite(raw) ? Math.max(1, Math.floor(raw)) : 1;
-              saveSettings({ ...settings, weeklyUnblockDurationMinutes: next });
-            }}
-          />
-          <span>{t(settings.language, "options.weekly_unblock.minutes")}</span>
-        </label>
-        <div className={`weekly-status ${weeklyStatusTone}`}>
-          <span className="weekly-status-label">{t(settings.language, "options.weekly_unblock.status.title")}</span>
-          <span className="weekly-status-value">{weeklyStatusText}</span>
-        </div>
-        {settings.weeklyUnblockEnabled && canStartWeekly ? (
-          <button type="button" onClick={startWeeklySession}>
-            {t(settings.language, "options.weekly_unblock.action.start")}
-          </button>
-        ) : null}
       </section>
 
-      <section className="panel">
+      <section className="panel permanent-panel" data-guide="permanent">
+        <h3>{t(settings.language, "options.permanent.title")}</h3>
+        <div className="permanent-grid permanent-grid-top">
+          <div className="option-stack">
+            <p className="option-desc">{t(settings.language, "options.permanent.desc")}</p>
+            <label className="option-toggle option-toggle-hero option-accent-red">
+              <span className="option-icon" aria-hidden="true" />
+              <input
+                type="checkbox"
+                checked={settings.blockEnabled}
+                onChange={(event) => saveSettings({ ...settings, blockEnabled: event.target.checked })}
+              />
+              <span className="option-text">{t(settings.language, "options.permanent.enable")}</span>
+            </label>
+          </div>
+          <div className="option-stack">
+            <p className="option-desc">{t(settings.language, "options.weekly_unblock.desc")}</p>
+            <label className="option-toggle option-toggle-hero option-accent-blue">
+              <span className="option-icon" aria-hidden="true" />
+              <input
+                type="checkbox"
+                checked={settings.weeklyUnblockEnabled}
+                onChange={(event) => saveSettings({ ...settings, weeklyUnblockEnabled: event.target.checked })}
+              />
+              <span className="option-text">{t(settings.language, "options.weekly_unblock.enable")}</span>
+            </label>
+          </div>
+        </div>
+        <div className="divider" />
+        <div className="permanent-grid permanent-grid-bottom">
+          <div className="weekly-days">
+            <span>{t(settings.language, "options.weekly_unblock.days")}</span>
+            <div className="weekly-days-list">
+              {dayOptions.map((day) => (
+                <label key={day.value} className="weekly-day">
+                  <input
+                    type="checkbox"
+                    checked={settings.weeklyUnblockDays.includes(day.value)}
+                    onChange={() => {
+                      const set = new Set(settings.weeklyUnblockDays);
+                      if (set.has(day.value)) {
+                        set.delete(day.value);
+                      } else {
+                        set.add(day.value);
+                      }
+                      saveSettings({ ...settings, weeklyUnblockDays: Array.from(set).sort((a, b) => a - b) });
+                    }}
+                  />
+                  <span className="weekly-day-label">{day.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="weekly-duration-stack">
+            <label className="option-row">
+              <span>{t(settings.language, "options.weekly_unblock.duration")}</span>
+              <input
+                type="number"
+                min={1}
+                step={1}
+                value={settings.weeklyUnblockDurationMinutes}
+                onChange={(event) => {
+                  const raw = Number(event.target.value);
+                  const next = Number.isFinite(raw) ? Math.max(1, Math.floor(raw)) : 1;
+                  saveSettings({ ...settings, weeklyUnblockDurationMinutes: next });
+                }}
+              />
+              <span>{t(settings.language, "options.weekly_unblock.minutes")}</span>
+            </label>
+            <div className={`weekly-status ${weeklyStatusTone}`}>
+              <span className="weekly-status-label">{t(settings.language, "options.weekly_unblock.status.title")}</span>
+              <span className="weekly-status-value">{weeklyStatusText}</span>
+            </div>
+            {settings.weeklyUnblockEnabled && canStartWeekly ? (
+              <div className="weekly-actions">
+                <button type="button" onClick={startWeeklySession}>
+                  {t(settings.language, "options.weekly_unblock.action.start")}
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </section>
+
+      <section className="panel" data-guide="time">
         <h3>{t(settings.language, "options.time.title")}</h3>
         <label>
           <input
@@ -383,25 +586,54 @@ export function Options() {
         </label>
       </section>
 
-      <section className="panel">
+      <section className="panel language-panel" data-guide="language">
         <h3>{t(settings.language, "options.language.title")}</h3>
-        <label>
-          <span>{t(settings.language, "options.language.current")}</span>
-          <select
-            value={settings.language}
-            onChange={(event) =>
-              saveSettings({ ...settings, language: event.target.value as Settings["language"] })
-            }
-          >
-            <option value="en">English</option>
-            <option value="es">Espanol</option>
-            <option value="pt">Portugues</option>
-            <option value="fr">Francais</option>
-          </select>
-        </label>
+        <div className="language-picker">
+          <span className="language-label">{t(settings.language, "options.language.current")}</span>
+          <label className="language-option">
+            <input
+              type="radio"
+              name="language"
+              value="en"
+              checked={settings.language === "en"}
+              onChange={() => setLanguage("en")}
+            />
+            <span>English</span>
+          </label>
+          <label className="language-option">
+            <input
+              type="radio"
+              name="language"
+              value="es"
+              checked={settings.language === "es"}
+              onChange={() => setLanguage("es")}
+            />
+            <span>Español</span>
+          </label>
+          <label className="language-option">
+            <input
+              type="radio"
+              name="language"
+              value="pt"
+              checked={settings.language === "pt"}
+              onChange={() => setLanguage("pt")}
+            />
+            <span>Português</span>
+          </label>
+          <label className="language-option">
+            <input
+              type="radio"
+              name="language"
+              value="fr"
+              checked={settings.language === "fr"}
+              onChange={() => setLanguage("fr")}
+            />
+            <span>Français</span>
+          </label>
+        </div>
       </section>
 
-      <section className="panel">
+      <section className="panel" data-guide="export">
         <h3>{t(settings.language, "options.export.title")}</h3>
         <div className="actions">
           <button onClick={exportSettings}>{t(settings.language, "options.export.export_json")}</button>
@@ -415,6 +647,56 @@ export function Options() {
           </label>
         </div>
       </section>
+
+      {guideActive && guideStep ? (
+        <div className="guide-float" role="dialog" aria-live="polite">
+          <div className="guide-progress">
+            {tf(settings.language, "options.guide.progress", {
+              current: guideStepIndex + 1,
+              total: totalGuideSteps
+            })}
+          </div>
+          <div className="guide-title">{guideStep.title}</div>
+          <div className="guide-text">{guideStep.desc}</div>
+          <div className="guide-nav">
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => setGuideStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={guideStepIndex === 0}
+            >
+              {t(settings.language, "options.guide.back")}
+            </button>
+            {guideStepIndex === totalGuideSteps - 1 ? (
+              <button type="button" onClick={finishGuide}>
+                {t(settings.language, "options.guide.finish")}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setGuideStepIndex((prev) => Math.min(totalGuideSteps - 1, prev + 1))}
+              >
+                {t(settings.language, "options.guide.next")}
+              </button>
+            )}
+            <button type="button" className="btn-ghost" onClick={skipGuide}>
+              {t(settings.language, "options.guide.skip")}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {showScrollTop ? (
+        <button
+          type="button"
+          className="scroll-top-btn"
+          title={t(settings.language, "ui.scroll_top")}
+          aria-label={t(settings.language, "ui.scroll_top")}
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        >
+          ↑
+        </button>
+      ) : null}
 
     </div>
   );

@@ -10,7 +10,7 @@ const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const DAY_LABELS_BY_LANG: Record<Language, string[]> = {
   es: ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"],
   en: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-  pt: ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"],
+  pt: ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"],
   fr: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
 };
 
@@ -369,13 +369,30 @@ function IntervalList({
           <div key={interval.id} className="grid grid-cols-5 gap-2 px-4 py-2 text-sm border-t border-slate-100">
             <span>{formatIntervalTime(interval.start, timeFormat12h)}</span>
             <span>{formatIntervalTime(interval.end, timeFormat12h)}</span>
-            <span className="capitalize">{interval.mode}</span>
+            <span
+              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${
+                interval.mode === "blocked"
+                  ? "border-rose-200 bg-rose-100 text-rose-800"
+                  : "border-emerald-200 bg-emerald-100 text-emerald-800"
+              }`}
+            >
+              {interval.mode === "blocked"
+                ? t(language, "schedule.modal.mode_blocked")
+                : t(language, "schedule.modal.mode_free")}
+            </span>
             <button
-              className={`w-fit rounded px-2 py-1 text-xs ${
-                interval.enabled ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-500"
+              className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                interval.enabled
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                  : "border-slate-200 bg-slate-50 text-slate-500"
               }`}
               onClick={() => onToggle(interval.id)}
             >
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  interval.enabled ? "bg-emerald-500" : "bg-slate-400"
+                }`}
+              />
               {interval.enabled ? t(language, "schedule.list.enabled") : t(language, "schedule.list.disabled")}
             </button>
             <div className="flex justify-end gap-2">
