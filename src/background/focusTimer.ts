@@ -122,6 +122,9 @@ async function writeFocusTimer(state: FocusTimerState) {
 }
 
 function scheduleAlarm(state: FocusTimerState | null) {
+  if (!chrome.alarms) {
+    return;
+  }
   if (!state?.running || !state.endAt) {
     chrome.alarms.clear(ALARM_NAME);
     return;
@@ -164,6 +167,9 @@ async function handleAlarm() {
 }
 
 export function registerFocusTimer() {
+  if (!chrome.alarms?.onAlarm) {
+    return;
+  }
   chrome.alarms.onAlarm.addListener((alarm) => {
     if (alarm?.name !== ALARM_NAME) return;
     void handleAlarm();
