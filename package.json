@@ -1,6 +1,7 @@
 {
   "name": "focus-tube-blocker",
   "version": "3.0.1",
+  "author": "Manuel Adolfo Deño de los Santos",
   "private": true,
   "type": "module",
   "scripts": {

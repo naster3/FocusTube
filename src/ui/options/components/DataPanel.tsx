@@ -30,6 +30,7 @@ export function DataPanel({
     <section className="panel data-panel" data-guide="export">
       <h3>{t(language, "options.export.title")}</h3>
       <p className="data-note">{t(language, "options.data.pdf_note")}</p>
+      <p className="data-note">{t(language, "options.data.privacy_note")}</p>
       <div className="data-grid">
         <div className="data-card">
           <div>

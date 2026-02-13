@@ -1,13 +1,13 @@
 # Documentacion interna
 
 ## Objetivo
-FocusTube Blocker es una extension MV3 que bloquea contenido de YouTube/YouTube Kids por reglas manuales, por horario, por Shorts, y por dominios configurables. Incluye UI de popup, pagina de opciones y una pagina de bloqueo, mas un overlay con temporizador dentro de YouTube.
+FocusTube Blocker es una extension MV3 para bloquear sitios web y contenidos por reglas manuales, horarios y listas personalizadas. Incluye UI de popup, pagina de opciones, dashboard, pagina de ayuda y pagina de bloqueo, mas un overlay flotante dentro de sitios objetivo.
 
 ## Arquitectura
 - Background (service worker): `src/background/index.ts`.
 - Content script: `src/content/index.ts` (inyecta el overlay y redirige a la pagina bloqueada).
-- UI: `src/ui/popup`, `src/ui/options`, `src/ui/blocked`.
-- Core: reglas, tipos y utilidades en `src/core/*`.
+- UI: `src/ui/popup`, `src/ui/options`, `src/ui/dashboard`, `src/ui/help`, `src/ui/blocked`.
+- Domain: reglas, tipos y utilidades en `src/domain/*`.
 - Infrastructure: storage y DB en `src/infrastructure/*`.
 - Manifest base: `src/manifest/manifest.base.json` (se copia a `dist/manifest.json`).
 
@@ -29,9 +29,10 @@ FocusTube Blocker es una extension MV3 que bloquea contenido de YouTube/YouTube 
 
 ## Datos y storage
 - `settings` y `metrics` viven en `chrome.storage.local`.
-- Valores por defecto en `src/core/defaults.ts`.
+- Valores por defecto en `src/domain/settings/defaults.ts`.
 - `mergeSettings` y `mergeMetrics` mantienen compatibilidad.
 - Modo estricto: requiere PIN (hash en `pinHash`) para desactivar.
+- Metricas agregadas y eventos se persisten en IndexedDB (incluye SQLite local).
 
 ## Mensajes (runtime)
 - `CHECK_BLOCK` (content -> background) evalua bloqueo.

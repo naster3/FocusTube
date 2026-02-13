@@ -1,16 +1,19 @@
 # FocusTube Blocker
 
-Extension MV3 para bloquear YouTube y otros dominios con horarios, whitelist y modo estricto.
+Extension MV3 para gestionar bloqueos y horarios de sitios web con listas personalizadas.
 
 ## Caracteristicas
 
 - Bloqueo por horarios (intervalos por dia).
 - Bloqueo permanente + sesion semanal.
 - Modo estricto con PIN.
-- Whitelist para canales y videos de YouTube.
-- Bloqueo de Shorts, Kids y Reels de Instagram.
-- Bloqueos rapidos para redes sociales (TikTok, Instagram, Facebook, X).
+- Lista permitida (whitelist) para URLs o dominios.
+- Bloqueos rapidos para sitios populares.
 - Dashboard con metricas y exportacion.
+
+## Autor
+
+Manuel Adolfo Deño de los Santos
 
 ## Requisitos
 
@@ -74,6 +77,11 @@ Las paginas de la extension viven en `src/ui/` y se copian al build en `dist/src
 - Eventos y agregados diarios se guardan en IndexedDB y se persisten con SQLite (en IndexedDB).
 - Exportacion/importacion de settings y metricas desde la UI.
 - Archivos de datos (`focus-tube-settings.json`, `focus-tube-metrics.json`, `*.sqlite`, `*.db`, etc.) estan ignorados por git.
+- Politica de privacidad: `docs/PRIVACY_POLICY.md` (publicala en una URL antes de subir a Chrome Web Store).
+
+## Publicar en Chrome Web Store
+
+- Checklist y texto sugerido: `docs/STORE_LISTING.md`.
 
 ## Troubleshooting
 

@@ -177,6 +177,15 @@ export const buildHelpGroups = (language: Settings["language"]): HelpGroup[] => 
           t(language, "help.metrics.line4"),
           t(language, "help.metrics.line5")
         ]
+      },
+      {
+        id: "privacy",
+        title: t(language, "help.privacy.title"),
+        lines: [
+          t(language, "help.privacy.line1"),
+          t(language, "help.privacy.line2"),
+          t(language, "help.privacy.line3")
+        ]
       }
     ]
   },
