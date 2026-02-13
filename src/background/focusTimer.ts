@@ -142,7 +142,7 @@ async function notifyTransition(prevMode: "focus" | "break") {
   const bodyKey = prevMode === "focus" ? "focus.notify.focus_done.body" : "focus.notify.break_done.body";
   chrome.notifications.create({
     type: "basic",
-    iconUrl: "icons/icon-48.png",
+    iconUrl: "icons/FT_icon_48x48.png",
     title: t(lang, titleKey),
     message: t(lang, bodyKey)
   });
