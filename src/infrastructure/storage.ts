@@ -492,16 +492,15 @@ function mergeProfile(input: Partial<ProfileSettings> | undefined, fallback: Pro
 
 // Merge de settings, con defaults y validacion basica.
 export function mergeSettings(input: Partial<Settings>): Settings {
-  const { proEnabled: _proEnabled, licenseKey: _licenseKey, licenseStatus: _licenseStatus, licenseCheckedAt: _licenseCheckedAt, deviceId: _deviceId, ...restInput } = input as Partial<Settings> & {
-    proEnabled?: unknown;
-    licenseKey?: unknown;
-    licenseStatus?: unknown;
-    licenseCheckedAt?: unknown;
-    deviceId?: unknown;
-  };
+  const restInput = { ...input } as Partial<Settings> & Record<string, unknown>;
+  delete restInput.proEnabled;
+  delete restInput.licenseKey;
+  delete restInput.licenseStatus;
+  delete restInput.licenseCheckedAt;
+  delete restInput.deviceId;
   const pinHash = typeof input.pinHash === "string" ? input.pinHash : null;
   const theme = input.theme === "dark" ? "dark" : input.theme === "system" ? "system" : "light";
-  let familyModeEnabled = Boolean(input.familyModeEnabled);
+  const familyModeEnabled = Boolean(input.familyModeEnabled);
   let activeProfile: ProfileId = input.activeProfile === "kid" ? "kid" : "adult";
   if (!familyModeEnabled) {
     activeProfile = "adult";
