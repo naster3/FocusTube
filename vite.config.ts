@@ -8,6 +8,7 @@ export default defineConfig({
   base: "./",
   resolve: {
     alias: {
+      "@": resolve(__dirname, "src"),
       fs: resolve(__dirname, "src/shims/fs.ts"),
       path: resolve(__dirname, "src/shims/path.ts"),
       crypto: resolve(__dirname, "src/shims/crypto.ts")

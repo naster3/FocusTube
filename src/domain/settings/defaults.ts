@@ -1,4 +1,5 @@
-import { Interval, IntervalWeek, Settings, Metrics, WeekSchedule } from "./types";
+import { Interval, IntervalWeek, ProfileSettings, Settings, Metrics, WeekSchedule } from "./types";
+import { getDayLabels } from "../../shared/i18n/dates";
 
 // Schedules por defecto por dia.
 export const DEFAULT_SCHEDULES: WeekSchedule = {
@@ -32,6 +33,48 @@ const toIntervals = (schedules: WeekSchedule): IntervalWeek => {
 
 export const DEFAULT_INTERVALS: IntervalWeek = toIntervals(DEFAULT_SCHEDULES);
 
+const cloneWeekSchedule = (input: WeekSchedule): WeekSchedule => {
+  const next: WeekSchedule = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+  for (let day = 0; day <= 6; day += 1) {
+    const ranges = input[day] || [];
+    next[day] = ranges.map((range) => ({ start: range.start, end: range.end }));
+  }
+  return next;
+};
+
+const cloneIntervalWeek = (input: IntervalWeek): IntervalWeek => {
+  const next: IntervalWeek = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+  for (let day = 0; day <= 6; day += 1) {
+    const ranges = input[day] || [];
+    next[day] = ranges.map((range) => ({ ...range }));
+  }
+  return next;
+};
+
+export const createDefaultProfile = (overrides: Partial<ProfileSettings> = {}): ProfileSettings => ({
+  blockEnabled: false,
+  blockShorts: true,
+  blockKids: false,
+  blockInstagramReels: false,
+  blockedDomains: [],
+  blockedDomainTags: {},
+  whitelist: [],
+  whitelistEnabled: true,
+  schedules: cloneWeekSchedule(DEFAULT_SCHEDULES),
+  intervalsByDay: cloneIntervalWeek(DEFAULT_INTERVALS),
+  timeFormat12h: false,
+  unblockUntil: null,
+  weeklyUnblockEnabled: false,
+  weeklyUnblockDays: [1],
+  weeklyUnblockDurationMinutes: 60,
+  weeklyUnblockUntil: null,
+  weeklyUnblockLastWeek: null,
+  ...overrides
+});
+
+export const DEFAULT_PROFILE_ADULT = createDefaultProfile();
+export const DEFAULT_PROFILE_KID = createDefaultProfile();
+
 // Settings por defecto.
 export const DEFAULT_SETTINGS: Settings = {
   blockEnabled: false,
@@ -39,11 +82,19 @@ export const DEFAULT_SETTINGS: Settings = {
   blockKids: false,
   blockInstagramReels: false,
   language: "en",
+  theme: "light",
+  familyModeEnabled: false,
+  activeProfile: "adult",
+  profiles: {
+    adult: DEFAULT_PROFILE_ADULT,
+    kid: DEFAULT_PROFILE_KID
+  },
   strictMode: false,
   pinHash: null,
   blockedDomains: [],
   blockedDomainTags: {},
   whitelist: [],
+  whitelistEnabled: true,
   schedules: DEFAULT_SCHEDULES,
   intervalsByDay: DEFAULT_INTERVALS,
   timeFormat12h: false,
@@ -67,4 +118,4 @@ export const DEFAULT_METRICS: Metrics = {
   lastUpdatedAt: null
 };
 
-export const DAY_LABELS = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"];
+export const DAY_LABELS = getDayLabels("es");

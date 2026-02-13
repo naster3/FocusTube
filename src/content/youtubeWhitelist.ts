@@ -27,7 +27,7 @@ function extractHandleFromHref(href: string) {
     const handle = rest.split(/[/?#]/)[0];
     return handle ? handle.toLowerCase() : null;
   } catch {
-    const m = href.match(/\/\@([a-zA-Z0-9._-]+)/);
+    const m = href.match(/\/@([a-zA-Z0-9._-]+)/);
     return m?.[1]?.toLowerCase() ?? null;
   }
 }
@@ -98,6 +98,9 @@ export async function allowWhitelistedYouTubeWatchIfPossible(
 
   // Lee settings directo del storage (local).
   const settings = await getSettings();
+  if (!settings.whitelistEnabled) {
+    return false;
+  }
   if (isWhitelisted(window.location.href, settings.whitelist)) {
     return true;
   }
@@ -134,5 +137,3 @@ export async function allowWhitelistedYouTubeWatchIfPossible(
 
   return false;
 }
-
-

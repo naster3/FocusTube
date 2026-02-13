@@ -1,23 +1,37 @@
 // @vitest-environment jsdom
 // @vitest-environment-options {"url":"https://www.youtube.com/watch?v=N2dqJG-e_Gw"}
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import settingsFixture from "../../focus-tube-settings.json";
+import { DEFAULT_SETTINGS } from "../domain/settings/defaults";
 import { allowWhitelistedYouTubeWatchIfPossible } from "../content/youtubeWhitelist";
+
+const settingsFixture = {
+  ...DEFAULT_SETTINGS,
+  whitelistEnabled: true,
+  whitelist: ["https://www.youtube.com/@veritasium"]
+};
 
 vi.mock("../infrastructure/storage", () => ({
   getSettings: vi.fn(async () => settingsFixture)
 }));
 
+const clearBody = () => {
+  while (document.body.firstChild) {
+    document.body.removeChild(document.body.firstChild);
+  }
+};
+
 function setChannelHandle(handle: string) {
-  document.body.innerHTML = `
-    <ytd-video-owner-renderer>
-      <a href="/@${handle}">${handle}</a>
-    </ytd-video-owner-renderer>
-  `;
+  clearBody();
+  const renderer = document.createElement("ytd-video-owner-renderer");
+  const link = document.createElement("a");
+  link.setAttribute("href", `/@${handle}`);
+  link.textContent = handle;
+  renderer.appendChild(link);
+  document.body.appendChild(renderer);
 }
 
 beforeEach(() => {
-  document.body.innerHTML = "";
+  clearBody();
   window.history.replaceState({}, "", "https://www.youtube.com/watch?v=N2dqJG-e_Gw");
 });
 

@@ -35,11 +35,11 @@ export async function checkAndBlock(options?: { showGuard?: boolean }) {
   }, 2000);
 
   // Consulta al background para la decision final.
-  safeSendMessage<{ blocked: boolean } & Record<string, unknown>>({ type: "CHECK_BLOCK", url }, (response) => {
+  safeSendMessage<"CHECK_BLOCK">({ type: "CHECK_BLOCK", url }, (response) => {
     settled = true;
     window.clearTimeout(failOpen);
 
-    if (!response?.blocked) {
+    if (!response?.ok || !response.blocked) {
       guard.hide();
       return;
     }

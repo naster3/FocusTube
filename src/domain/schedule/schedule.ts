@@ -19,7 +19,7 @@ export function isWithinBlockedSchedule(date: Date, intervalsByDay: IntervalWeek
   const prevIntervals = intervalsByDay[prevDay] || [];
 
   const inToday = todayIntervals.some((interval) => {
-    if (!interval.enabled || interval.mode !== "blocked") {
+    if (interval.enabled === false || interval.mode !== "blocked") {
       return false;
     }
     const start = parseTimeToMinutes(interval.start);
@@ -37,7 +37,7 @@ export function isWithinBlockedSchedule(date: Date, intervalsByDay: IntervalWeek
   }
 
   const inPrevCross = prevIntervals.some((interval) => {
-    if (!interval.enabled || interval.mode !== "blocked") {
+    if (interval.enabled === false || interval.mode !== "blocked") {
       return false;
     }
     const start = parseTimeToMinutes(interval.start);

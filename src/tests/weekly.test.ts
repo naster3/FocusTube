@@ -1,10 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_SETTINGS } from "../domain/settings/defaults";
 import type { DomainTag, Interval } from "../domain/settings/types";
 import { evaluateBlock } from "../domain/blocking/url";
 import { canStartWeeklySession, getWeeklySessionDayKey, isWeeklySessionActive } from "../domain/weekly/weekly";
 
 describe("weekly session rules", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2024-01-01T12:00:00Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("allows weekly session only on configured days", () => {
     const monday = new Date(2024, 0, 1, 12, 0, 0);
     const tuesday = new Date(2024, 0, 2, 12, 0, 0);
@@ -99,5 +108,41 @@ describe("weekly session rules", () => {
 
     const freeDecision = evaluateBlock("https://youtube.com/watch?v=1", settings, mondayFree.getTime());
     expect(freeDecision.blocked).toBe(false);
+  });
+
+  it("applies permanent block even when intervalos are disabled", () => {
+    const mondayFree = new Date(2024, 0, 1, 12, 0, 0);
+    const interval: Interval = {
+      id: "x",
+      start: "10:00" as Interval["start"],
+      end: "11:00" as Interval["end"],
+      mode: "blocked",
+      enabled: false
+    };
+    const tags: DomainTag[] = ["intervalos"];
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      blockEnabled: true,
+      blockedDomains: ["youtube.com"],
+      blockedDomainTags: { "youtube.com": tags },
+      intervalsByDay: { ...DEFAULT_SETTINGS.intervalsByDay, 1: [interval] }
+    };
+
+    const decision = evaluateBlock("https://youtube.com/watch?v=1", settings, mondayFree.getTime());
+    expect(decision.blocked).toBe(true);
+    expect(decision.reason).toBe("manual");
+  });
+
+  it("expires weekly session after the window ends", () => {
+    const now = Date.now();
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      weeklyUnblockEnabled: true,
+      weeklyUnblockUntil: now + 5 * 60 * 1000
+    };
+
+    expect(isWeeklySessionActive(settings, now)).toBe(true);
+    vi.advanceTimersByTime(6 * 60 * 1000);
+    expect(isWeeklySessionActive(settings, Date.now())).toBe(false);
   });
 });

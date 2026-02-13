@@ -150,7 +150,7 @@ export async function addAttempt(tabId: number, url: string, now: number) {
 // Tick global que acumula tiempo si la pestana esta activa/visible.
 export async function tickMetrics() {
   const now = Date.now();
-  for (const [tabId, state] of tabStates.entries()) {
+  for (const [, state] of tabStates.entries()) {
     const eligible = state.active && isWindowFocused() && state.visible && state.isTarget && state.domain;
     if (eligible && state.domain) {
       const last = state.lastTick ?? now;

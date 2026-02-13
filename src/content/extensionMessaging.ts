@@ -1,3 +1,4 @@
+import type { MessageRequest, MessageResponse, MessageType } from "../shared/messages";
 import { isValidOutgoingMessage } from "../shared/messages";
 
 // Evita llamadas cuando el contexto de la extension se invalida.
@@ -6,9 +7,9 @@ export function canUseExtension() {
 }
 
 // Wrapper seguro para mensajeria hacia background.
-export function safeSendMessage<T>(
-  message: { type: string; [key: string]: unknown },
-  callback: (response: T | undefined) => void
+export function safeSendMessage<T extends MessageType>(
+  message: MessageRequest<T>,
+  callback: (response: MessageResponse<T> | undefined) => void
 ) {
   if (!canUseExtension()) {
     return;
@@ -22,7 +23,7 @@ export function safeSendMessage<T>(
       if (err?.message?.includes("Extension context invalidated")) {
         return;
       }
-      callback(response as T | undefined);
+      callback(response as MessageResponse<T> | undefined);
     });
   } catch {
     // Extension context might be invalidated after reload.

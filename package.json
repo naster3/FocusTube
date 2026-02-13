@@ -1,31 +1,43 @@
 {
   "name": "focus-tube-blocker",
-  "version": "2.6.16",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build && vite build --config vite.content.config.ts && node scripts/copy-manifest.js",
     "test": "vitest run",
-    "db:check": "node scripts/print-db-check.js"
+    "db:check": "node scripts/print-db-check.js",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "chart.js": "^4.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "sql.js": "^1.12.0"
+    "sql.js": "^1.12.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@typescript-eslint/parser": "^7.2.0",
     "@types/chrome": "^0.0.244",
+    "@types/node": "^20.11.0",
     "@types/react": "^18.2.52",
     "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.34.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
     "jsdom": "^24.1.1",
     "postcss": "^8.4.45",
+    "prettier": "^3.2.5",
     "tailwindcss": "^3.4.10",
-    "typescript": "^5.3.3",
+    "typescript": "~5.5.4",
     "vite": "^5.0.12",
     "vitest": "^1.2.2"
   }

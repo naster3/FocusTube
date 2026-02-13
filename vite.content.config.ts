@@ -3,6 +3,11 @@ import { resolve } from "path";
 
 // Build separado para content script sin imports (IIFE).
 export default defineConfig({
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "src")
+    }
+  },
   build: {
     outDir: "dist",
     emptyOutDir: false,

@@ -2,17 +2,13 @@
 import React, { useMemo, useState, useEffect } from "react";
 import type { Interval, IntervalWeek, Language } from "../../../domain/settings/types";
 import { t, tf } from "../../../shared/i18n";
+import { DAY_ORDER_MONDAY_FIRST, getDayLabel, getDayLabelsInOrder } from "../../../shared/i18n/dates";
 import { Segment, computeTotals, detectOverlaps, minutesToTime, normalizeIntervals, parseTimeToMinutes } from "./helpers";
+import { EmptyState } from "../../shared/components/EmptyState";
 
 // Orden visual Lunes a Domingo.
-const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
-// Etiquetas cortas por idioma para la vista semanal.
-const DAY_LABELS_BY_LANG: Record<Language, string[]> = {
-  es: ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"],
-  en: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-  pt: ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"],
-  fr: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
-};
+const DAY_ORDER = DAY_ORDER_MONDAY_FIRST;
+const EMPTY_INTERVALS: Interval[] = [];
 
 // Traducciones de periodos del dia para el tooltip del timeline.
 const PERIOD_LABELS_BY_LANG: Record<string, Record<string, string>> = {
@@ -55,9 +51,60 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, language, onChange
   const [editing, setEditing] = useState<Interval | null>(null);
 
   // Intervalos del dia seleccionado.
-  const intervals = intervalsByDay[selectedDay] || [];
+  const intervals = useMemo(
+    () => intervalsByDay[selectedDay] ?? EMPTY_INTERVALS,
+    [intervalsByDay, selectedDay]
+  );
   const overlaps = useMemo(() => detectOverlaps(intervals), [intervals]);
-  const totals = useMemo(() => computeTotals(intervals), [intervals]);
+  const carryOver = useMemo(() => {
+    const prevDay = (selectedDay + 6) % 7;
+    const prevIntervals = intervalsByDay[prevDay] || [];
+    let untilMin = 0;
+
+    prevIntervals.forEach((interval) => {
+      if (interval.enabled === false || interval.mode !== "blocked") {
+        return;
+      }
+      const startMin = parseTimeToMinutes(interval.start);
+      const endMin = parseTimeToMinutes(interval.end);
+      if (startMin === endMin) {
+        return;
+      }
+      if (endMin < startMin) {
+        untilMin = Math.max(untilMin, endMin);
+      }
+    });
+
+    if (untilMin <= 0) {
+      return null;
+    }
+
+    return {
+      prevDay,
+      untilMin,
+      interval: {
+        id: `carry-${prevDay}`,
+        start: "00:00" as Interval["start"],
+        end: minutesToTime(untilMin) as Interval["end"],
+        mode: "blocked" as Interval["mode"],
+        enabled: true
+      }
+    };
+  }, [intervalsByDay, selectedDay]);
+
+  const intervalsForTotals = useMemo(
+    () => (carryOver ? [...intervals, carryOver.interval] : intervals),
+    [intervals, carryOver]
+  );
+  const totals = useMemo(() => computeTotals(intervalsForTotals), [intervalsForTotals]);
+  const carryOverNotice = useMemo(() => {
+    if (!carryOver) {
+      return null;
+    }
+    const dayLabel = getDayLabel(carryOver.prevDay, language);
+    const timeLabel = formatMinuteLabel(carryOver.untilMin, timeFormat12h);
+    return tf(language, "schedule.carryover.notice", { day: dayLabel, time: timeLabel });
+  }, [carryOver, language, timeFormat12h]);
 
   // Acciones CRUD de intervalos.
   const handleAdd = () => {
@@ -80,7 +127,11 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, language, onChange
   const handleToggle = (id: string) => {
     onChange({
       ...intervalsByDay,
-      [selectedDay]: intervals.map((i) => (i.id === id ? { ...i, enabled: !i.enabled } : i))
+      [selectedDay]: intervals.map((i) => {
+        if (i.id !== id) return i;
+        const isEnabled = i.enabled !== false;
+        return { ...i, enabled: !isEnabled };
+      })
     });
   };
 
@@ -125,11 +176,22 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, language, onChange
           {t(language, "schedule.overlaps")}
         </div>
       )}
+      {activeTab === "day" && carryOverNotice && (
+        <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          {carryOverNotice}
+        </div>
+      )}
 
       {activeTab === "day" ? (
         <>
           {/* Timeline del dia seleccionado */}
-          <DayTimelineBar intervals={intervals} timeFormat12h={timeFormat12h} language={language} />
+          <DayTimelineBar
+            intervals={intervals}
+            timeFormat12h={timeFormat12h}
+            language={language}
+            carryOverMinutes={carryOver?.untilMin ?? 0}
+            carryOverLabel={carryOverNotice ?? undefined}
+          />
           <div className="mt-3 text-sm text-slate-700">
             {tf(language, "schedule.blocked_free", {
               blocked: formatMinutes(totals.blockedMinutes),
@@ -194,11 +256,15 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, language, onChange
 function DayTimelineBar({
   intervals,
   timeFormat12h,
-  language
+  language,
+  carryOverMinutes,
+  carryOverLabel
 }: {
   intervals: Interval[];
   timeFormat12h: boolean;
   language: Language;
+  carryOverMinutes?: number;
+  carryOverLabel?: string;
 }) {
   const segments = useMemo(() => normalizeIntervals(intervals), [intervals]);
   const [nowMin, setNowMin] = useState(() => {
@@ -215,6 +281,7 @@ function DayTimelineBar({
   }, []);
 
   const nowLeft = (nowMin / 1440) * 100;
+  const carryWidth = carryOverMinutes ? Math.min(100, (carryOverMinutes / 1440) * 100) : 0;
 
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -235,6 +302,22 @@ function DayTimelineBar({
             />
           ))}
         </div>
+
+        {carryWidth > 0 ? (
+          <div
+            className="absolute inset-y-0 left-0 pointer-events-none"
+            style={{ width: `${carryWidth}%` }}
+            title={carryOverLabel}
+          >
+            <div
+              className="h-full w-full border-r border-rose-400/70"
+              style={{
+                backgroundImage:
+                  "repeating-linear-gradient(135deg, rgba(248,113,113,0.35) 0, rgba(248,113,113,0.35) 6px, rgba(255,255,255,0.25) 6px, rgba(255,255,255,0.25) 12px)"
+              }}
+            />
+          </div>
+        ) : null}
 
         <div
           className="absolute top-0 -translate-x-1/2 h-full border-l-2 border-rose-500"
@@ -267,7 +350,7 @@ function WeekTimelineBars({
     <div className="grid gap-3">
       {DAY_ORDER.map((day, idx) => {
         const segments = normalizeIntervals(intervalsByDay[day] || []);
-        const dayLabels = DAY_LABELS_BY_LANG[language] ?? DAY_LABELS_BY_LANG.en;
+        const dayLabels = getDayLabelsInOrder(language, "monday-first");
         const dayLabel = dayLabels[idx];
         const isActive = day === selectedDay;
         return (
@@ -363,48 +446,61 @@ function IntervalList({
         <span className="text-right">{t(language, "schedule.list.actions")}</span>
       </div>
       {intervals.length === 0 ? (
-        <div className="px-4 py-4 text-sm text-slate-500">{t(language, "schedule.empty")}</div>
+        <div className="px-4 py-4">
+          <EmptyState className="schedule-empty" title={t(language, "schedule.empty")} />
+        </div>
       ) : (
-        intervals.map((interval) => (
-          <div key={interval.id} className="grid grid-cols-5 gap-2 px-4 py-2 text-sm border-t border-slate-100">
-            <span>{formatIntervalTime(interval.start, timeFormat12h)}</span>
-            <span>{formatIntervalTime(interval.end, timeFormat12h)}</span>
-            <span
-              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${
-                interval.mode === "blocked"
-                  ? "border-rose-200 bg-rose-100 text-rose-800"
-                  : "border-emerald-200 bg-emerald-100 text-emerald-800"
-              }`}
-            >
-              {interval.mode === "blocked"
-                ? t(language, "schedule.modal.mode_blocked")
-                : t(language, "schedule.modal.mode_free")}
-            </span>
-            <button
-              className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-semibold ${
-                interval.enabled
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                  : "border-slate-200 bg-slate-50 text-slate-500"
-              }`}
-              onClick={() => onToggle(interval.id)}
-            >
+        intervals.map((interval) => {
+          const isEnabled = interval.enabled !== false;
+          const crossesMidnight = intervalCrossesMidnight(interval);
+          return (
+            <div key={interval.id} className="grid grid-cols-5 gap-2 px-4 py-2 text-sm border-t border-slate-100">
+              <span>{formatIntervalTime(interval.start, timeFormat12h)}</span>
+              <span className="inline-flex items-center gap-2">
+                {formatIntervalTime(interval.end, timeFormat12h)}
+                {crossesMidnight ? (
+                  <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                    {t(language, "schedule.cross_midnight")}
+                  </span>
+                ) : null}
+              </span>
               <span
-                className={`h-2 w-2 rounded-full ${
-                  interval.enabled ? "bg-emerald-500" : "bg-slate-400"
+                className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${
+                  interval.mode === "blocked"
+                    ? "border-rose-200 bg-rose-100 text-rose-800"
+                    : "border-emerald-200 bg-emerald-100 text-emerald-800"
                 }`}
-              />
-              {interval.enabled ? t(language, "schedule.list.enabled") : t(language, "schedule.list.disabled")}
-            </button>
-            <div className="flex justify-end gap-2">
-              <button className="text-slate-600 hover:text-slate-900" onClick={() => onEdit(interval)}>
-                {t(language, "schedule.list.edit")}
+              >
+                {interval.mode === "blocked"
+                  ? t(language, "schedule.modal.mode_blocked")
+                  : t(language, "schedule.modal.mode_free")}
+              </span>
+              <button
+                className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                  isEnabled
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                    : "border-slate-200 bg-slate-50 text-slate-500"
+                }`}
+                onClick={() => onToggle(interval.id)}
+              >
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    isEnabled ? "bg-emerald-500" : "bg-slate-400"
+                  }`}
+                />
+                {isEnabled ? t(language, "schedule.list.enabled") : t(language, "schedule.list.disabled")}
               </button>
-              <button className="text-rose-600 hover:text-rose-800" onClick={() => onDelete(interval.id)}>
-                {t(language, "schedule.list.delete")}
-              </button>
+              <div className="flex justify-end gap-2">
+                <button className="text-slate-600 hover:text-slate-900" onClick={() => onEdit(interval)}>
+                  {t(language, "schedule.list.edit")}
+                </button>
+                <button className="text-rose-600 hover:text-rose-800" onClick={() => onDelete(interval.id)}>
+                  {t(language, "schedule.list.delete")}
+                </button>
+              </div>
             </div>
-          </div>
-        ))
+          );
+        })
       )}
     </div>
   );
@@ -435,7 +531,7 @@ function AddEditIntervalModal({
       setStart(interval.start);
       setEnd(interval.end);
       setMode(interval.mode);
-      setEnabled(interval.enabled);
+      setEnabled(interval.enabled !== false);
     }
   }, [interval]);
 
@@ -563,6 +659,12 @@ function formatMinuteLabel(totalMinutes: number, use12h: boolean) {
 function formatIntervalTime(value: Interval["start"], use12h: boolean) {
   const minutes = parseTimeToMinutes(value);
   return formatMinuteLabel(minutes, use12h);
+}
+
+function intervalCrossesMidnight(interval: Interval) {
+  const startMin = parseTimeToMinutes(interval.start);
+  const endMin = parseTimeToMinutes(interval.end);
+  return startMin !== endMin && endMin < startMin;
 }
 
 // Formatea minutos totales como "Xh Ym".

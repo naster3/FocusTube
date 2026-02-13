@@ -57,7 +57,7 @@ function buildMinuteModes(intervals: Interval[]) {
   const blockedMask = new Array(1440).fill(false);
 
   intervals
-    .filter((i) => i.enabled)
+    .filter((i) => i.enabled !== false)
     .forEach((interval) => {
       const startMin = parseTimeToMinutes(interval.start);
       const endMin = parseTimeToMinutes(interval.end);
@@ -113,7 +113,7 @@ export function detectOverlaps(intervals: Interval[]) {
   const counts = new Array(1440).fill(0);
 
   intervals
-    .filter((i) => i.enabled)
+    .filter((i) => i.enabled !== false)
     .forEach((interval) => {
       const startMin = parseTimeToMinutes(interval.start);
       const endMin = parseTimeToMinutes(interval.end);
@@ -152,6 +152,5 @@ export function computeTotals(intervals: Interval[]) {
   const freeMinutes = 1440 - blockedMinutes;
   return { blockedMinutes, freeMinutes };
 }
-
 
 

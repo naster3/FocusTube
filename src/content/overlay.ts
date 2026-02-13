@@ -248,7 +248,7 @@ export function initFloatingTimerOverlay() {
   // Poll al background para estado del timeline.
   function tick() {
     line3.textContent = `${t(lang, "overlay.now")}: ${formatTimeAmPm(Date.now())}`;
-    safeSendMessage<{ ok: boolean; timeline?: unknown }>({ type: "GET_TIMELINE" }, (res) => {
+    safeSendMessage<"GET_TIMELINE">({ type: "GET_TIMELINE" }, (res) => {
       if (!res?.ok || !res.timeline) {
         line1.textContent = t(lang, "overlay.no_state");
         big.textContent = "--:--";

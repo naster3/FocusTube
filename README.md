@@ -58,6 +58,16 @@ El bundle sale en `dist/`.
 - `public/icons` iconos.
 - `dist/` build para cargar unpacked.
 
+## Rutas de la extension (UI)
+
+Las paginas de la extension viven en `src/ui/` y se copian al build en `dist/src/ui/` con la misma ruta.
+
+- Popup: `src/ui/popup/index.html` (referenciado en `manifest.json` como `action.default_popup`).
+- Opciones: `src/ui/options/index.html` (referenciado en `manifest.json` como `options_page`).
+- Dashboard: `src/ui/dashboard/index.html` (se navega desde Opciones).
+- Ayuda: `src/ui/help/index.html` (se navega desde Opciones).
+- Bloqueo: `src/ui/blocked/index.html` (listado en `web_accessible_resources` y usado para redirecciones).
+
 ## Datos y privacidad
 
 - Settings y metricas viven en `chrome.storage.local`.

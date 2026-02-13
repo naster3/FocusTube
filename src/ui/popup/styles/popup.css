@@ -1,0 +1,318 @@
+:root {
+  --accent: #0f172a;
+  --accent-contrast: #ffffff;
+}
+
+:root[data-theme="dark"] {
+  --accent: #f97316;
+  --accent-contrast: #0b1220;
+}
+
+.popup {
+  width: 280px;
+  padding: 16px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #0f172a;
+  background: linear-gradient(135deg, #f9f3ec, #eff4ff);
+  position: relative;
+}
+
+.popup h1 {
+  font-size: 20px;
+  margin: 0 0 4px 0;
+}
+
+.popup p {
+  margin: 0 0 12px 0;
+  color: #475569;
+  font-size: 12px;
+}
+
+.popup-nav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.popup-tab {
+  flex: 1;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 12px;
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.popup-tab.active {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+}
+
+.popup-tab:hover:not(.active) {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.focus-card {
+  gap: 10px;
+}
+
+.focus-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.focus-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.focus-sub {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.focus-chip {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.focus-chip.focus {
+  background: #dbeafe;
+  color: #1e3a8a;
+  border-color: #bfdbfe;
+}
+
+.focus-chip.break {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.focus-timer {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-align: center;
+  color: #0f172a;
+}
+
+.focus-config {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.focus-field {
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.focus-field input {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.focus-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.focus-btn {
+  flex: 1 1 70px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  padding: 6px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.focus-btn.ghost {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: #cbd5f5;
+}
+
+.focus-btn[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.toggle {
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.primary {
+  width: 100%;
+  border: none;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.toast {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  background: rgba(15, 23, 42, 0.92);
+  color: #f8fafc;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.2);
+  z-index: 10;
+}
+
+.incognito-warning {
+  margin: 10px 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #7c2d12;
+  box-shadow: 0 6px 12px rgba(124, 45, 18, 0.12);
+  display: grid;
+  gap: 4px;
+}
+
+.incognito-title {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.incognito-text {
+  font-size: 11px;
+  color: #9a3412;
+}
+
+:root[data-theme="dark"] .popup {
+  color: #e2e8f0;
+  background: linear-gradient(135deg, #0b1220, #111827);
+}
+
+:root[data-theme="dark"] .popup p {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .popup-tab {
+  background: #111827;
+  border-color: #1e293b;
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .popup-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+:root[data-theme="dark"] .popup-tab:hover:not(.active) {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+:root[data-theme="dark"] .card {
+  background: #0f172a;
+  box-shadow: 0 10px 20px rgba(2, 6, 23, 0.45);
+}
+
+:root[data-theme="dark"] .focus-title,
+:root[data-theme="dark"] .focus-timer {
+  color: #e2e8f0;
+}
+
+:root[data-theme="dark"] .focus-sub,
+:root[data-theme="dark"] .focus-field {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .focus-field input {
+  background: #0b1220;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .focus-chip.focus {
+  background: rgba(59, 130, 246, 0.28);
+  border-color: rgba(59, 130, 246, 0.7);
+  color: #e0f2fe;
+}
+
+:root[data-theme="dark"] .focus-chip.break {
+  background: rgba(34, 197, 94, 0.22);
+  border-color: rgba(34, 197, 94, 0.65);
+  color: #bbf7d0;
+}
+
+:root[data-theme="dark"] .focus-btn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+:root[data-theme="dark"] .focus-btn.ghost {
+  background: #0b1220;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .primary {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+:root[data-theme="dark"] .toast {
+  background: rgba(15, 23, 42, 0.96);
+  color: #e2e8f0;
+}
+
+:root[data-theme="dark"] .incognito-warning {
+  background: rgba(249, 115, 22, 0.12);
+  border-color: #fb923c;
+  color: #fed7aa;
+  box-shadow: 0 6px 12px rgba(249, 115, 22, 0.18);
+}
+
+:root[data-theme="dark"] .incognito-text {
+  color: #fdba74;
+}

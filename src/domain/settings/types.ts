@@ -20,17 +20,46 @@ export type Interval = {
 
 export type IntervalWeek = Record<number, Interval[]>;
 
+export type ProfileId = "adult" | "kid";
+
+export type ProfileSettings = {
+  blockEnabled: boolean;
+  blockShorts: boolean;
+  blockKids: boolean;
+  blockInstagramReels: boolean;
+  blockedDomains: string[];
+  blockedDomainTags: Record<string, DomainTag[]>;
+  whitelist: string[];
+  whitelistEnabled: boolean;
+  schedules: WeekSchedule;
+  intervalsByDay: IntervalWeek;
+  timeFormat12h: boolean;
+  unblockUntil: number | null;
+  weeklyUnblockEnabled: boolean;
+  weeklyUnblockDays: number[];
+  weeklyUnblockDurationMinutes: number;
+  weeklyUnblockUntil: number | null;
+  weeklyUnblockLastWeek: string | null;
+};
+
+export type ThemeMode = "light" | "dark" | "system";
+
 export type Settings = {
   blockEnabled: boolean;
   blockShorts: boolean;
   blockKids: boolean;
   blockInstagramReels: boolean;
   language: "en" | "es" | "pt" | "fr";
+  theme: ThemeMode;
+  familyModeEnabled: boolean;
+  activeProfile: ProfileId;
+  profiles: Record<ProfileId, ProfileSettings>;
   strictMode: boolean;
   pinHash: string | null;
   blockedDomains: string[];
   blockedDomainTags: Record<string, DomainTag[]>;
   whitelist: string[];
+  whitelistEnabled: boolean;
   schedules: WeekSchedule;
   intervalsByDay: IntervalWeek;
   timeFormat12h: boolean;

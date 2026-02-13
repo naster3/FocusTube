@@ -27,7 +27,7 @@ function minutesToDate(baseDay: Date, minutes: number) {
 // Filtra intervalos activos marcados como bloqueados para un dia.
 function getBlockedIntervalsForDay(intervalsByDay: IntervalWeek, dayIdx: number) {
   const intervals = intervalsByDay[dayIdx] ?? [];
-  return intervals.filter((i) => i.enabled && i.mode === "blocked");
+  return intervals.filter((i) => i.enabled !== false && i.mode === "blocked");
 }
 
 // Construye ventanas absolutas (timestamps) de bloqueo para un dia, considerando cruces de medianoche.

@@ -242,7 +242,7 @@ export function evaluateBlock(urlString: string, settings: Settings, now: number
     return decision;
   }
 
-  if (isWhitelisted(urlString, settings.whitelist)) {
+  if (settings.whitelistEnabled && isWhitelisted(urlString, settings.whitelist)) {
     const decision = { blocked: false } as const;
     devLog("blocking.evaluate", { url: urlString, ...decision, reason: "whitelist" });
     return decision;
@@ -256,6 +256,7 @@ export function evaluateBlock(urlString: string, settings: Settings, now: number
   const hasWeekly = tags.includes("por_semana");
 
   if (hasIntervals) {
+    devLog("blocking.evaluate", { url: urlString, note: "intervals_check", blockEnabled: settings.blockEnabled });
     if (!settings.strictMode && settings.unblockUntil && now < settings.unblockUntil) {
       const decision = { blocked: false } as const;
       devLog("blocking.evaluate", { url: urlString, ...decision, reason: "temporary_unblock" });
@@ -283,6 +284,12 @@ export function evaluateBlock(urlString: string, settings: Settings, now: number
     if (isWithinBlockedSchedule(new Date(now), settings.intervalsByDay)) {
       const decision = { blocked: true, reason: "schedule" } as const;
       devLog("blocking.evaluate", { url: urlString, ...decision });
+      return decision;
+    }
+
+    if (settings.blockEnabled) {
+      const decision = { blocked: true, reason: "manual" } as const;
+      devLog("blocking.evaluate", { url: urlString, ...decision, note: "block_enabled_intervalos" });
       return decision;
     }
 

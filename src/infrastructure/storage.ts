@@ -1,5 +1,15 @@
 import { DEFAULT_INTERVALS, DEFAULT_METRICS, DEFAULT_SETTINGS } from "../domain/settings/defaults";
-import { DomainTag, Interval, IntervalWeek, Metrics, Settings, WeekSchedule } from "../domain/settings/types";
+import {
+  DomainTag,
+  Interval,
+  IntervalWeek,
+  Metrics,
+  ProfileId,
+  ProfileSettings,
+  Settings,
+  WeekSchedule
+} from "../domain/settings/types";
+import { syncProfiles } from "../domain/settings/profiles";
 import { isDomainTag } from "../domain/blocking/tags";
 import { normalizeDomain, normalizeWhitelistEntry } from "../domain/blocking/url";
 import { devLog } from "../shared/devLogger";
@@ -11,6 +21,7 @@ const LOCAL_PREFIX = "focustube:";
 const DEV_FALLBACK = import.meta.env.DEV;
 let loggedFallback = false;
 let loggedNoChromeListener = false;
+const devStorageListeners = new Set<(changes: Record<string, chrome.storage.StorageChange>, area: string) => void>();
 
 type StorageAreaLike = {
   get: (keys?: string | string[] | Record<string, unknown>) => Promise<Record<string, unknown>>;
@@ -57,6 +68,19 @@ function localKey(key: string) {
   return `${LOCAL_PREFIX}${key}`;
 }
 
+function notifyDevStorageListeners(changes: Record<string, chrome.storage.StorageChange>) {
+  if (devStorageListeners.size === 0) {
+    return;
+  }
+  devStorageListeners.forEach((listener) => {
+    try {
+      listener(changes, "local");
+    } catch {
+      // ignore listener errors in dev fallback
+    }
+  });
+}
+
 function createLocalStorageArea(): StorageAreaLike {
   const localStorageRef = typeof window === "undefined" ? null : window.localStorage;
   return {
@@ -81,24 +105,66 @@ function createLocalStorageArea(): StorageAreaLike {
       if (!localStorageRef) {
         return;
       }
+      const changes: Record<string, chrome.storage.StorageChange> = {};
       for (const [key, value] of Object.entries(items)) {
+        let oldValue: unknown = undefined;
+        const rawOld = localStorageRef.getItem(localKey(key));
+        if (rawOld !== null) {
+          try {
+            oldValue = JSON.parse(rawOld);
+          } catch {
+            // ignore invalid JSON
+          }
+        }
         localStorageRef.setItem(localKey(key), JSON.stringify(value));
+        changes[key] = { oldValue, newValue: value };
+      }
+      if (Object.keys(changes).length > 0) {
+        notifyDevStorageListeners(changes);
       }
     },
     async remove(keys) {
       if (!localStorageRef) {
         return;
       }
+      const changes: Record<string, chrome.storage.StorageChange> = {};
       for (const key of normalizeKeys(keys)) {
+        let oldValue: unknown = undefined;
+        const rawOld = localStorageRef.getItem(localKey(key));
+        if (rawOld !== null) {
+          try {
+            oldValue = JSON.parse(rawOld);
+          } catch {
+            // ignore invalid JSON
+          }
+        }
         localStorageRef.removeItem(localKey(key));
+        changes[key] = { oldValue, newValue: undefined };
+      }
+      if (Object.keys(changes).length > 0) {
+        notifyDevStorageListeners(changes);
       }
     },
     async clear() {
       if (!localStorageRef) {
         return;
       }
+      const changes: Record<string, chrome.storage.StorageChange> = {};
       for (const key of [SETTINGS_KEY, METRICS_KEY]) {
+        let oldValue: unknown = undefined;
+        const rawOld = localStorageRef.getItem(localKey(key));
+        if (rawOld !== null) {
+          try {
+            oldValue = JSON.parse(rawOld);
+          } catch {
+            // ignore invalid JSON
+          }
+        }
         localStorageRef.removeItem(localKey(key));
+        changes[key] = { oldValue, newValue: undefined };
+      }
+      if (Object.keys(changes).length > 0) {
+        notifyDevStorageListeners(changes);
       }
     }
   };
@@ -124,10 +190,11 @@ export function onStorageChanged(listener: (changes: Record<string, chrome.stora
       throw new Error("chrome.storage.onChanged is not available outside the extension context.");
     }
     if (!loggedNoChromeListener) {
-      devLog("chrome.storage.onChanged not available; using no-op listener in dev.");
+      devLog("chrome.storage.onChanged not available; using dev fallback listener.");
       loggedNoChromeListener = true;
     }
-    return () => undefined;
+    devStorageListeners.add(listener);
+    return () => devStorageListeners.delete(listener);
   }
   chrome.storage.onChanged.addListener(listener);
   return () => chrome.storage.onChanged.removeListener(listener);
@@ -141,7 +208,11 @@ export async function ensureDefaults() {
   if (!storedSettings) {
     await storage.set({ [SETTINGS_KEY]: DEFAULT_SETTINGS });
     devLog("storage.ensureDefaults: settings initialized");
-  } else if (!Array.isArray(storedSettings.blockedDomains)) {
+  } else if (
+    !Array.isArray(storedSettings.blockedDomains) ||
+    typeof storedSettings.activeProfile !== "string" ||
+    !storedSettings.profiles
+  ) {
     const merged = mergeSettings(storedSettings);
     await storage.set({ [SETTINGS_KEY]: merged });
     devLog("storage.ensureDefaults: settings migrated");
@@ -170,11 +241,12 @@ export async function getSettings(): Promise<Settings> {
 // Guarda settings completos.
 export async function setSettings(settings: Settings) {
   const storage = getStorageArea();
-  await storage.set({ [SETTINGS_KEY]: settings });
+  const next = syncProfiles(settings);
+  await storage.set({ [SETTINGS_KEY]: next });
   devLog("storage.setSettings", {
-    blockEnabled: settings.blockEnabled,
-    blockedDomains: settings.blockedDomains.length,
-    whitelist: settings.whitelist.length
+    blockEnabled: next.blockEnabled,
+    blockedDomains: next.blockedDomains.length,
+    whitelist: next.whitelist.length
   });
 }
 
@@ -237,25 +309,6 @@ export async function incrementAttempt(timestamp: number) {
   devLog("metrics.incrementAttempt", { dateKey, count: nextCount });
 }
 
-// Merge profundo de schedules por dia.
-function mergeSchedules(input?: WeekSchedule): WeekSchedule {
-  const next: WeekSchedule = { ...DEFAULT_SETTINGS.schedules };
-  if (!input) {
-    return next;
-  }
-  for (const [dayKey, ranges] of Object.entries(input)) {
-    const day = Number(dayKey);
-    if (Number.isNaN(day) || !Array.isArray(ranges)) {
-      continue;
-    }
-    next[day] = ranges.map((range) => ({
-      start: range.start || "00:00",
-      end: range.end || "00:00"
-    }));
-  }
-  return next;
-}
-
 function schedulesToIntervals(input: WeekSchedule): IntervalWeek {
   const intervals: IntervalWeek = { ...DEFAULT_INTERVALS };
   for (const [dayKey, ranges] of Object.entries(input)) {
@@ -274,11 +327,51 @@ function schedulesToIntervals(input: WeekSchedule): IntervalWeek {
   return intervals;
 }
 
-function mergeIntervalsByDay(input?: IntervalWeek, fallbackSchedules?: WeekSchedule): IntervalWeek {
-  if (!input) {
-    return fallbackSchedules ? schedulesToIntervals(fallbackSchedules) : { ...DEFAULT_INTERVALS };
+function cloneWeekSchedule(input: WeekSchedule): WeekSchedule {
+  const next: WeekSchedule = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+  for (let day = 0; day <= 6; day += 1) {
+    const ranges = input[day] || [];
+    next[day] = ranges.map((range) => ({ start: range.start, end: range.end }));
   }
-  const next: IntervalWeek = { ...DEFAULT_INTERVALS };
+  return next;
+}
+
+function cloneIntervalWeek(input: IntervalWeek): IntervalWeek {
+  const next: IntervalWeek = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+  for (let day = 0; day <= 6; day += 1) {
+    const ranges = input[day] || [];
+    next[day] = ranges.map((range) => ({ ...range }));
+  }
+  return next;
+}
+
+function mergeSchedulesWithFallback(input: WeekSchedule | undefined, fallback: WeekSchedule): WeekSchedule {
+  const next = cloneWeekSchedule(fallback);
+  if (!input) {
+    return next;
+  }
+  for (const [dayKey, ranges] of Object.entries(input)) {
+    const day = Number(dayKey);
+    if (Number.isNaN(day) || !Array.isArray(ranges)) {
+      continue;
+    }
+    next[day] = ranges.map((range) => ({
+      start: range.start || "00:00",
+      end: range.end || "00:00"
+    }));
+  }
+  return next;
+}
+
+function mergeIntervalsByDayWithFallback(
+  input: IntervalWeek | undefined,
+  fallbackIntervals: IntervalWeek,
+  fallbackSchedules?: WeekSchedule
+): IntervalWeek {
+  if (!input) {
+    return fallbackSchedules ? schedulesToIntervals(fallbackSchedules) : cloneIntervalWeek(fallbackIntervals);
+  }
+  const next = cloneIntervalWeek(fallbackIntervals);
   for (const [dayKey, ranges] of Object.entries(input)) {
     const day = Number(dayKey);
     if (Number.isNaN(day) || !Array.isArray(ranges)) {
@@ -289,7 +382,7 @@ function mergeIntervalsByDay(input?: IntervalWeek, fallbackSchedules?: WeekSched
       start: range.start,
       end: range.end,
       mode: range.mode === "free" ? "free" : "blocked",
-      enabled: Boolean(range.enabled)
+      enabled: range.enabled !== false
     }));
   }
   return next;
@@ -325,10 +418,8 @@ function normalizeBlockedDomainTags(
   return next;
 }
 
-// Merge de settings, con defaults y validacion basica.
-export function mergeSettings(input: Partial<Settings>): Settings {
-  const pinHash = typeof input.pinHash === "string" ? input.pinHash : null;
-  const blockedDomains = Array.isArray(input.blockedDomains)
+function mergeProfile(input: Partial<ProfileSettings> | undefined, fallback: ProfileSettings): ProfileSettings {
+  const blockedDomains = Array.isArray(input?.blockedDomains)
     ? Array.from(
         new Set(
           input.blockedDomains
@@ -336,8 +427,8 @@ export function mergeSettings(input: Partial<Settings>): Settings {
             .filter((domain): domain is string => Boolean(domain))
         )
       )
-    : DEFAULT_SETTINGS.blockedDomains;
-  const whitelist = Array.isArray(input.whitelist)
+    : Array.from(fallback.blockedDomains);
+  const whitelist = Array.isArray(input?.whitelist)
     ? Array.from(
         new Set(
           input.whitelist
@@ -345,9 +436,16 @@ export function mergeSettings(input: Partial<Settings>): Settings {
             .filter((entry): entry is string => Boolean(entry))
         )
       )
-    : DEFAULT_SETTINGS.whitelist;
+    : Array.from(fallback.whitelist);
+  const whitelistEnabled = Boolean(input?.whitelistEnabled ?? fallback.whitelistEnabled);
   const blockedDomainsSet = new Set(blockedDomains);
-  const weeklyDays = Array.isArray(input.weeklyUnblockDays)
+  const blockedDomainTags = normalizeBlockedDomainTags(
+    (input?.blockedDomainTags ?? fallback.blockedDomainTags) as Record<string, unknown>,
+    blockedDomainsSet
+  );
+  const schedules = mergeSchedulesWithFallback(input?.schedules, fallback.schedules);
+  const intervalsByDay = mergeIntervalsByDayWithFallback(input?.intervalsByDay, fallback.intervalsByDay, schedules);
+  const weeklyDays = Array.isArray(input?.weeklyUnblockDays)
     ? Array.from(
         new Set(
           input.weeklyUnblockDays
@@ -355,35 +453,89 @@ export function mergeSettings(input: Partial<Settings>): Settings {
             .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6)
         )
       ).sort((a, b) => a - b)
-    : DEFAULT_SETTINGS.weeklyUnblockDays;
+    : Array.from(fallback.weeklyUnblockDays);
   const weeklyDuration =
-    typeof input.weeklyUnblockDurationMinutes === "number" && Number.isFinite(input.weeklyUnblockDurationMinutes)
+    typeof input?.weeklyUnblockDurationMinutes === "number" &&
+    Number.isFinite(input.weeklyUnblockDurationMinutes)
       ? Math.max(1, Math.floor(input.weeklyUnblockDurationMinutes))
-      : DEFAULT_SETTINGS.weeklyUnblockDurationMinutes;
+      : fallback.weeklyUnblockDurationMinutes;
   const weeklyUntil =
-    typeof input.weeklyUnblockUntil === "number" && Number.isFinite(input.weeklyUnblockUntil)
+    typeof input?.weeklyUnblockUntil === "number" && Number.isFinite(input.weeklyUnblockUntil)
       ? input.weeklyUnblockUntil
-      : null;
-  const weeklyLastWeek = typeof input.weeklyUnblockLastWeek === "string" ? input.weeklyUnblockLastWeek : null;
-  const blockedDomainTags = normalizeBlockedDomainTags(
-    input.blockedDomainTags as Record<string, unknown>,
-    blockedDomainsSet
-  );
+      : fallback.weeklyUnblockUntil;
+  const weeklyLastWeek = typeof input?.weeklyUnblockLastWeek === "string" ? input.weeklyUnblockLastWeek : fallback.weeklyUnblockLastWeek;
+  const unblockUntil =
+    typeof input?.unblockUntil === "number" && Number.isFinite(input.unblockUntil)
+      ? input.unblockUntil
+      : fallback.unblockUntil;
+
   return {
-    ...DEFAULT_SETTINGS,
-    ...input,
-    pinHash,
-    weeklyUnblockEnabled: Boolean(input.weeklyUnblockEnabled),
-    blockInstagramReels: Boolean(input.blockInstagramReels),
+    blockEnabled: Boolean(input?.blockEnabled ?? fallback.blockEnabled),
+    blockShorts: Boolean(input?.blockShorts ?? fallback.blockShorts),
+    blockKids: Boolean(input?.blockKids ?? fallback.blockKids),
+    blockInstagramReels: Boolean(input?.blockInstagramReels ?? fallback.blockInstagramReels),
+    blockedDomains,
+    blockedDomainTags,
+    whitelist,
+    whitelistEnabled,
+    schedules,
+    intervalsByDay,
+    timeFormat12h: Boolean(input?.timeFormat12h ?? fallback.timeFormat12h),
+    unblockUntil,
+    weeklyUnblockEnabled: Boolean(input?.weeklyUnblockEnabled ?? fallback.weeklyUnblockEnabled),
     weeklyUnblockDays: weeklyDays,
     weeklyUnblockDurationMinutes: weeklyDuration,
     weeklyUnblockUntil: weeklyUntil,
-    weeklyUnblockLastWeek: weeklyLastWeek,
-    schedules: mergeSchedules(input.schedules),
-    intervalsByDay: mergeIntervalsByDay(input.intervalsByDay, input.schedules),
-    whitelist,
-    blockedDomains,
-    blockedDomainTags
+    weeklyUnblockLastWeek: weeklyLastWeek
+  };
+}
+
+// Merge de settings, con defaults y validacion basica.
+export function mergeSettings(input: Partial<Settings>): Settings {
+  const { proEnabled: _proEnabled, licenseKey: _licenseKey, licenseStatus: _licenseStatus, licenseCheckedAt: _licenseCheckedAt, deviceId: _deviceId, ...restInput } = input as Partial<Settings> & {
+    proEnabled?: unknown;
+    licenseKey?: unknown;
+    licenseStatus?: unknown;
+    licenseCheckedAt?: unknown;
+    deviceId?: unknown;
+  };
+  const pinHash = typeof input.pinHash === "string" ? input.pinHash : null;
+  const theme = input.theme === "dark" ? "dark" : input.theme === "system" ? "system" : "light";
+  let familyModeEnabled = Boolean(input.familyModeEnabled);
+  let activeProfile: ProfileId = input.activeProfile === "kid" ? "kid" : "adult";
+  if (!familyModeEnabled) {
+    activeProfile = "adult";
+  }
+  const profilesInput = (input.profiles && typeof input.profiles === "object" ? input.profiles : {}) as Partial<
+    Record<ProfileId, Partial<ProfileSettings>>
+  >;
+  const activeFallback = activeProfile === "kid" ? DEFAULT_SETTINGS.profiles.kid : DEFAULT_SETTINGS.profiles.adult;
+  const activeProfileInput = mergeProfile(input as Partial<ProfileSettings>, activeFallback);
+  const adultProfile =
+    activeProfile === "adult"
+      ? activeProfileInput
+      : profilesInput.adult
+        ? mergeProfile(profilesInput.adult, DEFAULT_SETTINGS.profiles.adult)
+        : DEFAULT_SETTINGS.profiles.adult;
+  const kidProfile =
+    activeProfile === "kid"
+      ? activeProfileInput
+      : profilesInput.kid
+        ? mergeProfile(profilesInput.kid, DEFAULT_SETTINGS.profiles.kid)
+        : DEFAULT_SETTINGS.profiles.kid;
+  const activeProfileData = activeProfile === "kid" ? kidProfile : adultProfile;
+  return {
+    ...DEFAULT_SETTINGS,
+    ...restInput,
+    ...activeProfileData,
+    pinHash,
+    theme,
+    familyModeEnabled,
+    activeProfile,
+    profiles: {
+      adult: adultProfile,
+      kid: kidProfile
+    }
   };
 }
 
