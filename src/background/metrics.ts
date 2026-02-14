@@ -141,6 +141,12 @@ export async function addAttempt(tabId: number, url: string, now: number) {
   metrics.lastAttemptAt = now;
   metrics.lastUpdatedAt = now;
   setMetricsDirty(true);
+  try {
+    // Persist this immediately so blocked UI can show fresh attempt data.
+    await setMetrics(metrics);
+  } catch {
+    // Best effort; periodic flush will retry.
+  }
 
   // DB: registra evento y agregado diario.
   queueDbEvent({ ts: now, day: dayKey, type: "attempt", domain: state.domain, url, deltaSec: null, tabId });

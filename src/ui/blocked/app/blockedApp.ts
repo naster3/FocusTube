@@ -7,7 +7,7 @@ import { evaluateBlock, reasonLabel } from "../../../domain/blocking/url";
 import { parseTimeToMinutes } from "../../../domain/schedule/schedule";
 import type { Settings } from "../../../domain/settings/types";
 import { getBlockedElements } from "../utils/dom";
-import { getInitialBlockedUrl, matchBlockedDomain, resolveBlockedUrl } from "../utils/blockedUrl";
+import { getInitialBlockedUrl, matchBlockedDomain, resolveBlockedAttempt } from "../utils/blockedUrl";
 import { startBlockedTimer } from "../utils/timers";
 import { pickMessage } from "../utils/messages";
 import { createScheduleAutoUnblockController } from "../utils/scheduleAutoUnblock";
@@ -40,11 +40,16 @@ export function initBlockedPage() {
   initialized = true;
 
   let blockedUrl = getInitialBlockedUrl();
+  let lastAttemptAtFallback: number | null = null;
   const elements = getBlockedElements();
 
   const scheduleAutoUnblock = createScheduleAutoUnblockController({
     resolveBlockedUrl: async () => {
-      blockedUrl = await resolveBlockedUrl(blockedUrl);
+      const resolved = await resolveBlockedAttempt(blockedUrl);
+      blockedUrl = resolved.url;
+      if (typeof resolved.at === "number") {
+        lastAttemptAtFallback = resolved.at;
+      }
       return blockedUrl;
     }
   });
@@ -98,9 +103,18 @@ export function initBlockedPage() {
   async function render() {
     const [settings, metrics] = await Promise.all([getSettings(), getMetrics()]);
     const lang = settings.language ?? "en";
-    blockedUrl = await resolveBlockedUrl(blockedUrl);
+    const resolved = await resolveBlockedAttempt(blockedUrl);
+    blockedUrl = resolved.url;
+    if (typeof resolved.at === "number") {
+      lastAttemptAtFallback = resolved.at;
+    }
     const todayKey = new Date().toISOString().slice(0, 10);
-    const attempts = metrics.attemptsByDay[todayKey] || 0;
+    const hasFallbackToday =
+      typeof lastAttemptAtFallback === "number" &&
+      new Date(lastAttemptAtFallback).toISOString().slice(0, 10) === todayKey;
+    const fallbackToday = hasFallbackToday ? 1 : 0;
+    const attempts = Math.max(metrics.attemptsByDay[todayKey] || 0, fallbackToday);
+    const lastAttemptAt = Math.max(metrics.lastAttemptAt ?? 0, lastAttemptAtFallback ?? 0) || null;
     const setButtonLabel = (button: HTMLButtonElement | null, label: string) => {
       if (!button) {
         return;
@@ -134,8 +148,8 @@ export function initBlockedPage() {
       elements.attemptsEl.textContent = String(attempts);
     }
     if (elements.lastAttemptEl) {
-      elements.lastAttemptEl.textContent = metrics.lastAttemptAt
-        ? formatDateTime(lang, metrics.lastAttemptAt, settings.timeFormat12h)
+      elements.lastAttemptEl.textContent = lastAttemptAt
+        ? formatDateTime(lang, lastAttemptAt, settings.timeFormat12h)
         : "-";
     }
     if (elements.blockedUrlEl) {
@@ -289,11 +303,13 @@ export function initBlockedPage() {
 
   if (typeof chrome !== "undefined" && chrome.storage?.onChanged) {
     chrome.storage.onChanged.addListener((changes, area) => {
-      if (area !== "local" || !changes.settings) {
+      if (area !== "local" || (!changes.settings && !changes.metrics)) {
         return;
       }
       void render().then(() => {
-        void scheduleAutoUnblock.checkOnce();
+        if (changes.settings) {
+          void scheduleAutoUnblock.checkOnce();
+        }
       });
     });
   }
