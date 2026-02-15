@@ -86,6 +86,11 @@ Las paginas de la extension viven en `src/ui/` y se copian al build en `dist/src
 - Checklist y texto sugerido: `docs/STORE_LISTING.md`.
 - Guia tecnica corta (arquitectura, mensajes, release): `docs/TECHNICAL_ONE_PAGER.md`.
 
+## Licencia y avisos
+
+- Licencia: `LICENSE` (Apache-2.0).
+- Avisos y atribuciones: `NOTICE`.
+
 ## Troubleshooting
 
 - Si un bloqueo no aplica, recarga la extension y revisa permisos por dominio.

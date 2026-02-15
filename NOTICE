@@ -1,0 +1,20 @@
+FocusTube Blocker
+Copyright 2026 Manuel Adolfo Deno de los Santos
+
+This project is licensed under Apache License 2.0.
+
+Third-party software notices:
+- This project includes third-party dependencies distributed under their
+  own licenses (including MIT, Apache-2.0, and BSD-2-Clause).
+- Key runtime dependencies include:
+  - react (MIT)
+  - react-dom (MIT)
+  - chart.js (MIT)
+  - sql.js (MIT)
+  - xlsx (Apache-2.0)
+
+Attribution for assets:
+- No additional third-party icon/template attributions are currently
+  documented in this repository.
+- If external assets are added in the future, their attribution should be
+  appended to this NOTICE file.
