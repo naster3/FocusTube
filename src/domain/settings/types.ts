@@ -45,6 +45,7 @@ export type ProfileSettings = {
 export type ThemeMode = "light" | "dark" | "system";
 
 export type Settings = {
+  version: number;
   blockEnabled: boolean;
   blockShorts: boolean;
   blockKids: boolean;

@@ -90,23 +90,33 @@ const chromeMock: ChromeStorageMock = {
 };
 
 function mountBlockedDom() {
-  document.body.innerHTML = `
-    <div id="message"></div>
-    <div id="attempts"></div>
-    <div id="last-attempt"></div>
-    <div id="blocked-url"></div>
-    <div id="blocked-url-label"></div>
-    <button id="copy-url-btn" type="button"></button>
-    <button id="unblock-btn" type="button"></button>
-    <button id="close-btn" type="button"></button>
-    <div id="blocked-tag"></div>
-    <div id="blocked-title"></div>
-    <div id="attempts-label"></div>
-    <div id="last-attempt-label"></div>
-    <div id="blocked-reason-label"></div>
-    <div id="blocked-reason"></div>
-    <div id="carryover-note"></div>
-  `;
+  document.body.textContent = "";
+  const nodes: Array<{ tag: "div" | "button"; id: string; type?: "button" }> = [
+    { tag: "div", id: "message" },
+    { tag: "div", id: "attempts" },
+    { tag: "div", id: "last-attempt" },
+    { tag: "div", id: "blocked-url" },
+    { tag: "div", id: "blocked-url-label" },
+    { tag: "button", id: "copy-url-btn", type: "button" },
+    { tag: "button", id: "unblock-btn", type: "button" },
+    { tag: "button", id: "close-btn", type: "button" },
+    { tag: "div", id: "blocked-tag" },
+    { tag: "div", id: "blocked-title" },
+    { tag: "div", id: "attempts-label" },
+    { tag: "div", id: "last-attempt-label" },
+    { tag: "div", id: "blocked-reason-label" },
+    { tag: "div", id: "blocked-reason" },
+    { tag: "div", id: "carryover-note" }
+  ];
+
+  nodes.forEach((node) => {
+    const element = document.createElement(node.tag);
+    element.id = node.id;
+    if (node.type && element instanceof HTMLButtonElement) {
+      element.type = node.type;
+    }
+    document.body.appendChild(element);
+  });
 }
 
 async function flushPromises() {

@@ -21,21 +21,21 @@ Manuel Adolfo Deño de los Santos
 
 ## Desarrollo (UI)
 
-1) Instalar dependencias:
+1. Instalar dependencias:
 
-```
+```bash
 npm i
 ```
 
-2) Servidor dev (solo UI):
+1. Servidor dev (solo UI):
 
-```
+```bash
 npm run dev
 ```
 
 ## Build
 
-```
+```bash
 npm run build
 ```
 
@@ -43,15 +43,17 @@ El bundle sale en `dist/`.
 
 ## Cargar extension (unpacked)
 
-1) Abre la pagina de extensiones de Chrome/Brave.
-2) Activa Developer mode.
-3) Click en "Load unpacked" y selecciona la carpeta `dist/`.
+1. Abre la pagina de extensiones de Chrome/Brave.
+1. Activa Developer mode.
+1. Click en "Load unpacked" y selecciona la carpeta `dist/`.
 
 ## Scripts utiles
 
 - `npm run dev`: UI en modo dev.
 - `npm run build`: build completo + manifest.
 - `npm run test`: tests (vitest).
+- `npm run encoding:check`: valida UTF-8 (sin BOM) + normalizacion NFC + deteccion de mojibake.
+- `npm run encoding:fix`: corrige automaticamente encoding/normalizacion en archivos de texto.
 - `npm run db:check`: diagnostico de DB (devtools del service worker).
 
 ## Estructura
@@ -82,6 +84,7 @@ Las paginas de la extension viven en `src/ui/` y se copian al build en `dist/src
 ## Publicar en Chrome Web Store
 
 - Checklist y texto sugerido: `docs/STORE_LISTING.md`.
+- Guia tecnica corta (arquitectura, mensajes, release): `docs/TECHNICAL_ONE_PAGER.md`.
 
 ## Troubleshooting
 

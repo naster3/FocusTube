@@ -258,12 +258,14 @@
 }
 
 .help-code {
-  background: var(--surface-strong);
-  color: var(--text-primary);
+  background: linear-gradient(135deg, #0b1733, #0f1f47);
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.28);
   padding: 10px 12px;
   border-radius: 10px;
   overflow-x: auto;
   font-size: 12px;
+  font-family: "Cascadia Mono", "Consolas", "Courier New", monospace;
 }
 
 .help-empty {
@@ -329,8 +331,9 @@
 }
 
 :root[data-theme="dark"] .help-code {
-  background: var(--surface-strong);
-  color: var(--text-primary);
+  background: linear-gradient(135deg, #020617, #0f172a);
+  color: #f8fafc;
+  border-color: rgba(148, 163, 184, 0.32);
 }
 
 :root[data-theme="dark"] .help-search,

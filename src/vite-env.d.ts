@@ -2,6 +2,7 @@
 /// <reference types="chrome" />
 
 declare module "*.css";
+declare module "*.css?raw";
 declare module "*.wasm?url";
 
 interface ImportMetaEnv {

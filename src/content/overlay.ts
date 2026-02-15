@@ -1,16 +1,93 @@
 // Overlay flotante para mostrar estado y countdown en paginas objetivo.
+import overlayCss from "./overlay.css?raw";
 import { safeSendMessage } from "./extensionMessaging";
 import { t, tf } from "../shared/i18n";
 import type { Language } from "../domain/settings/types";
 
-// Formatea hora AM/PM para el widget.
-function formatTimeAmPm(ts: number) {
-  return new Date(ts).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true
-  });
+const OVERLAY_VISUAL_TICK_MS = 1000;
+const OVERLAY_SYNC_TICK_MS = 10000;
+const OVERLAY_STYLE_ID = "focustube-overlay-styles";
+
+const LANGUAGE_LOCALE_MAP: Record<Language, string> = {
+  en: "en-US",
+  es: "es-ES",
+  pt: "pt-BR",
+  fr: "fr-FR"
+};
+
+type OverlayTimeline = {
+  state: "blocked" | "free";
+  reason: string;
+  currentUntil: number | null;
+  nextBlockStart: number | null;
+  nextBlockEnd: number | null;
+};
+
+type OverlaySettings = {
+  language?: Language;
+  timeFormat12h?: boolean;
+  theme?: "light" | "dark" | "system";
+};
+
+declare global {
+  interface Window {
+    __FOCUSTUBE_OVERLAY__?: {
+      initialized: boolean;
+      teardown: () => void;
+    };
+  }
+}
+
+function ensureOverlayStyles() {
+  if (document.getElementById(OVERLAY_STYLE_ID)) {
+    return;
+  }
+  const style = document.createElement("style");
+  style.id = OVERLAY_STYLE_ID;
+  style.textContent = overlayCss;
+  (document.head || document.documentElement).appendChild(style);
+}
+
+function formatDuration(ms: number) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const hh = Math.floor(s / 3600);
+  const mm = Math.floor((s % 3600) / 60);
+  const ss = s % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return hh > 0 ? `${hh}:${pad(mm)}:${pad(ss)}` : `${mm}:${pad(ss)}`;
+}
+
+function formatOverlayTime(ts: number, locale: string, hour12Preference: boolean | null) {
+  try {
+    return new Intl.DateTimeFormat(locale, {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: typeof hour12Preference === "boolean" ? hour12Preference : undefined
+    }).format(ts);
+  } catch {
+    return new Date(ts).toLocaleTimeString();
+  }
+}
+
+function localeFromLanguage(language?: Language) {
+  if (!language) {
+    return navigator.language || "en-US";
+  }
+  return LANGUAGE_LOCALE_MAP[language] || navigator.language || "en-US";
+}
+
+function resolveTheme(theme: "light" | "dark" | "system" | undefined): "light" | "dark" {
+  if (theme === "light" || theme === "dark") {
+    return theme;
+  }
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function createOverlayElement<K extends keyof HTMLElementTagNameMap>(tag: K, className: string): HTMLElementTagNameMap[K] {
+  const el = document.createElement(tag);
+  el.className = className;
+  return el;
 }
 
 /**
@@ -18,100 +95,48 @@ function formatTimeAmPm(ts: number) {
  * Lee el timeline de horarios desde background (igual que el popup).
  */
 export function initFloatingTimerOverlay() {
-  // Evita duplicados en SPA (YouTube re-renderiza seguido).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const w = window as any;
-  if (w.__FOCUSTUBE_OVERLAY__) return;
-  w.__FOCUSTUBE_OVERLAY__ = true;
+  if (window.top !== window) {
+    return;
+  }
+  if (window.__FOCUSTUBE_OVERLAY__?.initialized) {
+    return;
+  }
 
-  // No ejecutar en iframes.
-  if (window.top !== window) return;
+  ensureOverlayStyles();
 
-  // DOM base del widget.
-  const root = document.createElement("div");
+  const root = createOverlayElement("div", "focustube-overlay-root");
   root.id = "focustube-overlay";
-  root.style.cssText = `
-    position: fixed;
-    left: 16px;
-    top: 16px;
-    z-index: 2147483647;
-    width: 240px;
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    user-select: none;
-    color-scheme: dark;
-  `;
+  root.setAttribute("role", "region");
+  root.setAttribute("data-state", "loading");
 
-  const box = document.createElement("div");
-  box.style.cssText = `
-    border: 1px solid rgba(255,255,255,0.14);
-    background: rgba(18,18,18,0.82);
-    color: rgba(255,255,255,0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-radius: 16px;
-    box-shadow: 0 14px 40px rgba(0,0,0,0.35);
-    overflow: hidden;
-  `;
-
-  const header = document.createElement("div");
-  header.style.cssText = `
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 10px 10px;
-    cursor: grab;
-    background: rgba(255,255,255,0.06);
-  `;
-
-  const title = document.createElement("div");
+  const box = createOverlayElement("div", "focustube-overlay-box");
+  const header = createOverlayElement("div", "focustube-overlay-header");
+  const title = createOverlayElement("div", "focustube-overlay-title");
   title.textContent = "FocusTube";
-  title.style.cssText = `font-weight: 800; font-size: 13px; letter-spacing: 0.3px;`;
+  const btns = createOverlayElement("div", "focustube-overlay-btns");
 
-  const btns = document.createElement("div");
-  btns.style.cssText = `display:flex; gap:6px; align-items:center;`;
-
-  const btnMin = document.createElement("button");
+  const btnMin = createOverlayElement("button", "focustube-overlay-btn");
+  btnMin.type = "button";
   btnMin.textContent = "-";
-  btnMin.title = "Minimizar";
-  btnMin.style.cssText = miniBtnStyle();
-  btnMin.addEventListener("pointerdown", (e) => {
-    e.stopPropagation();
-  });
+  btnMin.setAttribute("aria-controls", "focustube-overlay-body");
 
-  const btnClose = document.createElement("button");
-  btnClose.textContent = "A-";
-  btnClose.title = "Ocultar (vuelve al recargar)";
-  btnClose.style.cssText = miniBtnStyle();
-  btnClose.addEventListener("pointerdown", (e) => {
-    e.stopPropagation();
-  });
+  const btnClose = createOverlayElement("button", "focustube-overlay-btn");
+  btnClose.type = "button";
+  btnClose.textContent = "x";
 
   btns.appendChild(btnMin);
   btns.appendChild(btnClose);
-
   header.appendChild(title);
   header.appendChild(btns);
 
-  const body = document.createElement("div");
-  body.style.cssText = `padding: 10px 12px 12px; display:grid; gap:8px;`;
-
-  const line1 = document.createElement("div");
-  line1.style.cssText = `font-size: 12px; opacity: 0.85;`;
+  const body = createOverlayElement("div", "focustube-overlay-body");
+  body.id = "focustube-overlay-body";
+  const line1 = createOverlayElement("div", "focustube-overlay-line1");
   line1.textContent = "Loading...";
-
-  const big = document.createElement("div");
-  big.style.cssText = `font-size: 18px; font-weight: 900; letter-spacing: 0.2px;`;
+  const big = createOverlayElement("div", "focustube-overlay-big");
   big.textContent = "--:--";
-
-  const line2 = document.createElement("div");
-  line2.style.cssText = `font-size: 11px; opacity: 0.7;`;
-  line2.textContent = "";
-
-  const line3 = document.createElement("div");
-  line3.style.cssText = `font-size: 11px; opacity: 0.7;`;
-  line3.textContent = "";
-
+  const line2 = createOverlayElement("div", "focustube-overlay-line2");
+  const line3 = createOverlayElement("div", "focustube-overlay-line3");
   body.appendChild(line1);
   body.appendChild(big);
   body.appendChild(line2);
@@ -122,225 +147,338 @@ export function initFloatingTimerOverlay() {
   root.appendChild(box);
   document.documentElement.appendChild(root);
 
-  // Restaura posicion guardada.
-  void chrome.storage.local.get("overlayPos").then((res) => {
-    const pos = res.overlayPos as { left: number; top: number } | undefined;
-    if (!pos) return;
-    root.style.left = `${pos.left}px`;
-    root.style.top = `${pos.top}px`;
-  });
-
-  // Minimizar / ocultar.
+  const cleanupFns: Array<() => void> = [];
+  const addCleanup = (fn: () => void) => cleanupFns.push(fn);
+  let destroyed = false;
   let minimized = false;
   let restoreBtn: HTMLButtonElement | null = null;
   let lang: Language = "en";
-  const applyStaticLabels = () => {
-    title.textContent = t(lang, "overlay.title");
-    btnMin.title = t(lang, "overlay.minimize");
-    btnClose.title = t(lang, "overlay.hide");
-    if (!minimized) {
-      line1.textContent = t(lang, "overlay.loading");
-    }
-    if (restoreBtn) {
-      restoreBtn.textContent = t(lang, "overlay.show");
-    }
+  let locale = navigator.language || "en-US";
+  let timeFormat12h: boolean | null = null;
+  let themePreference: "light" | "dark" | "system" = "system";
+  let hasTimelineResponse = false;
+  let timeline: OverlayTimeline | null = null;
+
+  const setOverlayState = (state: "loading" | "unknown" | "blocked" | "free") => {
+    root.setAttribute("data-state", state);
   };
-
-  const loadLanguage = async () => {
-    try {
-      const stored = await chrome.storage.local.get("settings");
-      const next = (stored.settings as { language?: Language } | undefined)?.language;
-      if (next) {
-        lang = next;
-      }
-    } catch {
-      // ignorar
-    }
-    applyStaticLabels();
-  };
-  btnMin.addEventListener("click", (e) => {
-    e.stopPropagation();
-    minimized = !minimized;
-    body.style.display = minimized ? "none" : "grid";
-    btnMin.textContent = minimized ? "+" : "-";
-  });
-
-  btnClose.addEventListener("click", (e) => {
-    e.stopPropagation();
-    root.style.display = "none";
-    showRestoreButton();
-  });
-
-  // Drag del widget.
-  let dragging = false;
-  let startX = 0;
-  let startY = 0;
-  let startLeft = 0;
-  let startTop = 0;
 
   const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+  const positionOverlay = (left: number, top: number) => {
+    const maxLeft = Math.max(0, window.innerWidth - root.offsetWidth);
+    const maxTop = Math.max(0, window.innerHeight - root.offsetHeight);
+    root.style.left = `${clamp(left, 0, maxLeft)}px`;
+    root.style.top = `${clamp(top, 0, maxTop)}px`;
+  };
 
-  header.addEventListener("pointerdown", (e) => {
-    const target = e.target as HTMLElement | null;
-    if (target && (target.tagName === "BUTTON" || target.closest("button"))) {
-      return;
-    }
-    dragging = true;
-    header.style.cursor = "grabbing";
-    header.setPointerCapture(e.pointerId);
-    startX = e.clientX;
-    startY = e.clientY;
-
-    const rect = root.getBoundingClientRect();
-    startLeft = rect.left;
-    startTop = rect.top;
-  });
-
-  header.addEventListener("pointermove", (e) => {
-    if (!dragging) return;
-
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-
-    const left = clamp(startLeft + dx, 0, window.innerWidth - root.offsetWidth);
-    const top = clamp(startTop + dy, 0, window.innerHeight - root.offsetHeight);
-
-    root.style.left = `${left}px`;
-    root.style.top = `${top}px`;
-  });
-
-  header.addEventListener("pointerup", () => {
-    if (!dragging) return;
-    dragging = false;
-    header.style.cursor = "grab";
-
-    const rect = root.getBoundingClientRect();
-    void chrome.storage.local.set({
-      overlayPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
-    });
-  });
-
-  // Helpers para duracion, etiquetas y tick del timeline.
-  function formatDuration(ms: number) {
-    const s = Math.max(0, Math.floor(ms / 1000));
-    const hh = Math.floor(s / 3600);
-    const mm = Math.floor((s % 3600) / 60);
-    const ss = s % 60;
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return hh > 0 ? `${hh}:${pad(mm)}:${pad(ss)}` : `${mm}:${pad(ss)}`;
-  }
-
-  function reasonLabel(reason: string) {
+  const reasonLabel = (reason: string) => {
     switch (reason) {
       case "manual":
         return t(lang, "overlay.reason.manual");
       case "temporary_unblock":
         return t(lang, "overlay.reason.temp");
       case "schedule":
-        return t(lang, "overlay.reason.schedule");
       case "schedule_free":
         return t(lang, "overlay.reason.schedule");
       default:
         return reason;
     }
-  }
+  };
 
-  // Poll al background para estado del timeline.
-  function tick() {
-    line3.textContent = `${t(lang, "overlay.now")}: ${formatTimeAmPm(Date.now())}`;
+  const render = (now: number) => {
+    if (destroyed) {
+      return;
+    }
+
+    line3.textContent = `${t(lang, "overlay.now")}: ${formatOverlayTime(now, locale, timeFormat12h)}`;
+
+    if (!hasTimelineResponse) {
+      setOverlayState("loading");
+      line1.textContent = t(lang, "overlay.loading");
+      big.textContent = "--:--";
+      line2.textContent = "";
+      return;
+    }
+
+    if (!timeline) {
+      setOverlayState("unknown");
+      line1.textContent = t(lang, "overlay.no_state");
+      big.textContent = "--:--";
+      line2.textContent = "";
+      return;
+    }
+
+    const until = timeline.currentUntil;
+    if (timeline.state === "blocked") {
+      setOverlayState("blocked");
+      line1.textContent = t(lang, "overlay.blocked");
+      big.textContent = until ? formatDuration(until - now) : "--:--";
+      line2.textContent = `${t(lang, "overlay.reason")}: ${reasonLabel(timeline.reason)}`;
+      return;
+    }
+
+    setOverlayState("free");
+    line1.textContent = t(lang, "overlay.free");
+    big.textContent = until ? formatDuration(until - now) : "--:--";
+    if (timeline.nextBlockStart && timeline.nextBlockEnd) {
+      line2.textContent = tf(lang, "overlay.next_block", {
+        duration: formatDuration(timeline.nextBlockEnd - timeline.nextBlockStart)
+      });
+    } else {
+      line2.textContent = "";
+    }
+  };
+
+  const updateMinimizeControlState = () => {
+    btnMin.textContent = minimized ? "+" : "-";
+    btnMin.setAttribute("aria-pressed", String(minimized));
+    btnMin.setAttribute("aria-expanded", String(!minimized));
+  };
+
+  const applyStaticLabels = () => {
+    const minimizeLabel = minimized ? t(lang, "overlay.show") : t(lang, "overlay.minimize");
+    const hideLabel = t(lang, "overlay.hide");
+    const regionLabel = t(lang, "overlay.title");
+    title.textContent = regionLabel;
+    root.setAttribute("aria-label", regionLabel);
+    btnMin.title = minimizeLabel;
+    btnMin.setAttribute("aria-label", minimizeLabel);
+    btnClose.title = hideLabel;
+    btnClose.setAttribute("aria-label", hideLabel);
+    if (restoreBtn) {
+      const restoreLabel = t(lang, "overlay.show");
+      restoreBtn.textContent = restoreLabel;
+      restoreBtn.title = restoreLabel;
+      restoreBtn.setAttribute("aria-label", restoreLabel);
+      restoreBtn.setAttribute("data-theme", resolveTheme(themePreference));
+    }
+    render(Date.now());
+  };
+
+  const applyTheme = () => {
+    const resolvedTheme = resolveTheme(themePreference);
+    root.setAttribute("data-theme", resolvedTheme);
+    if (restoreBtn) {
+      restoreBtn.setAttribute("data-theme", resolvedTheme);
+    }
+  };
+
+  const loadOverlaySettings = async () => {
+    try {
+      const stored = await chrome.storage.local.get("settings");
+      const settings = stored.settings as OverlaySettings | undefined;
+      lang = settings?.language || "en";
+      locale = localeFromLanguage(settings?.language);
+      timeFormat12h = typeof settings?.timeFormat12h === "boolean" ? settings.timeFormat12h : null;
+      themePreference = settings?.theme || "system";
+    } catch {
+      locale = navigator.language || "en-US";
+      timeFormat12h = null;
+      themePreference = "system";
+    }
+    applyTheme();
+    applyStaticLabels();
+  };
+
+  const syncTimeline = (force = false) => {
+    if (!force && document.visibilityState !== "visible") {
+      return;
+    }
     safeSendMessage<"GET_TIMELINE">({ type: "GET_TIMELINE" }, (res) => {
-      if (!res?.ok || !res.timeline) {
-        line1.textContent = t(lang, "overlay.no_state");
-        big.textContent = "--:--";
-        line2.textContent = "";
-        line3.textContent = `${t(lang, "overlay.now")}: ${formatTimeAmPm(Date.now())}`;
+      if (destroyed) {
         return;
       }
-
-      const timeline = res.timeline as {
-        state: "blocked" | "free";
-        reason: string;
-        currentUntil: number | null;
-        nextBlockStart: number | null;
-        nextBlockEnd: number | null;
-      };
-
-      const now = Date.now();
-      const until = timeline.currentUntil;
-
-      if (timeline.state === "blocked") {
-        line1.textContent = t(lang, "overlay.blocked");
-        big.textContent = until ? formatDuration(until - now) : "--:--";
-        line2.textContent = `${t(lang, "overlay.reason")}: ${reasonLabel(timeline.reason)}`;
-      } else {
-        line1.textContent = t(lang, "overlay.free");
-        big.textContent = until ? formatDuration(until - now) : "--:--";
-        if (timeline.nextBlockStart && timeline.nextBlockEnd) {
-          line2.textContent = tf(lang, "overlay.next_block", {
-            duration: formatDuration(timeline.nextBlockEnd - timeline.nextBlockStart)
-          });
-        } else {
-          line2.textContent = "";
-        }
-      }
+      hasTimelineResponse = true;
+      timeline = res?.ok && res.timeline ? (res.timeline as OverlayTimeline) : null;
+      render(Date.now());
     });
-  }
+  };
 
-  // Arranque inicial y tick cada segundo.
-  tick();
-  window.setInterval(tick, 1000);
+  const onMinimizeClick = (e: MouseEvent) => {
+    e.stopPropagation();
+    minimized = !minimized;
+    body.hidden = minimized;
+    root.classList.toggle("is-minimized", minimized);
+    updateMinimizeControlState();
+    applyStaticLabels();
+  };
+  btnMin.addEventListener("click", onMinimizeClick);
+  addCleanup(() => btnMin.removeEventListener("click", onMinimizeClick));
 
-  // Estilo reutilizable para botones.
-  function miniBtnStyle() {
-    return `
-      width: 26px;
-      height: 22px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.16);
-      background: rgba(255,255,255,0.08);
-      color: rgba(255,255,255,0.92);
-      cursor: pointer;
-      font-size: 14px;
-      line-height: 1;
-    `;
-  }
+  const onCloseClick = (e: MouseEvent) => {
+    e.stopPropagation();
+    root.style.display = "none";
+    showRestoreButton();
+  };
+  btnClose.addEventListener("click", onCloseClick);
+  addCleanup(() => btnClose.removeEventListener("click", onCloseClick));
+
+  const stopDragFromButtons = (e: PointerEvent) => {
+    e.stopPropagation();
+  };
+  btnMin.addEventListener("pointerdown", stopDragFromButtons);
+  btnClose.addEventListener("pointerdown", stopDragFromButtons);
+  addCleanup(() => btnMin.removeEventListener("pointerdown", stopDragFromButtons));
+  addCleanup(() => btnClose.removeEventListener("pointerdown", stopDragFromButtons));
+
+  let dragging = false;
+  let startX = 0;
+  let startY = 0;
+  let startLeft = 0;
+  let startTop = 0;
+
+  const onPointerDown = (e: PointerEvent) => {
+    const target = e.target as HTMLElement | null;
+    if (target && (target.tagName === "BUTTON" || target.closest("button"))) {
+      return;
+    }
+    dragging = true;
+    header.classList.add("is-dragging");
+    header.setPointerCapture(e.pointerId);
+    startX = e.clientX;
+    startY = e.clientY;
+    const rect = root.getBoundingClientRect();
+    startLeft = rect.left;
+    startTop = rect.top;
+  };
+  const onPointerMove = (e: PointerEvent) => {
+    if (!dragging) {
+      return;
+    }
+    positionOverlay(startLeft + (e.clientX - startX), startTop + (e.clientY - startY));
+  };
+  const persistPosition = () => {
+    if (!dragging) {
+      return;
+    }
+    dragging = false;
+    header.classList.remove("is-dragging");
+    const rect = root.getBoundingClientRect();
+    void chrome.storage.local.set({
+      overlayPos: { left: Math.round(rect.left), top: Math.round(rect.top) }
+    });
+  };
+  header.addEventListener("pointerdown", onPointerDown);
+  header.addEventListener("pointermove", onPointerMove);
+  header.addEventListener("pointerup", persistPosition);
+  header.addEventListener("pointercancel", persistPosition);
+  addCleanup(() => header.removeEventListener("pointerdown", onPointerDown));
+  addCleanup(() => header.removeEventListener("pointermove", onPointerMove));
+  addCleanup(() => header.removeEventListener("pointerup", persistPosition));
+  addCleanup(() => header.removeEventListener("pointercancel", persistPosition));
 
   function showRestoreButton() {
     if (restoreBtn) {
       restoreBtn.style.display = "block";
       return;
     }
-    restoreBtn = document.createElement("button");
-    restoreBtn.textContent = t(lang, "overlay.show");
-    restoreBtn.style.cssText = `
-      position: fixed;
-      right: 16px;
-      bottom: 16px;
-      z-index: 2147483647;
-      padding: 8px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.16);
-      background: rgba(18,18,18,0.82);
-      color: rgba(255,255,255,0.92);
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-      box-shadow: 0 12px 32px rgba(0,0,0,0.35);
-    `;
-    restoreBtn.addEventListener("click", () => {
+    const button = createOverlayElement("button", "focustube-overlay-restore-btn");
+    restoreBtn = button;
+    button.type = "button";
+    const onRestoreClick = () => {
       root.style.display = "block";
-      restoreBtn?.remove();
+      const rect = root.getBoundingClientRect();
+      positionOverlay(rect.left, rect.top);
+      button.removeEventListener("click", onRestoreClick);
+      button.remove();
       restoreBtn = null;
-    });
-    document.documentElement.appendChild(restoreBtn);
+      applyStaticLabels();
+    };
+    button.addEventListener("click", onRestoreClick);
+    document.documentElement.appendChild(button);
+    applyStaticLabels();
   }
 
-  void loadLanguage();
-  chrome.storage.onChanged.addListener((changes, area) => {
+  const onResize = () => {
+    const rect = root.getBoundingClientRect();
+    positionOverlay(rect.left, rect.top);
+  };
+  window.addEventListener("resize", onResize);
+  addCleanup(() => window.removeEventListener("resize", onResize));
+
+  const onThemeMediaChange = () => {
+    if (themePreference !== "system") {
+      return;
+    }
+    applyTheme();
+  };
+  const themeMedia = window.matchMedia("(prefers-color-scheme: dark)");
+  themeMedia.addEventListener("change", onThemeMediaChange);
+  addCleanup(() => themeMedia.removeEventListener("change", onThemeMediaChange));
+
+  const onVisibilityChange = () => {
+    if (document.visibilityState === "visible") {
+      syncTimeline(true);
+    }
+  };
+  document.addEventListener("visibilitychange", onVisibilityChange);
+  addCleanup(() => document.removeEventListener("visibilitychange", onVisibilityChange));
+
+  const visualTickId = window.setInterval(() => {
+    if (document.visibilityState !== "visible") {
+      return;
+    }
+    render(Date.now());
+  }, OVERLAY_VISUAL_TICK_MS);
+  addCleanup(() => window.clearInterval(visualTickId));
+
+  const syncTickId = window.setInterval(() => {
+    syncTimeline(false);
+  }, OVERLAY_SYNC_TICK_MS);
+  addCleanup(() => window.clearInterval(syncTickId));
+
+  const onStorageChanged = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
     if (area !== "local" || !changes.settings) {
       return;
     }
-    void loadLanguage();
+    void loadOverlaySettings();
+  };
+  chrome.storage.onChanged.addListener(onStorageChanged);
+  addCleanup(() => chrome.storage.onChanged.removeListener(onStorageChanged));
+
+  const teardown = () => {
+    if (destroyed) {
+      return;
+    }
+    destroyed = true;
+    while (cleanupFns.length > 0) {
+      const fn = cleanupFns.pop();
+      try {
+        fn?.();
+      } catch {
+        // cleanup defensivo
+      }
+    }
+    if (restoreBtn) {
+      restoreBtn.remove();
+      restoreBtn = null;
+    }
+    root.remove();
+    const style = document.getElementById(OVERLAY_STYLE_ID);
+    style?.remove();
+    if (window.__FOCUSTUBE_OVERLAY__?.teardown === teardown) {
+      delete window.__FOCUSTUBE_OVERLAY__;
+    }
+  };
+
+  window.__FOCUSTUBE_OVERLAY__ = { initialized: true, teardown };
+
+  const onPageHide = () => teardown();
+  window.addEventListener("pagehide", onPageHide);
+  addCleanup(() => window.removeEventListener("pagehide", onPageHide));
+
+  updateMinimizeControlState();
+  void chrome.storage.local.get("overlayPos").then((res) => {
+    if (destroyed) {
+      return;
+    }
+    const pos = res.overlayPos as { left: number; top: number } | undefined;
+    if (!pos) {
+      return;
+    }
+    positionOverlay(pos.left, pos.top);
   });
+  render(Date.now());
+  void loadOverlaySettings();
+  syncTimeline(true);
 }

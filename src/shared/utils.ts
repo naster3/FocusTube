@@ -1,4 +1,4 @@
-﻿// Formato corto para fechas en UI.
+// Formato corto para fechas en UI.
 export function formatDateTime(timestamp: number) {
   const date = new Date(timestamp);
   return date.toLocaleString();

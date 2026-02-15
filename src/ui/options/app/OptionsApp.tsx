@@ -35,6 +35,8 @@ import { DataPanel } from "../components/DataPanel";
 import { GuidePanel } from "../components/GuidePanel";
 import { GuideFloat } from "../components/GuideFloat";
 
+const SHOW_FAMILY_PANEL = false;
+
 // Pantalla principal de opciones.
 export function Options() {
   // Estado base de UI.
@@ -559,12 +561,14 @@ export function Options() {
 
       <LanguagePanel language={settings.language} onSetLanguage={setLanguage} />
 
-      <FamilyPanel
-        settings={settings}
-        language={settings.language}
-        onToggleFamilyMode={(enabled) => void toggleFamilyMode(enabled)}
-        onSelectProfile={(profileId) => void selectProfile(profileId)}
-      />
+      {SHOW_FAMILY_PANEL ? (
+        <FamilyPanel
+          settings={settings}
+          language={settings.language}
+          onToggleFamilyMode={(enabled) => void toggleFamilyMode(enabled)}
+          onSelectProfile={(profileId) => void selectProfile(profileId)}
+        />
+      ) : null}
 
       <DataPanel
         language={settings.language}
@@ -608,4 +612,3 @@ export function Options() {
 function normalizeSettings(data: Partial<Settings>): Settings {
   return mergeSettings(data);
 }
-

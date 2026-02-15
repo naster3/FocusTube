@@ -61,9 +61,11 @@ export function Dashboard() {
   const [summaryEl, setSummaryEl] = useState<HTMLDivElement | null>(null);
   const [summaryInView, setSummaryInView] = useState(false);
   const [summaryAnimKey, setSummaryAnimKey] = useState(0);
+  const [metricsPanelReady, setMetricsPanelReady] = useState(false);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [undoMetrics, setUndoMetrics] = useState<Metrics | null>(null);
   const undoResetTimerRef = useRef<number | null>(null);
+  const metricsPanelAnchorRef = useRef<HTMLDivElement | null>(null);
 
   // Etiquetas para dominios bloqueados
   const tagLabels = useMemo(
@@ -147,6 +149,38 @@ export function Dashboard() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (metricsPanelReady) {
+      return () => undefined;
+    }
+
+    const warmupTimer = window.setTimeout(() => setMetricsPanelReady(true), 1800);
+
+    if (!metricsPanelAnchorRef.current || typeof IntersectionObserver === "undefined") {
+      return () => {
+        window.clearTimeout(warmupTimer);
+      };
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry?.isIntersecting) {
+          return;
+        }
+        setMetricsPanelReady(true);
+        observer.disconnect();
+      },
+      { threshold: 0.01, rootMargin: "320px 0px" }
+    );
+    observer.observe(metricsPanelAnchorRef.current);
+
+    return () => {
+      window.clearTimeout(warmupTimer);
+      observer.disconnect();
+    };
+  }, [metricsPanelReady]);
 
   // Helpers de mensajes UI.
   const pushToast = (message: string, tone: ToastTone = "info") => {
@@ -427,14 +461,14 @@ export function Dashboard() {
 
   // Datos derivados para charts.
   const chartSeries = useMemo<ChartSeries | null>(() => {
-    if (!metrics || metricsTab !== "charts") return null;
+    if (!metricsPanelReady || !metrics || metricsTab !== "charts") return null;
     const days = getRecentDays(14).reverse();
     return {
       labels: days,
       attempts: days.map((day) => metrics.attemptsByDay[day] || 0),
       times: days.map((day) => metrics.timeByDay[day] || 0)
     };
-  }, [metrics, metricsTab]);
+  }, [metricsPanelReady, metrics, metricsTab]);
 
   const chartHasData = useMemo(() => {
     if (!chartSeries) {
@@ -444,7 +478,7 @@ export function Dashboard() {
   }, [chartSeries]);
 
   const pieSeries = useMemo<PieSeries | null>(() => {
-    if (!metrics || metricsTab !== "charts" || !chartHasData) return null;
+    if (!metricsPanelReady || !metrics || metricsTab !== "charts" || !chartHasData) return null;
     const days = getRecentDays(7);
     const totals: Record<string, number> = {};
     days.forEach((day) => {
@@ -466,7 +500,7 @@ export function Dashboard() {
       values.push(otherSum);
     }
     return { labels, values };
-  }, [metrics, metricsTab, chartHasData, settings.language]);
+  }, [metricsPanelReady, metrics, metricsTab, chartHasData, settings.language]);
 
   const whitelistTotal = settings.whitelist.length;
   const whitelistTotalPages = Math.max(1, Math.ceil(whitelistTotal / LIST_PAGE_SIZE));
@@ -483,7 +517,7 @@ export function Dashboard() {
   const blockedSlice = settings.blockedDomains.slice(blockedStart, blockedEnd);
 
   const summaryData = useMemo<SummaryData | null>(() => {
-    if (!metrics || metricsTab !== "summary") {
+    if (!metricsPanelReady || !metrics || metricsTab !== "summary") {
       return null;
     }
     const todayKey = getDayKey(new Date());
@@ -526,10 +560,10 @@ export function Dashboard() {
       weekLabel,
       monthLabel
     };
-  }, [metrics, metricsTab, settings.language]);
+  }, [metricsPanelReady, metrics, metricsTab, settings.language]);
 
   const advancedData = useMemo<AdvancedData | null>(() => {
-    if (!metrics || metricsTab !== "advanced") {
+    if (!metricsPanelReady || !metrics || metricsTab !== "advanced") {
       return null;
     }
     const last30 = getRecentDays(30);
@@ -561,9 +595,9 @@ export function Dashboard() {
       sessionsPrev30,
       topDomains
     };
-  }, [metrics, metricsTab]);
+  }, [metricsPanelReady, metrics, metricsTab]);
 
-  const animateSummary = metricsTab === "summary" && Boolean(summaryData) && summaryInView;
+  const animateSummary = metricsPanelReady && metricsTab === "summary" && Boolean(summaryData) && summaryInView;
 
   useEffect(() => {
     if (animateSummary) {
@@ -583,7 +617,7 @@ export function Dashboard() {
   const tableDays = useMemo(() => getRecentDays(14), []);
 
   const tableRows = useMemo<MetricsTableRow[]>(() => {
-    if (!metrics || metricsTab !== "table") {
+    if (!metricsPanelReady || !metrics || metricsTab !== "table") {
       return [];
     }
     return tableDays.map((day) => {
@@ -605,7 +639,7 @@ export function Dashboard() {
         topDomainLabel
       };
     });
-  }, [metrics, metricsTab, tableDays]);
+  }, [metricsPanelReady, metrics, metricsTab, tableDays]);
 
   useEffect(() => {
     if (whitelistPage > whitelistTotalPages) {
@@ -622,7 +656,7 @@ export function Dashboard() {
   useMetricsCharts({
     chartSeries,
     pieSeries,
-    enabled: chartHasData,
+    enabled: metricsPanelReady && chartHasData,
     metricsTab,
     attemptsCanvasRef,
     timeCanvasRef,
@@ -771,34 +805,37 @@ export function Dashboard() {
 
 
 
-      <MetricsPanel
-        language={settings.language}
-        metrics={metrics}
-        metricsTab={metricsTab}
-        summaryData={summaryData}
-        advancedData={advancedData}
-        chartSeries={chartSeries}
-        pieSeries={pieSeries}
-        attemptsTodayAnim={attemptsTodayAnim}
-        timeTodayAnim={timeTodayAnim}
-        sessionsTodayAnim={sessionsTodayAnim}
-        attemptsWeekAnim={attemptsWeekAnim}
-        timeWeekAnim={timeWeekAnim}
-        sessionsWeekAnim={sessionsWeekAnim}
-        last30AttemptsAnim={last30AttemptsAnim}
-        last30TimeAnim={last30TimeAnim}
-        tableRows={tableRows}
-        onMetricsTabChange={(tab) => setMetricsTab(tab)}
-        onExportMetrics={exportMetrics}
-        onResetMetrics={handleResetMetrics}
-        onSummaryRef={setSummaryEl}
-        attemptsCanvasRef={attemptsCanvasRef}
-        timeCanvasRef={timeCanvasRef}
-        pieCanvasRef={pieCanvasRef}
-        formatSeconds={formatSeconds}
-        percentDelta={percentDelta}
-        deltaClass={deltaClass}
-      />
+      <div ref={metricsPanelAnchorRef}>
+        <MetricsPanel
+          language={settings.language}
+          metrics={metrics}
+          metricsTab={metricsTab}
+          summaryData={summaryData}
+          advancedData={advancedData}
+          chartSeries={chartSeries}
+          pieSeries={pieSeries}
+          attemptsTodayAnim={attemptsTodayAnim}
+          timeTodayAnim={timeTodayAnim}
+          sessionsTodayAnim={sessionsTodayAnim}
+          attemptsWeekAnim={attemptsWeekAnim}
+          timeWeekAnim={timeWeekAnim}
+          sessionsWeekAnim={sessionsWeekAnim}
+          last30AttemptsAnim={last30AttemptsAnim}
+          last30TimeAnim={last30TimeAnim}
+          tableRows={tableRows}
+          deferred={!metricsPanelReady}
+          onMetricsTabChange={(tab) => setMetricsTab(tab)}
+          onExportMetrics={exportMetrics}
+          onResetMetrics={handleResetMetrics}
+          onSummaryRef={setSummaryEl}
+          attemptsCanvasRef={attemptsCanvasRef}
+          timeCanvasRef={timeCanvasRef}
+          pieCanvasRef={pieCanvasRef}
+          formatSeconds={formatSeconds}
+          percentDelta={percentDelta}
+          deltaClass={deltaClass}
+        />
+      </div>
       <GuideFloat
         language={settings.language}
         guideActive={guideActive}

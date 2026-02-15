@@ -1,6 +1,9 @@
 import { Interval, IntervalWeek, ProfileSettings, Settings, Metrics, WeekSchedule } from "./types";
 import { getDayLabels } from "../../shared/i18n/dates";
 
+export const SETTINGS_SCHEMA_VERSION = 3;
+export const METRICS_SCHEMA_VERSION = 2;
+
 // Schedules por defecto por dia.
 export const DEFAULT_SCHEDULES: WeekSchedule = {
   0: [],
@@ -77,6 +80,7 @@ export const DEFAULT_PROFILE_KID = createDefaultProfile();
 
 // Settings por defecto.
 export const DEFAULT_SETTINGS: Settings = {
+  version: SETTINGS_SCHEMA_VERSION,
   blockEnabled: false,
   blockShorts: true,
   blockKids: false,
@@ -108,7 +112,7 @@ export const DEFAULT_SETTINGS: Settings = {
 
 // Metrics por defecto (v2).
 export const DEFAULT_METRICS: Metrics = {
-  version: 2,
+  version: METRICS_SCHEMA_VERSION,
   attemptsByDay: {},
   timeByDay: {},
   blockedTimeByDay: {},

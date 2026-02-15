@@ -599,6 +599,21 @@
   --block-accent-soft: var(--border-default);
 }
 
+:root[data-theme="dark"] .block-slate {
+  --block-accent: #cbd5e1;
+  --block-accent-soft: rgba(148, 163, 184, 0.24);
+}
+
+:root[data-theme="dark"] .block-slate .block-switch .block-slider {
+  background: rgba(148, 163, 184, 0.24);
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+:root[data-theme="dark"] .block-slate .block-switch .block-slider::after {
+  background: #e2e8f0;
+  box-shadow: 0 6px 14px rgba(2, 6, 23, 0.32);
+}
+
 .option-toggle {
   @apply flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -720,9 +735,9 @@
 }
 
 .panel button {
-  border: none;
-  background: var(--surface-muted);
-  color: var(--text-inverse);
+  border: 1px solid var(--border-default);
+  background: var(--surface-soft);
+  color: var(--text-primary);
   padding: 8px 12px;
   border-radius: 10px;
   cursor: pointer;
@@ -862,13 +877,6 @@
   .option-toggle,
   .language-option,
   .weekly-day,
-  .summary-card,
-  .summary-card .metric-value,
-  .summary-card .metric-delta,
-  .metric-row,
-  .metric-delta,
-  .chart,
-  .metrics-empty,
   .panel,
   .guide-highlight,
   .guide-progress-value {
@@ -920,23 +928,33 @@
 }
 
 .theme-swatch {
+  position: relative;
+  overflow: hidden;
   width: 28px;
   height: 28px;
   border-radius: 10px;
-  border: 1px solid var(--border-default);
+  border: 1px solid rgba(148, 163, 184, 0.55);
   flex: 0 0 auto;
 }
 
 .theme-swatch-light {
-  background: linear-gradient(135deg, var(--surface), var(--border-default));
+  background: linear-gradient(135deg, #ffffff, #e2e8f0);
 }
 
 .theme-swatch-dark {
-  background: linear-gradient(135deg, var(--surface-strong), var(--surface-muted));
+  background: linear-gradient(135deg, #020617, #1e293b);
 }
 
 .theme-swatch-system {
-  background: linear-gradient(135deg, var(--surface) 0 50%, var(--surface-strong) 50% 100%);
+  background: linear-gradient(135deg, #ffffff 0 50%, #0f172a 50% 100%);
+}
+
+.theme-swatch-system::after {
+  content: "";
+  position: absolute;
+  inset: 2px auto 2px 50%;
+  width: 1px;
+  background: rgba(148, 163, 184, 0.7);
 }
 
 .language-picker {
@@ -1101,248 +1119,6 @@
   margin: 12px 0;
 }
 
-.dashboard {
-  display: grid;
-  gap: 16px;
-}
-
-.summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-}
-
-.summary-card {
-  padding: 12px;
-  border: 1px solid var(--border-muted);
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--surface-muted), var(--surface));
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-.summary-card .metric-value,
-.summary-card .metric-delta {
-  transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease;
-}
-
-.summary-card:hover .metric-value {
-  transform: translateY(-1px);
-}
-
-.summary-card:hover .metric-delta {
-  transform: translateY(-1px);
-}
-.summary-card h4 {
-  margin: 0 0 8px 0;
-}
-
-.summary-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-
-.summary-sub {
-  font-size: 12px;
-  color: var(--text-subtle);
-}
-
-.summary-note {
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.summary-card:hover {
-  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.12);
-  transform: translateY(-1px);
-}
-
-.metric-card {
-  border-left: 4px solid transparent;
-}
-
-.metric-card.metric-attempts {
-  border-left-color: var(--status-danger-solid);
-}
-
-.metric-card.metric-time {
-  border-left-color: var(--brand-blue-500);
-}
-
-.metric-card.metric-sessions {
-  border-left-color: var(--status-success-solid);
-}
-
-.metric-row {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: baseline;
-  gap: 8px;
-  margin-top: 6px;
-  transition: transform 0.2s ease;
-}
-
-.metric-row:hover {
-  transform: translateX(2px);
-}
-
-.metric-label {
-  font-size: 12px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.metric-value {
-  font-size: 20px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.metric-delta {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: var(--border-default);
-  color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.metric-delta:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
-}
-
-.metric-delta.positive {
-  background: var(--surface-success-soft);
-  color: var(--status-success-text);
-}
-
-.metric-delta.negative {
-  background: var(--surface-danger-soft);
-  color: var(--status-danger-text);
-}
-
-.metric-delta.neutral {
-  background: var(--border-default);
-  color: var(--text-secondary);
-}
-
-.charts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
-}
-
-.chart {
-  padding: 12px;
-  border: 1px solid var(--border-muted);
-  border-radius: 12px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.chart:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.12);
-}
-
-.chart.metric-attempts {
-  border-color: rgba(239, 68, 68, 0.4);
-}
-
-.chart.metric-time {
-  border-color: rgba(59, 130, 246, 0.4);
-}
-
-.metrics-empty {
-  display: grid;
-  gap: 6px;
-  padding: 18px;
-  border-radius: 14px;
-  border: 1px dashed var(--border-brand-soft);
-  background: var(--surface-muted);
-  text-align: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.metrics-empty:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-soft);
-  box-shadow: 0 14px 24px rgba(15, 23, 42, 0.12);
-}
-
-.metrics-empty-icon {
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: 6px;
-  color: var(--text-subtle);
-}
-
-.metrics-empty-title {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.metrics-empty-text {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.chart-canvas {
-  height: 140px;
-}
-
-.chart-canvas canvas {
-  width: 100%;
-  height: 100%;
-}
-
-.bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  height: 120px;
-  margin-top: 8px;
-}
-
-.bar {
-  flex: 1;
-  background: var(--border-default);
-  border-radius: 6px;
-  display: flex;
-  align-items: flex-end;
-  overflow: hidden;
-}
-
-.bar .fill {
-  width: 100%;
-  background: var(--surface-muted);
-}
-
-.table {
-  display: grid;
-  gap: 6px;
-}
-
-.table .row {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--border-muted);
-  font-size: 12px;
-}
-
-.table .row.header {
-  font-weight: 700;
-  font-size: 12px;
-}
-
 
 .weekly-status {
   display: inline-flex;
@@ -1410,7 +1186,7 @@
   box-shadow: 0 12px 24px rgba(2, 6, 23, 0.5);
 }
 
-:root[data-theme="dark"] .panel button:not(.btn-ghost) {
+:root[data-theme="dark"] .panel button:not(.btn-ghost):not(.theme-option) {
   background: var(--accent);
   color: var(--accent-contrast);
 }
@@ -1425,10 +1201,6 @@
 :root[data-theme="dark"] .blocks-group-title,
 :root[data-theme="dark"] .language-label,
 :root[data-theme="dark"] .family-label,
-:root[data-theme="dark"] .summary-sub,
-:root[data-theme="dark"] .summary-note,
-:root[data-theme="dark"] .metric-label,
-:root[data-theme="dark"] .metrics-empty-text,
 :root[data-theme="dark"] .data-note {
   color: var(--text-subtle);
 }
@@ -1487,6 +1259,18 @@
   color: var(--text-primary);
 }
 
+:root[data-theme="dark"] .permanent-panel .option-stack,
+:root[data-theme="dark"] .permanent-panel .weekly-days,
+:root[data-theme="dark"] .permanent-panel .option-row {
+  background: var(--surface-muted);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .permanent-panel .option-row > span {
+  color: var(--text-secondary-strong);
+}
+
 :root[data-theme="dark"] .block-desc,
 :root[data-theme="dark"] .data-select,
 :root[data-theme="dark"] .import {
@@ -1514,7 +1298,11 @@
 :root[data-theme="dark"] .theme-option.active {
   border-color: var(--accent);
   background: rgba(249, 115, 22, 0.12);
-  color: var(--status-warning-text);
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .theme-swatch {
+  border-color: rgba(148, 163, 184, 0.65);
 }
 
 :root[data-theme="dark"] .panel input[type="text"],

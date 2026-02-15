@@ -1,4 +1,10 @@
-import { DEFAULT_INTERVALS, DEFAULT_METRICS, DEFAULT_SETTINGS } from "../domain/settings/defaults";
+import {
+  DEFAULT_INTERVALS,
+  DEFAULT_METRICS,
+  DEFAULT_SETTINGS,
+  METRICS_SCHEMA_VERSION,
+  SETTINGS_SCHEMA_VERSION
+} from "../domain/settings/defaults";
 import {
   DomainTag,
   Interval,
@@ -209,6 +215,7 @@ export async function ensureDefaults() {
     await storage.set({ [SETTINGS_KEY]: DEFAULT_SETTINGS });
     devLog("storage.ensureDefaults: settings initialized");
   } else if (
+    storedSettings.version !== SETTINGS_SCHEMA_VERSION ||
     !Array.isArray(storedSettings.blockedDomains) ||
     typeof storedSettings.activeProfile !== "string" ||
     !storedSettings.profiles
@@ -221,7 +228,7 @@ export async function ensureDefaults() {
   if (!storedMetrics) {
     await storage.set({ [METRICS_KEY]: DEFAULT_METRICS });
     devLog("storage.ensureDefaults: metrics initialized");
-  } else if (storedMetrics.version !== 2) {
+  } else if (storedMetrics.version !== METRICS_SCHEMA_VERSION) {
     const mergedMetrics = mergeMetrics(storedMetrics);
     await storage.set({ [METRICS_KEY]: mergedMetrics });
     devLog("storage.ensureDefaults: metrics migrated");
@@ -241,7 +248,7 @@ export async function getSettings(): Promise<Settings> {
 // Guarda settings completos.
 export async function setSettings(settings: Settings) {
   const storage = getStorageArea();
-  const next = syncProfiles(settings);
+  const next = syncProfiles(mergeSettings(settings));
   await storage.set({ [SETTINGS_KEY]: next });
   devLog("storage.setSettings", {
     blockEnabled: next.blockEnabled,
@@ -272,10 +279,11 @@ export async function getMetrics(): Promise<Metrics> {
 // Guarda metrics completos.
 export async function setMetrics(metrics: Metrics) {
   const storage = getStorageArea();
-  await storage.set({ [METRICS_KEY]: metrics });
+  const next = mergeMetrics(metrics);
+  await storage.set({ [METRICS_KEY]: next });
   devLog("storage.setMetrics", {
-    attemptsByDay: Object.keys(metrics.attemptsByDay).length,
-    timeByDay: Object.keys(metrics.timeByDay).length
+    attemptsByDay: Object.keys(next.attemptsByDay).length,
+    timeByDay: Object.keys(next.timeByDay).length
   });
 }
 
@@ -490,26 +498,104 @@ function mergeProfile(input: Partial<ProfileSettings> | undefined, fallback: Pro
   };
 }
 
+function toSchemaVersion(value: unknown, fallback: number) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.max(1, Math.floor(value));
+}
+
+function migrateSettingsV1ToV2(input: Partial<Settings> & Record<string, unknown>) {
+  const hasProfiles = Boolean(input.profiles && typeof input.profiles === "object");
+  if (hasProfiles) {
+    return { ...input, version: 2 };
+  }
+  const activeProfile: ProfileId = input.activeProfile === "kid" ? "kid" : "adult";
+  const adultProfile = mergeProfile(input as Partial<ProfileSettings>, DEFAULT_SETTINGS.profiles.adult);
+  return {
+    ...input,
+    version: 2,
+    familyModeEnabled: Boolean(input.familyModeEnabled),
+    activeProfile,
+    profiles: {
+      adult: adultProfile,
+      kid: DEFAULT_SETTINGS.profiles.kid
+    }
+  };
+}
+
+function migrateSettingsV2ToV3(input: Partial<Settings> & Record<string, unknown>) {
+  const next = { ...input };
+  delete next.proEnabled;
+  delete next.licenseKey;
+  delete next.licenseStatus;
+  delete next.licenseCheckedAt;
+  delete next.deviceId;
+  return {
+    ...next,
+    version: SETTINGS_SCHEMA_VERSION
+  };
+}
+
+function migrateSettingsInput(input: Partial<Settings>) {
+  let next = { ...input } as Partial<Settings> & Record<string, unknown>;
+  let version = toSchemaVersion(next.version, 1);
+
+  if (version < 2) {
+    next = migrateSettingsV1ToV2(next);
+    version = 2;
+  }
+  if (version < 3) {
+    next = migrateSettingsV2ToV3(next);
+  }
+
+  return {
+    ...next,
+    version: SETTINGS_SCHEMA_VERSION
+  } as Partial<Settings> & Record<string, unknown>;
+}
+
+function migrateMetricsV1ToV2(input: Partial<Metrics>) {
+  return {
+    ...input,
+    version: METRICS_SCHEMA_VERSION,
+    lastAttemptUrl: typeof input.lastAttemptUrl === "string" ? input.lastAttemptUrl : null
+  };
+}
+
+function migrateMetricsInput(input: Partial<Metrics>) {
+  let next = { ...input };
+  const version = toSchemaVersion(next.version, 1);
+  if (version < METRICS_SCHEMA_VERSION) {
+    next = migrateMetricsV1ToV2(next);
+  }
+  return {
+    ...next,
+    version: METRICS_SCHEMA_VERSION
+  };
+}
+
 // Merge de settings, con defaults y validacion basica.
 export function mergeSettings(input: Partial<Settings>): Settings {
-  const restInput = { ...input } as Partial<Settings> & Record<string, unknown>;
+  const migratedInput = migrateSettingsInput(input);
+  const restInput = { ...migratedInput } as Partial<Settings> & Record<string, unknown>;
   delete restInput.proEnabled;
   delete restInput.licenseKey;
   delete restInput.licenseStatus;
   delete restInput.licenseCheckedAt;
   delete restInput.deviceId;
-  const pinHash = typeof input.pinHash === "string" ? input.pinHash : null;
-  const theme = input.theme === "dark" ? "dark" : input.theme === "system" ? "system" : "light";
-  const familyModeEnabled = Boolean(input.familyModeEnabled);
-  let activeProfile: ProfileId = input.activeProfile === "kid" ? "kid" : "adult";
+  const pinHash = typeof migratedInput.pinHash === "string" ? migratedInput.pinHash : null;
+  const theme = migratedInput.theme === "dark" ? "dark" : migratedInput.theme === "system" ? "system" : "light";
+  const familyModeEnabled = Boolean(migratedInput.familyModeEnabled);
+  let activeProfile: ProfileId = migratedInput.activeProfile === "kid" ? "kid" : "adult";
   if (!familyModeEnabled) {
     activeProfile = "adult";
   }
-  const profilesInput = (input.profiles && typeof input.profiles === "object" ? input.profiles : {}) as Partial<
+  const profilesInput = (migratedInput.profiles && typeof migratedInput.profiles === "object" ? migratedInput.profiles : {}) as Partial<
     Record<ProfileId, Partial<ProfileSettings>>
   >;
   const activeFallback = activeProfile === "kid" ? DEFAULT_SETTINGS.profiles.kid : DEFAULT_SETTINGS.profiles.adult;
-  const activeProfileInput = mergeProfile(input as Partial<ProfileSettings>, activeFallback);
+  const activeProfileInput = mergeProfile(migratedInput as Partial<ProfileSettings>, activeFallback);
   const adultProfile =
     activeProfile === "adult"
       ? activeProfileInput
@@ -527,6 +613,7 @@ export function mergeSettings(input: Partial<Settings>): Settings {
     ...DEFAULT_SETTINGS,
     ...restInput,
     ...activeProfileData,
+    version: SETTINGS_SCHEMA_VERSION,
     pinHash,
     theme,
     familyModeEnabled,
@@ -540,15 +627,17 @@ export function mergeSettings(input: Partial<Settings>): Settings {
 
 // Merge de metrics v2 con defaults.
 export function mergeMetrics(input: Partial<Metrics>): Metrics {
+  const migratedInput = migrateMetricsInput(input);
   return {
     ...DEFAULT_METRICS,
-    ...input,
-    version: 2,
-    attemptsByDay: input.attemptsByDay || DEFAULT_METRICS.attemptsByDay,
-    timeByDay: input.timeByDay || DEFAULT_METRICS.timeByDay,
-    blockedTimeByDay: input.blockedTimeByDay || DEFAULT_METRICS.blockedTimeByDay,
-    sessionsByDay: input.sessionsByDay || DEFAULT_METRICS.sessionsByDay,
-    timeByDomainByDay: input.timeByDomainByDay || DEFAULT_METRICS.timeByDomainByDay,
-    lastAttemptUrl: typeof input.lastAttemptUrl === "string" ? input.lastAttemptUrl : DEFAULT_METRICS.lastAttemptUrl
+    ...migratedInput,
+    version: METRICS_SCHEMA_VERSION,
+    attemptsByDay: migratedInput.attemptsByDay || DEFAULT_METRICS.attemptsByDay,
+    timeByDay: migratedInput.timeByDay || DEFAULT_METRICS.timeByDay,
+    blockedTimeByDay: migratedInput.blockedTimeByDay || DEFAULT_METRICS.blockedTimeByDay,
+    sessionsByDay: migratedInput.sessionsByDay || DEFAULT_METRICS.sessionsByDay,
+    timeByDomainByDay: migratedInput.timeByDomainByDay || DEFAULT_METRICS.timeByDomainByDay,
+    lastAttemptUrl:
+      typeof migratedInput.lastAttemptUrl === "string" ? migratedInput.lastAttemptUrl : DEFAULT_METRICS.lastAttemptUrl
   };
 }

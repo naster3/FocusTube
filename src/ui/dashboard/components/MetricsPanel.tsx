@@ -23,6 +23,7 @@ type MetricsPanelProps = {
   last30AttemptsAnim: number;
   last30TimeAnim: number;
   tableRows: MetricsTableRow[];
+  deferred: boolean;
   onMetricsTabChange: (tab: MetricsTab) => void;
   onExportMetrics: () => void;
   onResetMetrics: () => void;
@@ -52,6 +53,7 @@ export function MetricsPanel({
   last30AttemptsAnim,
   last30TimeAnim,
   tableRows,
+  deferred,
   onMetricsTabChange,
   onExportMetrics,
   onResetMetrics,
@@ -63,6 +65,22 @@ export function MetricsPanel({
   percentDelta,
   deltaClass
 }: MetricsPanelProps) {
+  if (deferred) {
+    return (
+      <section className="panel" data-guide="metrics">
+        <div className="metrics-header">
+          <h3>{t(language, "dashboard.metrics.title")}</h3>
+        </div>
+        <div className="metrics-skeleton" role="status" aria-live="polite" aria-label={t(language, "dashboard.metrics.loading")}>
+          <div className="metrics-skeleton-row w-70" />
+          <div className="metrics-skeleton-row" />
+          <div className="metrics-skeleton-row w-45" />
+          <div className="metrics-skeleton-row" />
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="panel" data-guide="metrics">
       <div className="metrics-header">
