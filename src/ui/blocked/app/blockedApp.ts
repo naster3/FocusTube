@@ -7,7 +7,7 @@ import { evaluateBlock, reasonLabel } from "../../../domain/blocking/url";
 import { parseTimeToMinutes } from "../../../domain/schedule/schedule";
 import type { Settings } from "../../../domain/settings/types";
 import { getBlockedElements } from "../utils/dom";
-import { getInitialBlockedUrl, matchBlockedDomain, resolveBlockedAttempt } from "../utils/blockedUrl";
+import { getInitialBlockedUrl, matchBlockedDomain, resolveBlockedAttempt, resolveBlockedUrl } from "../utils/blockedUrl";
 import { startBlockedTimer } from "../utils/timers";
 import { pickMessage } from "../utils/messages";
 import { createScheduleAutoUnblockController } from "../utils/scheduleAutoUnblock";
@@ -105,6 +105,9 @@ export function initBlockedPage() {
     const lang = settings.language ?? "en";
     const resolved = await resolveBlockedAttempt(blockedUrl);
     blockedUrl = resolved.url;
+    if (!blockedUrl && typeof metrics.lastAttemptUrl === "string") {
+      blockedUrl = metrics.lastAttemptUrl;
+    }
     if (typeof resolved.at === "number") {
       lastAttemptAtFallback = resolved.at;
     }
