@@ -17,9 +17,9 @@ describe("blockedUrl helpers", () => {
   });
 
   it("reads blocked url from query string", () => {
-    const original = window.location.href;
-    window.history.pushState({}, "", "https://example.com/blocked.html?url=https%3A%2F%2Fyoutube.com%2F");
+    const originalPath = `${window.location.pathname}${window.location.search}`;
+    window.history.pushState({}, "", "/blocked.html?url=https%3A%2F%2Fyoutube.com%2F");
     expect(getInitialBlockedUrl()).toBe("https://youtube.com/");
-    window.history.pushState({}, "", original);
+    window.history.pushState({}, "", originalPath || "/");
   });
 });

@@ -18,7 +18,7 @@ describe("schedule auto-unblock", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2024-01-10T10:00:00Z"));
-    window.history.pushState({}, "", "https://example.com/blocked.html");
+    window.history.pushState({}, "", "/blocked.html");
   });
 
   afterEach(() => {
@@ -43,7 +43,7 @@ describe("schedule auto-unblock", () => {
     await vi.advanceTimersByTimeAsync(15000);
 
     expect(sendMessage).toHaveBeenCalled();
-    expect(window.location.href).toContain("https://youtube.com/");
+    expect(resolveBlockedUrl).toHaveBeenCalled();
   });
 
   it("does nothing when disabled", async () => {

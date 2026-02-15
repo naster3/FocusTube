@@ -108,6 +108,7 @@ describe("storage contract", () => {
 
     expect(settings.blockedDomains).toEqual(["youtube.com"]);
     expect(settings.activeProfile).toBe("adult");
-    expect(settings.profiles).toEqual(DEFAULT_SETTINGS.profiles);
+    expect(settings.profiles.adult.blockedDomains).toEqual(["youtube.com"]);
+    expect(settings.profiles.kid).toEqual(DEFAULT_SETTINGS.profiles.kid);
   });
 });

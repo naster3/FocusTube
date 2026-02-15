@@ -24,3 +24,5 @@ focus-tube-metrics.json
 *.dump
 *.bak
 *.csv
+playwright-report/
+test-results/
