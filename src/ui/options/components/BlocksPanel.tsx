@@ -35,7 +35,7 @@ export function BlocksPanel({
           <h3>{t(language, "options.blocks.title")}</h3>
           <p className="option-desc">{t(language, "options.blocks.desc")}</p>
         </div>
-        <div className="blocks-actions">
+        <div className="blocks-actions" data-guide="blocks-actions">
           <button type="button" className="btn-ghost" onClick={() => onToggleAll(true)}>
             {t(language, "options.blocks.action.enable_all")}
           </button>
@@ -47,7 +47,7 @@ export function BlocksPanel({
 
       <div className="blocks-group">
         <div className="blocks-group-title">{t(language, "options.blocks.group.youtube")}</div>
-        <div className="block-grid">
+        <div className="block-grid" data-guide="blocks-youtube-grid">
           <label className="block-card block-red">
             <span className="block-icon">YT</span>
             <span className="block-text">
@@ -83,7 +83,7 @@ export function BlocksPanel({
 
       <div className="blocks-group">
         <div className="blocks-group-title">{t(language, "options.blocks.group.social")}</div>
-        <div className="block-grid">
+        <div className="block-grid" data-guide="blocks-social-grid">
           <label className="block-card block-purple">
             <span className="block-icon">IG</span>
             <span className="block-text">

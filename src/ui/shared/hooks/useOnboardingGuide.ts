@@ -5,6 +5,8 @@ export type GuideStep = {
   target: string;
   title: string;
   desc: string;
+  highlightSelectors?: string[];
+  scrollSelector?: string;
 };
 
 type UseOnboardingGuideOptions = {
@@ -73,14 +75,41 @@ export function useOnboardingGuide({ steps, storageKey }: UseOnboardingGuideOpti
     if (!guideActive || !guideStep) {
       return;
     }
-    const el = document.querySelector<HTMLElement>(`[data-guide="${guideStep.target}"]`);
-    if (!el) {
+
+    const selectors =
+      guideStep.highlightSelectors && guideStep.highlightSelectors.length > 0
+        ? guideStep.highlightSelectors
+        : [`[data-guide="${guideStep.target}"]`];
+
+    const highlighted = selectors
+      .map((selector) => {
+        try {
+          return document.querySelector<HTMLElement>(selector);
+        } catch {
+          return null;
+        }
+      })
+      .filter((element): element is HTMLElement => Boolean(element));
+
+    if (highlighted.length === 0) {
       return;
     }
-    el.classList.add("guide-highlight");
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    highlighted.forEach((element) => element.classList.add("guide-highlight"));
+
+    const scrollTarget = guideStep.scrollSelector
+      ? (() => {
+          try {
+            return document.querySelector<HTMLElement>(guideStep.scrollSelector);
+          } catch {
+            return null;
+          }
+        })()
+      : highlighted[0];
+    scrollTarget?.scrollIntoView({ behavior: "smooth", block: "center" });
+
     return () => {
-      el.classList.remove("guide-highlight");
+      highlighted.forEach((element) => element.classList.remove("guide-highlight"));
     };
   }, [guideActive, guideStep]);
 
@@ -121,6 +150,18 @@ export function useOnboardingGuide({ steps, storageKey }: UseOnboardingGuideOpti
     setGuideStepIndex((prev) => Math.min(totalGuideSteps - 1, prev + 1));
   }, [totalGuideSteps]);
 
+  const goToStep = useCallback(
+    (index: number) => {
+      if (totalGuideSteps === 0) {
+        return;
+      }
+      const safeIndex = Math.max(0, Math.min(totalGuideSteps - 1, index));
+      setGuideStepIndex(safeIndex);
+      setGuideActive(true);
+    },
+    [totalGuideSteps]
+  );
+
   return useMemo(
     () => ({
       guideActive,
@@ -135,7 +176,8 @@ export function useOnboardingGuide({ steps, storageKey }: UseOnboardingGuideOpti
       restartGuide,
       dismissGuide,
       goPrev,
-      goNext
+      goNext,
+      goToStep
     }),
     [
       guideActive,
@@ -150,7 +192,8 @@ export function useOnboardingGuide({ steps, storageKey }: UseOnboardingGuideOpti
       restartGuide,
       dismissGuide,
       goPrev,
-      goNext
+      goNext,
+      goToStep
     ]
   );
 }

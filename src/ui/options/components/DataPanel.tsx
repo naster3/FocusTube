@@ -32,7 +32,7 @@ export function DataPanel({
       <p className="data-note">{t(language, "options.data.pdf_note")}</p>
       <p className="data-note">{t(language, "options.data.privacy_note")}</p>
       <div className="data-grid">
-        <div className="data-card">
+        <div className="data-card" data-guide="export-settings-card">
           <div>
             <h4>{t(language, "options.data.settings_title")}</h4>
             <p className="option-desc">{t(language, "options.data.settings_desc")}</p>
@@ -64,7 +64,7 @@ export function DataPanel({
             </label>
           </div>
         </div>
-        <div className="data-card">
+        <div className="data-card" data-guide="export-backup-card">
           <div>
             <h4>{t(language, "options.data.backup_title")}</h4>
             <p className="option-desc">{t(language, "options.data.backup_desc")}</p>

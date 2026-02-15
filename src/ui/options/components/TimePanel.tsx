@@ -12,7 +12,7 @@ export function TimePanel({ settings, language, onSaveSettings }: TimePanelProps
   return (
     <section className="panel" data-guide="time">
       <h3>{t(language, "options.time.title")}</h3>
-      <label>
+      <label data-guide="time-format-toggle">
         <input
           type="checkbox"
           checked={settings.timeFormat12h}

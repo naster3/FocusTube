@@ -1,6 +1,52 @@
 :root {
   color-scheme: light;
 }
+
+@keyframes blocked-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes unblock-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(185, 28, 28, 0.3);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(185, 28, 28, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(185, 28, 28, 0);
+  }
+}
+
+@keyframes confirm-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes feedback-pop {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-1px) scale(1.03);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
 body {
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -23,6 +69,7 @@ body {
   border: 1px solid #f1c0a8;
   position: relative;
   overflow: hidden;
+  animation: blocked-card-in 0.38s ease both;
 }
 .card::before {
   content: "";
@@ -149,11 +196,22 @@ button {
   border-radius: 10px;
   cursor: pointer;
   font-size: 14px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  transition:
+    transform 0.18s cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 0.22s ease,
+    filter 0.22s ease,
+    background-color 0.22s ease,
+    border-color 0.22s ease,
+    color 0.22s ease;
+  will-change: transform;
 }
 button.primary {
   background: #b91c1c;
   box-shadow: 0 10px 18px rgba(185, 28, 28, 0.25);
+}
+
+#unblock-btn[data-pulse="true"] {
+  animation: unblock-pulse 2.2s ease-in-out infinite;
 }
 button.ghost {
   background: transparent;
@@ -181,6 +239,13 @@ button:hover:not([disabled]) {
   transform: translateY(-1px);
   filter: brightness(0.98);
 }
+button:active:not([disabled]) {
+  transform: translateY(0) scale(0.98);
+}
+
+button[data-feedback="true"] {
+  animation: feedback-pop 0.26s ease;
+}
 .tag {
   display: inline-block;
   background: #fee2e2;
@@ -203,6 +268,14 @@ button:hover:not([disabled]) {
 }
 .confirm-backdrop[data-open="true"] {
   display: flex;
+}
+
+.confirm-backdrop[data-open="true"] .confirm-card {
+  animation: confirm-pop 0.18s ease-out both;
+}
+
+.confirm-backdrop[data-confirming="true"] .confirm-card {
+  transform: scale(0.985);
 }
 .confirm-card {
   width: min(420px, 100%);
@@ -232,6 +305,24 @@ button:hover:not([disabled]) {
   gap: 10px;
   flex-wrap: wrap;
 }
+
+.confirm-actions .primary {
+  position: relative;
+  overflow: hidden;
+}
+
+.confirm-actions .primary::after {
+  content: "";
+  position: absolute;
+  inset: -120% -30%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.45), transparent 60%);
+  opacity: 0;
+}
+
+.confirm-actions .primary:hover::after {
+  opacity: 0.35;
+  animation: feedback-pop 0.4s ease;
+}
 @media (max-width: 540px) {
   .actions {
     flex-direction: column;
@@ -242,5 +333,17 @@ button:hover:not([disabled]) {
   .url-row {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  .card,
+  #unblock-btn[data-pulse="true"],
+  .confirm-backdrop[data-open="true"] .confirm-card,
+  .confirm-actions .primary::after {
+    transition: none;
+    transform: none;
+    animation: none;
   }
 }

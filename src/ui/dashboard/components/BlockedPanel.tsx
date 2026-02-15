@@ -53,7 +53,7 @@ export function BlockedPanel({
   return (
     <section className="panel" data-guide="blocked">
       <h3>{t(language, "dashboard.blocked.title")}</h3>
-      <div className="row blocked-input-row">
+      <div className="row blocked-input-row" data-guide="blocked-input-row">
         <input
           type="text"
           placeholder={t(language, "dashboard.blocked.placeholder")}
@@ -62,7 +62,7 @@ export function BlockedPanel({
         />
         <button onClick={onAdd}>{t(language, "dashboard.action.add")}</button>
       </div>
-      <div className="tag-picker">
+      <div className="tag-picker" data-guide="blocked-tag-picker">
         <span>{t(language, "dashboard.domain.tags_label")}</span>
         <div className="tag-list">
           {tagOptions.map((tag) => {
@@ -84,11 +84,15 @@ export function BlockedPanel({
       ) : (
         <>
           <ul className="list">
-            {blockedSlice.map((entry) => {
+            {blockedSlice.map((entry, index) => {
               const hasPermission = blockedPermissions[entry] ?? true;
               const tags = blockedDomainTags[entry] ?? [];
               return (
-                <li key={entry} className={`blocked-card ${hasPermission ? "" : "blocked-card-missing"}`}>
+                <li
+                  key={entry}
+                  className={`blocked-card ${hasPermission ? "" : "blocked-card-missing"}`}
+                  style={{ "--stagger-index": index } as React.CSSProperties}
+                >
                   <div className="blocked-card-header">
                     <div className="blocked-domain-main">
                       <span className="blocked-domain-text">{entry}</span>

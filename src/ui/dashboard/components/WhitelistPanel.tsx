@@ -43,7 +43,7 @@ export function WhitelistPanel({
   return (
     <section className="panel" data-guide="whitelist">
       <h3>{t(language, "dashboard.whitelist.title")}</h3>
-      <div className="whitelist-controls">
+      <div className="whitelist-controls" data-guide="whitelist-controls">
         <label className="whitelist-toggle">
           <input type="checkbox" checked={whitelistEnabled} onChange={(event) => onToggleEnabled(event.target.checked)} />
           <span>{t(language, "dashboard.whitelist.enabled")}</span>
@@ -52,7 +52,7 @@ export function WhitelistPanel({
           <span className="whitelist-disabled-hint">{t(language, "dashboard.whitelist.disabled_hint")}</span>
         ) : null}
       </div>
-      <div className="row">
+      <div className="row" data-guide="whitelist-input-row">
         <input
           type="text"
           placeholder={t(language, "dashboard.whitelist.placeholder")}
@@ -69,8 +69,8 @@ export function WhitelistPanel({
       ) : (
         <>
           <ul className="list whitelist-list">
-            {whitelistSlice.map((entry) => (
-              <li key={entry} className="whitelist-item">
+            {whitelistSlice.map((entry, index) => (
+              <li key={entry} className="whitelist-item" style={{ "--stagger-index": index } as React.CSSProperties}>
                 <div className="whitelist-item-main">
                   <span className="whitelist-icon" aria-hidden="true">✓</span>
                   <span className="whitelist-url" title={entry}>

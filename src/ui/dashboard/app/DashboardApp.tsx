@@ -168,31 +168,39 @@ export function Dashboard() {
       id: "nav",
       target: "nav",
       title: t(settings.language, "dashboard.guide.step.nav.title"),
-      desc: t(settings.language, "dashboard.guide.step.nav.desc")
+      desc: t(settings.language, "dashboard.guide.step.nav.desc"),
+      highlightSelectors: ['[data-guide="nav"]']
     },
     {
       id: "schedule",
       target: "schedule",
       title: t(settings.language, "dashboard.guide.step.schedule.title"),
-      desc: t(settings.language, "dashboard.guide.step.schedule.desc")
+      desc: t(settings.language, "dashboard.guide.step.schedule.desc"),
+      highlightSelectors: ['[data-guide="schedule"]']
     },
     {
       id: "whitelist",
       target: "whitelist",
       title: t(settings.language, "dashboard.guide.step.whitelist.title"),
-      desc: t(settings.language, "dashboard.guide.step.whitelist.desc")
+      desc: t(settings.language, "dashboard.guide.step.whitelist.desc"),
+      highlightSelectors: ['[data-guide="whitelist-controls"]', '[data-guide="whitelist-input-row"]'],
+      scrollSelector: '[data-guide="whitelist"]'
     },
     {
       id: "blocked",
       target: "blocked",
       title: t(settings.language, "dashboard.guide.step.blocked.title"),
-      desc: t(settings.language, "dashboard.guide.step.blocked.desc")
+      desc: t(settings.language, "dashboard.guide.step.blocked.desc"),
+      highlightSelectors: ['[data-guide="blocked-input-row"]', '[data-guide="blocked-tag-picker"]'],
+      scrollSelector: '[data-guide="blocked"]'
     },
     {
       id: "metrics",
       target: "metrics",
       title: t(settings.language, "dashboard.guide.step.metrics.title"),
-      desc: t(settings.language, "dashboard.guide.step.metrics.desc")
+      desc: t(settings.language, "dashboard.guide.step.metrics.desc"),
+      highlightSelectors: ['[data-guide="metrics-tabs"]', '[data-guide="metrics-actions"]'],
+      scrollSelector: '[data-guide="metrics"]'
     }
   ];
 
@@ -209,7 +217,8 @@ export function Dashboard() {
     restartGuide,
     dismissGuide,
     goPrev,
-    goNext
+    goNext,
+    goToStep
   } = useOnboardingGuide({ steps: guideSteps, storageKey: "dashboardOnboardingSeen" });
 
   // Persistencia de settings.
@@ -669,7 +678,11 @@ export function Dashboard() {
         guideSeen={guideSeen}
         guideActive={guideActive}
         guideReady={guideReady}
+        guideStepIndex={guideStepIndex}
+        totalGuideSteps={totalGuideSteps}
+        guideSteps={guideSteps}
         onStartGuide={startGuide}
+        onStepSelect={goToStep}
         onRestartGuide={restartGuide}
         onDismissGuide={dismissGuide}
       />

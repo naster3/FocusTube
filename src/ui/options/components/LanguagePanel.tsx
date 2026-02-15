@@ -11,7 +11,7 @@ export function LanguagePanel({ language, onSetLanguage }: LanguagePanelProps) {
   return (
     <section className="panel language-panel" data-guide="language">
       <h3>{t(language, "options.language.title")}</h3>
-      <div className="language-picker">
+      <div className="language-picker" data-guide="language-picker">
         <span className="language-label">{t(language, "options.language.current")}</span>
         <label className="language-option">
           <input type="radio" name="language" value="en" checked={language === "en"} onChange={() => onSetLanguage("en")} />

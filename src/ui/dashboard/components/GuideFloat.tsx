@@ -30,6 +30,35 @@ export function GuideFloat({
   onFinish,
   onSkip
 }: GuideFloatProps) {
+  React.useEffect(() => {
+    if (!guideActive) {
+      return;
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onSkip();
+        return;
+      }
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        onPrev();
+        return;
+      }
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        if (guideStepIndex === totalGuideSteps - 1) {
+          onFinish();
+        } else {
+          onNext();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [guideActive, guideStepIndex, onFinish, onNext, onPrev, onSkip, totalGuideSteps]);
+
   if (!guideActive || !guideStep) {
     return null;
   }

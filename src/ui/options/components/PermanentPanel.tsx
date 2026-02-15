@@ -31,7 +31,7 @@ export function PermanentPanel({
     <section className="panel permanent-panel" data-guide="permanent">
       <h3>{t(language, "options.permanent.title")}</h3>
       <div className="permanent-grid permanent-grid-top">
-        <div className="option-stack">
+        <div className="option-stack" data-guide="permanent-main">
           <p className="option-desc">{t(language, "options.permanent.desc")}</p>
           <label className="option-toggle option-toggle-hero option-accent-red">
             <span className="option-icon" aria-hidden="true" />
@@ -43,7 +43,7 @@ export function PermanentPanel({
             <span className="option-text">{t(language, "options.permanent.enable")}</span>
           </label>
         </div>
-        <div className="option-stack">
+        <div className="option-stack" data-guide="weekly-session-toggle">
           <p className="option-desc">{t(language, "options.weekly_unblock.desc")}</p>
           <label className="option-toggle option-toggle-hero option-accent-blue">
             <span className="option-icon" aria-hidden="true" />
@@ -58,7 +58,7 @@ export function PermanentPanel({
       </div>
       <div className="divider" />
       <div className="permanent-grid permanent-grid-bottom">
-        <div className="weekly-days">
+        <div className="weekly-days" data-guide="weekly-session-days">
           <span>{t(language, "options.weekly_unblock.days")}</span>
           <div className="weekly-days-list">
             {dayOptions.map((day) => (
@@ -81,7 +81,7 @@ export function PermanentPanel({
             ))}
           </div>
         </div>
-        <div className="weekly-duration-stack">
+        <div className="weekly-duration-stack" data-guide="weekly-session-config">
           <label className="option-row">
             <span>{t(language, "options.weekly_unblock.duration")}</span>
             <input

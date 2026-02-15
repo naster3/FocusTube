@@ -8,6 +8,39 @@
   --accent-contrast: #0b1220;
 }
 
+@keyframes popup-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popup-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popup-toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
 .popup {
   width: 280px;
   padding: 16px;
@@ -15,6 +48,30 @@
   color: #0f172a;
   background: linear-gradient(135deg, #f9f3ec, #eff4ff);
   position: relative;
+}
+
+:where(button) {
+  transition:
+    transform 0.18s cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 0.22s ease,
+    filter 0.22s ease,
+    background-color 0.22s ease,
+    border-color 0.22s ease,
+    color 0.22s ease;
+  will-change: transform;
+}
+
+:where(button):hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+:where(button):active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+:where(button):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
 }
 
 .popup h1 {
@@ -65,6 +122,15 @@
   display: grid;
   gap: 8px;
   margin-bottom: 12px;
+  animation: popup-card-in 0.32s ease both;
+}
+
+.popup .card:nth-of-type(2) {
+  animation-delay: 0.03s;
+}
+
+.popup .card:nth-of-type(3) {
+  animation-delay: 0.06s;
 }
 
 .focus-card {
@@ -201,6 +267,7 @@
   font-size: 12px;
   box-shadow: 0 10px 20px rgba(15, 23, 42, 0.2);
   z-index: 10;
+  animation: popup-toast-in 0.2s ease, popup-toast-out 0.2s ease 2.28s forwards;
 }
 
 .incognito-warning {
@@ -315,4 +382,15 @@
 
 :root[data-theme="dark"] .incognito-text {
   color: #fdba74;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  .popup-tab,
+  .card,
+  .toast {
+    transition: none;
+    transform: none;
+    animation: none;
+  }
 }

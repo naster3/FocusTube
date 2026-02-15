@@ -68,7 +68,7 @@ export function MetricsPanel({
       <div className="metrics-header">
         <h3>{t(language, "dashboard.metrics.title")}</h3>
         <div className="metrics-controls">
-          <div className="metrics-nav">
+          <div className="metrics-nav" data-guide="metrics-tabs">
             <button
               type="button"
               className={`metrics-tab ${metricsTab === "summary" ? "active" : ""}`}
@@ -101,9 +101,14 @@ export function MetricsPanel({
         </div>
       </div>
       {!metrics ? (
-        <p>{t(language, "dashboard.metrics.loading")}</p>
+        <div className="metrics-skeleton" role="status" aria-live="polite" aria-label={t(language, "dashboard.metrics.loading")}>
+          <div className="metrics-skeleton-row w-70" />
+          <div className="metrics-skeleton-row" />
+          <div className="metrics-skeleton-row w-45" />
+          <div className="metrics-skeleton-row" />
+        </div>
       ) : (
-        <div className="dashboard">
+        <div className="dashboard metrics-content" key={`metrics-${metricsTab}`}>
           {metricsTab === "summary" && summaryData ? (
             <div className="summary" ref={onSummaryRef}>
               <div className="summary-card metric-card metric-attempts">
@@ -302,7 +307,7 @@ export function MetricsPanel({
             </div>
           ) : null}
 
-          <div className="actions">
+          <div className="actions" data-guide="metrics-actions">
             <button onClick={onExportMetrics}>{t(language, "dashboard.metrics.export")}</button>
             <button onClick={onResetMetrics}>{t(language, "dashboard.metrics.reset")}</button>
           </div>

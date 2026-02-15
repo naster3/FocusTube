@@ -1,13 +1,23 @@
 import React from "react";
-import { t } from "../../../shared/i18n";
+import { t, tf } from "../../../shared/i18n";
 import type { Settings } from "../../../domain/settings/types";
+
+type GuideStep = {
+  id: string;
+  title: string;
+  desc: string;
+};
 
 type GuidePanelProps = {
   language: Settings["language"];
   guideSeen: boolean;
   guideActive: boolean;
   guideReady: boolean;
+  guideStepIndex: number;
+  totalGuideSteps: number;
+  guideSteps: GuideStep[];
   onStartGuide: () => void;
+  onStepSelect: (index: number) => void;
   onRestartGuide: () => void;
   onDismissGuide: () => void;
 };
@@ -17,7 +27,11 @@ export function GuidePanel({
   guideSeen,
   guideActive,
   guideReady,
+  guideStepIndex,
+  totalGuideSteps,
+  guideSteps,
   onStartGuide,
+  onStepSelect,
   onRestartGuide,
   onDismissGuide
 }: GuidePanelProps) {
@@ -27,6 +41,20 @@ export function GuidePanel({
 
   return (
     <section className="panel guide-panel">
+      <div className="guide-overview">
+        <div className="guide-progress">
+          {tf(language, "options.guide.progress", {
+            current: String(Math.min(guideStepIndex + 1, totalGuideSteps || 1)),
+            total: String(Math.max(totalGuideSteps, 1))
+          })}
+        </div>
+        <div className="guide-progress-track" aria-hidden="true">
+          <span
+            className="guide-progress-value"
+            style={{ width: `${(Math.min(guideStepIndex + 1, totalGuideSteps || 1) / Math.max(totalGuideSteps, 1)) * 100}%` }}
+          />
+        </div>
+      </div>
       <div className="guide-header">
         <div>
           <h3>{t(language, "options.guide.title")}</h3>
@@ -49,9 +77,14 @@ export function GuidePanel({
       </div>
       <div className="guide-body">
         <ol className="guide-steps">
-          <li>{t(language, "options.guide.step1")}</li>
-          <li>{t(language, "options.guide.step2")}</li>
-          <li>{t(language, "options.guide.step3")}</li>
+          {guideSteps.map((step, index) => (
+            <li key={step.id} className={guideActive && guideStepIndex === index ? "is-current" : ""}>
+              <button type="button" className="guide-step-btn" onClick={() => onStepSelect(index)}>
+                <span className="guide-step-title">{step.title}</span>
+                <span className="guide-step-desc">{step.desc}</span>
+              </button>
+            </li>
+          ))}
         </ol>
       </div>
     </section>

@@ -385,37 +385,46 @@ export function Options() {
       id: "nav",
       target: "nav",
       title: t(settings.language, "options.guide.step.nav.title"),
-      desc: t(settings.language, "options.guide.step.nav.desc")
+      desc: t(settings.language, "options.guide.step.nav.desc"),
+      highlightSelectors: ['[data-guide="nav"]']
     },
     {
       id: "blocks",
       target: "blocks",
       title: t(settings.language, "options.guide.step.blocks.title"),
-      desc: t(settings.language, "options.guide.step.blocks.desc")
+      desc: t(settings.language, "options.guide.step.blocks.desc"),
+      highlightSelectors: ['[data-guide="blocks-actions"]', '[data-guide="blocks-social-grid"]'],
+      scrollSelector: '[data-guide="blocks"]'
     },
     {
       id: "permanent",
       target: "permanent",
       title: t(settings.language, "options.guide.step.permanent.title"),
-      desc: t(settings.language, "options.guide.step.permanent.desc")
+      desc: t(settings.language, "options.guide.step.permanent.desc"),
+      highlightSelectors: ['[data-guide="weekly-session-toggle"]', '[data-guide="weekly-session-config"]'],
+      scrollSelector: '[data-guide="permanent"]'
     },
     {
       id: "time",
       target: "time",
       title: t(settings.language, "options.guide.step.time.title"),
-      desc: t(settings.language, "options.guide.step.time.desc")
+      desc: t(settings.language, "options.guide.step.time.desc"),
+      highlightSelectors: ['[data-guide="time-format-toggle"]']
     },
     {
       id: "language",
       target: "language",
       title: t(settings.language, "options.guide.step.language.title"),
-      desc: t(settings.language, "options.guide.step.language.desc")
+      desc: t(settings.language, "options.guide.step.language.desc"),
+      highlightSelectors: ['[data-guide="language-picker"]']
     },
     {
       id: "export",
       target: "export",
       title: t(settings.language, "options.guide.step.export.title"),
-      desc: t(settings.language, "options.guide.step.export.desc")
+      desc: t(settings.language, "options.guide.step.export.desc"),
+      highlightSelectors: ['[data-guide="export-settings-card"]', '[data-guide="export-backup-card"]'],
+      scrollSelector: '[data-guide="export"]'
     }
   ];
   const {
@@ -431,7 +440,8 @@ export function Options() {
     restartGuide,
     dismissGuide,
     goPrev,
-    goNext
+    goNext,
+    goToStep
   } = useOnboardingGuide({ steps: guideSteps, storageKey: "onboardingSeen" });
 
   const now = Date.now();
@@ -508,7 +518,11 @@ export function Options() {
         guideSeen={guideSeen}
         guideActive={guideActive}
         guideReady={guideReady}
+        guideStepIndex={guideStepIndex}
+        totalGuideSteps={totalGuideSteps}
+        guideSteps={guideSteps}
         onStartGuide={startGuide}
+        onStepSelect={goToStep}
         onRestartGuide={restartGuide}
         onDismissGuide={dismissGuide}
       />
