@@ -57,6 +57,7 @@ describe("metrics utils", () => {
       sessionsByDay: {},
       timeByDomainByDay: {},
       lastAttemptAt: null,
+      lastAttemptUrl: null,
       lastUpdatedAt: null
     };
     expect(sumMetricRange(metrics, ["2024-01-10", "2024-01-08"], "attemptsByDay")).toBe(2);

@@ -15,7 +15,7 @@ export function BlockedView() {
               </div>
               <h1 id="blocked-title">Bloqueado por tus horarios</h1>
             </div>
-            <p className="message" id="message" role="status" aria-live="polite">
+            <p className="message" id="message">
               Respira, enfoca y vuelve con un objetivo claro.
             </p>
             <p className="carryover-note" id="carryover-note" role="status" aria-live="polite" />
@@ -25,7 +25,7 @@ export function BlockedView() {
               <span className="meta-label" id="attempts-label">
                 Intentos hoy
               </span>
-              <span className="meta-value" id="attempts" aria-live="polite">
+              <span className="meta-value" id="attempts">
                 0
               </span>
             </div>
@@ -33,7 +33,7 @@ export function BlockedView() {
               <span className="meta-label" id="last-attempt-label">
                 Ultimo intento
               </span>
-              <span className="meta-value" id="last-attempt" aria-live="polite">
+              <span className="meta-value" id="last-attempt">
                 -
               </span>
             </div>
@@ -41,7 +41,7 @@ export function BlockedView() {
               <span className="meta-label" id="blocked-reason-label">
                 Motivo
               </span>
-              <span className="meta-value" id="blocked-reason" aria-live="polite">
+              <span className="meta-value" id="blocked-reason">
                 -
               </span>
             </div>
@@ -51,7 +51,7 @@ export function BlockedView() {
               URL
             </span>
             <div className="url-row">
-              <span className="url" id="blocked-url" aria-live="polite" aria-atomic="true" />
+              <span className="url" id="blocked-url" />
               <button className="ghost small" id="copy-url-btn" type="button" aria-label="Copiar URL bloqueada">
                 Copiar
               </button>
@@ -74,6 +74,7 @@ export function BlockedView() {
           aria-modal="true"
           aria-labelledby="confirm-title"
           aria-describedby="confirm-desc"
+          tabIndex={-1}
         >
           <h2 className="confirm-title" id="confirm-title">
             Confirmar

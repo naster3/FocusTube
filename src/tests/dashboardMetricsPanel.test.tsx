@@ -39,6 +39,7 @@ describe("MetricsPanel UI", () => {
       sessionsByDay: { "2024-01-10": 1 },
       timeByDomainByDay: { "2024-01-10": { "youtube.com": 120 } },
       lastAttemptAt: null,
+      lastAttemptUrl: null,
       lastUpdatedAt: null
     };
     const tableRows: MetricsTableRow[] = [
@@ -100,6 +101,7 @@ describe("MetricsPanel UI", () => {
       sessionsByDay: {},
       timeByDomainByDay: {},
       lastAttemptAt: null,
+      lastAttemptUrl: null,
       lastUpdatedAt: null
     };
     const summaryData: SummaryData = {

@@ -110,13 +110,34 @@ export function initBlockedPage() {
     elements.confirmModalEl.setAttribute("data-open", "true");
 
     return await new Promise<boolean>((resolve) => {
+      const previousActive = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      const dialogEl = elements.confirmModalEl?.querySelector<HTMLElement>(".confirm-card") ?? null;
+      const focusableSelector = [
+        "button:not([disabled])",
+        "a[href]",
+        "input:not([disabled]):not([type='hidden'])",
+        "select:not([disabled])",
+        "textarea:not([disabled])",
+        "[tabindex]:not([tabindex='-1'])"
+      ].join(",");
+
+      const getFocusable = () => {
+        if (!dialogEl) {
+          return [] as HTMLElement[];
+        }
+        return Array.from(dialogEl.querySelectorAll<HTMLElement>(focusableSelector))
+          .filter((el) => !el.hasAttribute("disabled") && el.getAttribute("aria-hidden") !== "true");
+      };
+
       const cleanup = (value: boolean) => {
         elements.confirmModalEl?.removeAttribute("data-open");
-        elements.confirmModalEl?.removeAttribute("aria-hidden");
+        elements.confirmModalEl?.setAttribute("aria-hidden", "true");
         elements.confirmModalEl?.removeAttribute("data-confirming");
         elements.confirmCancelBtn?.removeEventListener("click", onCancel);
         elements.confirmConfirmBtn?.removeEventListener("click", onConfirm);
         elements.confirmModalEl?.removeEventListener("click", onBackdrop);
+        document.removeEventListener("keydown", onKeyDown);
+        previousActive?.focus();
         resolve(value);
       };
 
@@ -131,11 +152,46 @@ export function initBlockedPage() {
           cleanup(false);
         }
       };
+      const onKeyDown = (event: KeyboardEvent) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          cleanup(false);
+          return;
+        }
+        if (event.key !== "Tab") {
+          return;
+        }
+        const focusable = getFocusable();
+        if (!focusable.length) {
+          event.preventDefault();
+          dialogEl?.focus();
+          return;
+        }
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        const activeInside = active ? dialogEl?.contains(active) : false;
+        if (event.shiftKey) {
+          if (!activeInside || active === first) {
+            event.preventDefault();
+            last.focus();
+          }
+          return;
+        }
+        if (!activeInside || active === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      };
 
       elements.confirmModalEl?.setAttribute("aria-hidden", "false");
       elements.confirmCancelBtn?.addEventListener("click", onCancel);
       elements.confirmConfirmBtn?.addEventListener("click", onConfirm);
       elements.confirmModalEl?.addEventListener("click", onBackdrop);
+      document.addEventListener("keydown", onKeyDown);
+      window.requestAnimationFrame(() => {
+        elements.confirmCancelBtn?.focus();
+      });
     });
   }
 

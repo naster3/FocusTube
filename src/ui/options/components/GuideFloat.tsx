@@ -30,6 +30,10 @@ export function GuideFloat({
   onFinish,
   onSkip
 }: GuideFloatProps) {
+  const floatRef = React.useRef<HTMLDivElement | null>(null);
+  const titleId = React.useId();
+  const descId = React.useId();
+
   React.useEffect(() => {
     if (!guideActive) {
       return;
@@ -59,20 +63,37 @@ export function GuideFloat({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [guideActive, guideStepIndex, onFinish, onNext, onPrev, onSkip, totalGuideSteps]);
 
+  React.useEffect(() => {
+    if (!guideActive) {
+      return;
+    }
+    window.requestAnimationFrame(() => {
+      floatRef.current?.focus();
+    });
+  }, [guideActive, guideStepIndex]);
+
   if (!guideActive || !guideStep) {
     return null;
   }
 
   return (
-    <div className="guide-float" role="dialog" aria-live="polite">
+    <div
+      ref={floatRef}
+      className="guide-float"
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby={titleId}
+      aria-describedby={descId}
+      tabIndex={-1}
+    >
       <div className="guide-progress">
         {tf(language, "options.guide.progress", {
           current: String(guideStepIndex + 1),
           total: String(totalGuideSteps)
         })}
       </div>
-      <div className="guide-title">{guideStep.title}</div>
-      <div className="guide-text">{guideStep.desc}</div>
+      <div className="guide-title" id={titleId}>{guideStep.title}</div>
+      <div className="guide-text" id={descId}>{guideStep.desc}</div>
       <div className="guide-nav">
         <button type="button" className="btn-ghost" onClick={onPrev} disabled={guideStepIndex === 0}>
           {t(language, "options.guide.back")}
