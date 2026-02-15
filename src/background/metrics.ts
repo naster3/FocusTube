@@ -139,6 +139,7 @@ export async function addAttempt(tabId: number, url: string, now: number) {
   const nextCount = (metrics.attemptsByDay[dayKey] || 0) + 1;
   metrics.attemptsByDay = { ...metrics.attemptsByDay, [dayKey]: nextCount };
   metrics.lastAttemptAt = now;
+  metrics.lastAttemptUrl = url;
   metrics.lastUpdatedAt = now;
   setMetricsDirty(true);
   try {

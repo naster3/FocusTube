@@ -81,6 +81,7 @@ export type Metrics = {
   sessionsByDay: Record<string, number>;
   timeByDomainByDay: Record<string, Record<string, number>>;
   lastAttemptAt: number | null;
+  lastAttemptUrl: string | null;
   lastUpdatedAt: number | null;
 };
 

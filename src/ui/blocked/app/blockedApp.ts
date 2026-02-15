@@ -41,7 +41,42 @@ export function initBlockedPage() {
 
   let blockedUrl = getInitialBlockedUrl();
   let lastAttemptAtFallback: number | null = null;
+  let lastRenderedAttempts = 0;
   const elements = getBlockedElements();
+
+  const triggerButtonFeedback = (button: HTMLButtonElement | null) => {
+    if (!button) {
+      return;
+    }
+    button.setAttribute("data-feedback", "true");
+    window.setTimeout(() => {
+      button.removeAttribute("data-feedback");
+    }, 260);
+  };
+
+  const animateNumberText = (el: HTMLElement, target: number) => {
+    const from = Number.isFinite(lastRenderedAttempts) ? lastRenderedAttempts : 0;
+    if (from === target) {
+      el.textContent = String(target);
+      return;
+    }
+    const durationMs = 320;
+    const start = performance.now();
+
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / durationMs);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const value = Math.round(from + (target - from) * eased);
+      el.textContent = String(value);
+      if (progress < 1) {
+        window.requestAnimationFrame(tick);
+        return;
+      }
+      lastRenderedAttempts = target;
+    };
+
+    window.requestAnimationFrame(tick);
+  };
 
   const scheduleAutoUnblock = createScheduleAutoUnblockController({
     resolveBlockedUrl: async () => {
@@ -78,6 +113,7 @@ export function initBlockedPage() {
       const cleanup = (value: boolean) => {
         elements.confirmModalEl?.removeAttribute("data-open");
         elements.confirmModalEl?.removeAttribute("aria-hidden");
+        elements.confirmModalEl?.removeAttribute("data-confirming");
         elements.confirmCancelBtn?.removeEventListener("click", onCancel);
         elements.confirmConfirmBtn?.removeEventListener("click", onConfirm);
         elements.confirmModalEl?.removeEventListener("click", onBackdrop);
@@ -85,7 +121,11 @@ export function initBlockedPage() {
       };
 
       const onCancel = () => cleanup(false);
-      const onConfirm = () => cleanup(true);
+      const onConfirm = () => {
+        triggerButtonFeedback(elements.confirmConfirmBtn);
+        elements.confirmModalEl?.setAttribute("data-confirming", "true");
+        window.setTimeout(() => cleanup(true), 90);
+      };
       const onBackdrop = (event: Event) => {
         if (event.target === elements.confirmModalEl) {
           cleanup(false);
@@ -148,7 +188,7 @@ export function initBlockedPage() {
       elements.blockedUrlLabelEl.textContent = t(lang, "blocked.url_prefix");
     }
     if (elements.attemptsEl) {
-      elements.attemptsEl.textContent = String(attempts);
+      animateNumberText(elements.attemptsEl, attempts);
     }
     if (elements.lastAttemptEl) {
       elements.lastAttemptEl.textContent = lastAttemptAt
@@ -188,6 +228,7 @@ export function initBlockedPage() {
         try {
           await navigator.clipboard.writeText(blockedUrl);
           setButtonLabel(copyBtn, t(lang, "blocked.copied"));
+          triggerButtonFeedback(copyBtn);
           window.setTimeout(() => {
             setButtonLabel(copyBtn, copyLabel);
           }, 1500);
@@ -209,6 +250,7 @@ export function initBlockedPage() {
 
     if (!tags.length) {
       elements.unblockBtn.disabled = true;
+      elements.unblockBtn.setAttribute("data-pulse", "false");
       setButtonLabel(elements.unblockBtn, t(lang, "blocked.missing_tag"));
       return;
     }
@@ -217,6 +259,7 @@ export function initBlockedPage() {
     if (hasWeekly && !hasIntervals) {
       if (!settings.weeklyUnblockEnabled) {
         elements.unblockBtn.disabled = true;
+        elements.unblockBtn.setAttribute("data-pulse", "false");
         setButtonLabel(elements.unblockBtn, t(lang, "blocked.weekly.disabled"));
         return;
       }
@@ -231,6 +274,7 @@ export function initBlockedPage() {
 
       if (!canStart) {
         elements.unblockBtn.disabled = true;
+        elements.unblockBtn.setAttribute("data-pulse", "false");
         const label = weeklyActive
           ? t(lang, "blocked.weekly.used")
           : alreadyUsed
@@ -243,6 +287,7 @@ export function initBlockedPage() {
       }
 
       elements.unblockBtn.disabled = false;
+      elements.unblockBtn.setAttribute("data-pulse", "true");
       setButtonLabel(elements.unblockBtn, tf(lang, "blocked.weekly.unblock", { minutes: String(durationMin) }));
       elements.unblockBtn.onclick = async () => {
         const confirmOk = await confirmAction(lang, {
@@ -269,9 +314,11 @@ export function initBlockedPage() {
 
     if (settings.strictMode) {
       elements.unblockBtn.disabled = true;
+      elements.unblockBtn.setAttribute("data-pulse", "false");
       setButtonLabel(elements.unblockBtn, t(lang, "blocked.strict_active"));
     } else {
       elements.unblockBtn.disabled = false;
+      elements.unblockBtn.setAttribute("data-pulse", "true");
       setButtonLabel(elements.unblockBtn, t(lang, "blocked.unblock"));
       elements.unblockBtn.onclick = async () => {
         const confirmOk = await confirmAction(lang, {

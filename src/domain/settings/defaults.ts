@@ -115,6 +115,7 @@ export const DEFAULT_METRICS: Metrics = {
   sessionsByDay: {},
   timeByDomainByDay: {},
   lastAttemptAt: null,
+  lastAttemptUrl: null,
   lastUpdatedAt: null
 };
 

@@ -7,9 +7,22 @@ export type ResolvedBlockedAttempt = {
   at: number | null;
 };
 
+function getHttpReferrerUrl() {
+  const referrer = document.referrer || "";
+  if (!referrer) {
+    return "";
+  }
+  try {
+    const parsed = new URL(referrer);
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? referrer : "";
+  } catch {
+    return "";
+  }
+}
+
 export const getInitialBlockedUrl = () => {
   const params = new URLSearchParams(window.location.search);
-  return params.get("url") || "";
+  return params.get("url") || getHttpReferrerUrl();
 };
 
 export async function resolveBlockedAttempt(currentUrl: string): Promise<ResolvedBlockedAttempt> {
@@ -20,11 +33,11 @@ export async function resolveBlockedAttempt(currentUrl: string): Promise<Resolve
     const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
     const tabId = tabs?.[0]?.id;
     if (!tabId) {
-      return { url: "", at: null };
+      return { url: getHttpReferrerUrl(), at: null };
     }
     const message = { type: "GET_LAST_ATTEMPT", tabId };
     if (!isValidOutgoingMessage(message, "blocked")) {
-      return { url: "", at: null };
+      return { url: getHttpReferrerUrl(), at: null };
     }
     const res = (await chrome.runtime.sendMessage(message)) as MessageResponse<"GET_LAST_ATTEMPT"> | undefined;
     if (res?.ok) {
@@ -35,7 +48,7 @@ export async function resolveBlockedAttempt(currentUrl: string): Promise<Resolve
   } catch {
     // ignore
   }
-  return { url: "", at: null };
+  return { url: getHttpReferrerUrl(), at: null };
 }
 
 export async function resolveBlockedUrl(currentUrl: string): Promise<string> {

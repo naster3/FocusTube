@@ -548,6 +548,7 @@ export function mergeMetrics(input: Partial<Metrics>): Metrics {
     timeByDay: input.timeByDay || DEFAULT_METRICS.timeByDay,
     blockedTimeByDay: input.blockedTimeByDay || DEFAULT_METRICS.blockedTimeByDay,
     sessionsByDay: input.sessionsByDay || DEFAULT_METRICS.sessionsByDay,
-    timeByDomainByDay: input.timeByDomainByDay || DEFAULT_METRICS.timeByDomainByDay
+    timeByDomainByDay: input.timeByDomainByDay || DEFAULT_METRICS.timeByDomainByDay,
+    lastAttemptUrl: typeof input.lastAttemptUrl === "string" ? input.lastAttemptUrl : DEFAULT_METRICS.lastAttemptUrl
   };
 }
