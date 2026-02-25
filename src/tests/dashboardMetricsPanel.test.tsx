@@ -1,13 +1,15 @@
 // @vitest-environment jsdom
 import React from "react";
 import { afterEach, describe, expect, it } from "vitest";
-import { act } from "react-dom/test-utils";
+import { act } from "react";
 import { createRoot } from "react-dom/client";
 import type { Metrics } from "../domain/settings/types";
 import type { AdvancedData, ChartSeries, MetricsTableRow, PieSeries, SummaryData } from "../ui/dashboard/types";
 import { MetricsPanel } from "../ui/dashboard/components/MetricsPanel";
 
 const noop = () => undefined;
+
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const clearBody = () => {
   while (document.body.firstChild) {

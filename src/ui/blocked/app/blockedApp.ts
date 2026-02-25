@@ -12,6 +12,7 @@ import { startBlockedTimer } from "../utils/timers";
 import { pickMessage } from "../utils/messages";
 import { createScheduleAutoUnblockController } from "../utils/scheduleAutoUnblock";
 import { closeBlockedTab } from "../utils/close";
+import { navigateTo } from "../utils/navigation";
 
 let initialized = false;
 
@@ -362,7 +363,7 @@ export function initBlockedPage() {
           weeklyUnblockLastWeek: getWeeklySessionDayKey(start)
         });
         if (blockedUrl) {
-          window.location.href = blockedUrl;
+          navigateTo(blockedUrl);
         }
       };
       return;
@@ -389,7 +390,7 @@ export function initBlockedPage() {
         const start = Date.now();
         await updateSettings({ unblockUntil: start + 5 * 60 * 1000 });
         if (blockedUrl) {
-          window.location.href = blockedUrl;
+          navigateTo(blockedUrl);
         }
       };
     }

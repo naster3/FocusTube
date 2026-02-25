@@ -1,5 +1,6 @@
 import type { MessageResponse } from "../../../shared/messages";
 import { isValidOutgoingMessage } from "../../../shared/messages";
+import { navigateTo } from "./navigation";
 
 type ScheduleAutoUnblockController = {
   start: () => void;
@@ -33,7 +34,7 @@ export function createScheduleAutoUnblockController({
       }
       const res = (await chrome.runtime.sendMessage(message)) as MessageResponse<"GET_TIMELINE"> | undefined;
       if (res?.ok && res.timeline.state === "free") {
-        window.location.href = url;
+        navigateTo(url);
       }
     } catch {
       // ignore
