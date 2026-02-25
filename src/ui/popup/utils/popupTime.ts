@@ -5,7 +5,7 @@ export function formatDateTimeAmPm(ts: number) {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-    hour12: true
+    hour12: true,
   });
   return `${date} ${time}`;
 }

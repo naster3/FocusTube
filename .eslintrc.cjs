@@ -3,15 +3,15 @@ module.exports = {
   env: {
     browser: true,
     node: true,
-    es2021: true
+    es2021: true,
   },
   parser: "@typescript-eslint/parser",
   parserOptions: {
     ecmaVersion: "latest",
     sourceType: "module",
     ecmaFeatures: {
-      jsx: true
-    }
+      jsx: true,
+    },
   },
   plugins: ["@typescript-eslint", "react", "react-hooks"],
   extends: [
@@ -19,12 +19,12 @@ module.exports = {
     "plugin:@typescript-eslint/recommended",
     "plugin:react/recommended",
     "plugin:react-hooks/recommended",
-    "prettier"
+    "prettier",
   ],
   settings: {
     react: {
-      version: "detect"
-    }
+      version: "detect",
+    },
   },
   ignorePatterns: ["dist/", "node_modules/", "coverage/"],
   rules: {
@@ -35,28 +35,28 @@ module.exports = {
       {
         object: "document",
         property: "write",
-        message: "Avoid document.write. Use createElement/textContent instead."
+        message: "Avoid document.write. Use createElement/textContent instead.",
       },
       {
         object: "document",
         property: "writeln",
-        message: "Avoid document.writeln. Use createElement/textContent instead."
-      }
+        message: "Avoid document.writeln. Use createElement/textContent instead.",
+      },
     ],
     "no-restricted-syntax": [
       "error",
       {
         selector: "MemberExpression[property.name='innerHTML']",
-        message: "Avoid innerHTML. Use textContent/createElement instead."
+        message: "Avoid innerHTML. Use textContent/createElement instead.",
       },
       {
         selector: "MemberExpression[property.name='outerHTML']",
-        message: "Avoid outerHTML. Use createElement instead."
+        message: "Avoid outerHTML. Use createElement instead.",
       },
       {
         selector: "MemberExpression[property.name='insertAdjacentHTML']",
-        message: "Avoid insertAdjacentHTML. Use createElement instead."
-      }
-    ]
-  }
+        message: "Avoid insertAdjacentHTML. Use createElement instead.",
+      },
+    ],
+  },
 };

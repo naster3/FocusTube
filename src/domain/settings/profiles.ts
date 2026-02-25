@@ -17,7 +17,7 @@ export const PROFILE_FIELDS: (keyof ProfileSettings)[] = [
   "weeklyUnblockDays",
   "weeklyUnblockDurationMinutes",
   "weeklyUnblockUntil",
-  "weeklyUnblockLastWeek"
+  "weeklyUnblockLastWeek",
 ];
 
 export const extractProfile = (settings: Settings): ProfileSettings => ({
@@ -37,12 +37,12 @@ export const extractProfile = (settings: Settings): ProfileSettings => ({
   weeklyUnblockDays: settings.weeklyUnblockDays,
   weeklyUnblockDurationMinutes: settings.weeklyUnblockDurationMinutes,
   weeklyUnblockUntil: settings.weeklyUnblockUntil,
-  weeklyUnblockLastWeek: settings.weeklyUnblockLastWeek
+  weeklyUnblockLastWeek: settings.weeklyUnblockLastWeek,
 });
 
 export const applyProfile = (settings: Settings, profile: ProfileSettings): Settings => ({
   ...settings,
-  ...profile
+  ...profile,
 });
 
 export const syncProfiles = (settings: Settings): Settings => {
@@ -51,8 +51,8 @@ export const syncProfiles = (settings: Settings): Settings => {
     ...settings,
     profiles: {
       ...settings.profiles,
-      [settings.activeProfile]: profile
-    }
+      [settings.activeProfile]: profile,
+    },
   };
 };
 
@@ -62,6 +62,6 @@ export const switchProfile = (settings: Settings, profileId: ProfileId): Setting
   return {
     ...synced,
     ...nextProfile,
-    activeProfile: profileId
+    activeProfile: profileId,
   };
 };

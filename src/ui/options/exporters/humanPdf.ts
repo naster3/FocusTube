@@ -18,7 +18,7 @@ const languageLabels: Record<Settings["language"], string> = {
   es: "ES",
   en: "EN",
   pt: "PT",
-  fr: "FR"
+  fr: "FR",
 };
 
 const yesNo = (lang: Settings["language"], value: boolean) =>
@@ -85,11 +85,11 @@ export function openHumanPdf({ title, settings, metrics, language }: PdfPayload)
       label: t(language, "options.data.pdf.time_format"),
       value: settings.timeFormat12h
         ? t(language, "options.data.pdf.time_format_12h")
-        : t(language, "options.data.pdf.time_format_24h")
+        : t(language, "options.data.pdf.time_format_24h"),
     },
     { label: t(language, "options.data.pdf.family_mode"), value: yesNo(language, settings.familyModeEnabled) },
     { label: t(language, "options.data.pdf.strict_mode"), value: yesNo(language, settings.strictMode) },
-    { label: t(language, "options.data.pdf.block_permanent"), value: yesNo(language, settings.blockEnabled) }
+    { label: t(language, "options.data.pdf.block_permanent"), value: yesNo(language, settings.blockEnabled) },
   ];
 
   const blockItems: KeyValueItem[] = [
@@ -97,13 +97,13 @@ export function openHumanPdf({ title, settings, metrics, language }: PdfPayload)
     { label: t(language, "options.blocks.kids"), value: yesNo(language, settings.blockKids) },
     {
       label: t(language, "options.blocks.instagram_reels"),
-      value: yesNo(language, settings.blockInstagramReels)
-    }
+      value: yesNo(language, settings.blockInstagramReels),
+    },
   ];
 
   const listItems: KeyValueItem[] = [
     { label: t(language, "options.data.pdf.blocked_domains_count"), value: String(settings.blockedDomains.length) },
-    { label: t(language, "options.data.pdf.whitelist_count"), value: String(settings.whitelist.length) }
+    { label: t(language, "options.data.pdf.whitelist_count"), value: String(settings.whitelist.length) },
   ];
 
   const weeklyItems: KeyValueItem[] = [
@@ -113,37 +113,40 @@ export function openHumanPdf({ title, settings, metrics, language }: PdfPayload)
       value:
         settings.weeklyUnblockDays.length > 0
           ? settings.weeklyUnblockDays.map((day) => getDayLabel(day, language)).join(", ")
-          : t(language, "options.data.pdf.none")
+          : t(language, "options.data.pdf.none"),
     },
     {
       label: t(language, "options.data.pdf.weekly_duration"),
-      value: `${settings.weeklyUnblockDurationMinutes} ${t(language, "options.weekly_unblock.minutes")}`
+      value: `${settings.weeklyUnblockDurationMinutes} ${t(language, "options.weekly_unblock.minutes")}`,
     },
     {
       label: t(language, "options.data.pdf.weekly_until"),
       value: settings.weeklyUnblockUntil
         ? formatDateTime(language, settings.weeklyUnblockUntil, settings.timeFormat12h)
-        : t(language, "options.data.pdf.none")
-    }
+        : t(language, "options.data.pdf.none"),
+    },
   ];
 
   const metricsTotals: KeyValueItem[] = [];
   let metricsSections: HTMLElement[] = [];
   if (metrics) {
-    metricsTotals.push({ label: t(language, "options.data.pdf.metrics.total_attempts"), value: String(sumValues(metrics.attemptsByDay)) });
+    metricsTotals.push({
+      label: t(language, "options.data.pdf.metrics.total_attempts"),
+      value: String(sumValues(metrics.attemptsByDay)),
+    });
     metricsTotals.push({
       label: t(language, "options.data.pdf.metrics.total_time"),
-      value: formatMinutes(language, sumValues(metrics.timeByDay))
+      value: formatMinutes(language, sumValues(metrics.timeByDay)),
     });
     metricsTotals.push({
       label: t(language, "options.data.pdf.metrics.total_sessions"),
-      value: String(sumValues(metrics.sessionsByDay))
+      value: String(sumValues(metrics.sessionsByDay)),
     });
     metricsTotals.push({
       label: t(language, "options.data.pdf.metrics.last_attempt"),
       value: metrics.lastAttemptAt
         ? formatDateTime(language, metrics.lastAttemptAt, settings.timeFormat12h)
-        : t(language, "options.data.pdf.none")
+        : t(language, "options.data.pdf.none"),
     });
 
     const topDomains = aggregateDomains(metrics);
@@ -151,7 +154,7 @@ export function openHumanPdf({ title, settings, metrics, language }: PdfPayload)
       dayKey,
       attempts: metrics.attemptsByDay[dayKey] || 0,
       time: metrics.timeByDay[dayKey] || 0,
-      sessions: metrics.sessionsByDay[dayKey] || 0
+      sessions: metrics.sessionsByDay[dayKey] || 0,
     }));
     const hasActivity = recentRows.some((row) => row.attempts > 0 || row.time > 0 || row.sessions > 0);
     metricsSections = [
@@ -160,8 +163,8 @@ export function openHumanPdf({ title, settings, metrics, language }: PdfPayload)
         totals: metricsTotals,
         recentRows,
         hasActivity,
-        topDomains
-      })
+        topDomains,
+      }),
     ];
   }
 
@@ -206,11 +209,17 @@ export function openHumanPdf({ title, settings, metrics, language }: PdfPayload)
 
   doc.body.appendChild(titleEl);
   doc.body.appendChild(metaEl);
-  doc.body.appendChild(buildSection(doc, t(language, "options.data.pdf.section.summary"), buildKeyValueTable(doc, summaryItems)));
-  doc.body.appendChild(buildSection(doc, t(language, "options.data.pdf.section.blocks"), buildKeyValueTable(doc, blockItems)));
+  doc.body.appendChild(
+    buildSection(doc, t(language, "options.data.pdf.section.summary"), buildKeyValueTable(doc, summaryItems))
+  );
+  doc.body.appendChild(
+    buildSection(doc, t(language, "options.data.pdf.section.blocks"), buildKeyValueTable(doc, blockItems))
+  );
   doc.body.appendChild(buildListsSection(doc, language, listItems, settings.blockedDomains, settings.whitelist));
   doc.body.appendChild(buildScheduleSection(doc, language, settings.intervalsByDay, settings.timeFormat12h));
-  doc.body.appendChild(buildSection(doc, t(language, "options.data.pdf.section.weekly"), buildKeyValueTable(doc, weeklyItems)));
+  doc.body.appendChild(
+    buildSection(doc, t(language, "options.data.pdf.section.weekly"), buildKeyValueTable(doc, weeklyItems))
+  );
 
   metricsSections.forEach((section) => {
     doc.body.appendChild(section);
@@ -290,12 +299,7 @@ function buildList(doc: Document, lang: Settings["language"], items: string[], c
   return list;
 }
 
-function buildIntervalsList(
-  doc: Document,
-  lang: Settings["language"],
-  intervals: Interval[],
-  timeFormat12h: boolean
-) {
+function buildIntervalsList(doc: Document, lang: Settings["language"], intervals: Interval[], timeFormat12h: boolean) {
   if (intervals.length === 0) {
     return buildText(doc, "span", t(lang, "options.data.pdf.none"), "muted");
   }
@@ -303,9 +307,7 @@ function buildIntervalsList(
   list.className = "list compact";
   intervals.forEach((interval) => {
     const mode =
-      interval.mode === "free"
-        ? t(lang, "schedule.modal.mode_free")
-        : t(lang, "schedule.modal.mode_blocked");
+      interval.mode === "free" ? t(lang, "schedule.modal.mode_free") : t(lang, "schedule.modal.mode_blocked");
     const state = interval.enabled ? t(lang, "schedule.list.enabled") : t(lang, "schedule.list.disabled");
     const time = `${formatTimeString(interval.start, timeFormat12h)} - ${formatTimeString(interval.end, timeFormat12h)}`;
     const li = doc.createElement("li");
@@ -374,8 +376,14 @@ function buildMetricsSection({ lang, totals, recentRows, hasActivity, topDomains
   const daily = doc.createElement("div");
   daily.className = "subsection";
   daily.appendChild(buildText(doc, "h4", t(lang, "options.data.pdf.section.metrics_daily")));
-  daily.appendChild(buildText(doc, "p", tf(lang, "options.data.pdf.metrics_window", { count: String(METRICS_DAYS) }), "muted"));
-  daily.appendChild(hasActivity ? buildMetricsTable(doc, lang, recentRows) : buildText(doc, "p", t(lang, "options.data.pdf.none"), "muted"));
+  daily.appendChild(
+    buildText(doc, "p", tf(lang, "options.data.pdf.metrics_window", { count: String(METRICS_DAYS) }), "muted")
+  );
+  daily.appendChild(
+    hasActivity
+      ? buildMetricsTable(doc, lang, recentRows)
+      : buildText(doc, "p", t(lang, "options.data.pdf.none"), "muted")
+  );
   section.appendChild(daily);
 
   const top = doc.createElement("div");
@@ -411,7 +419,7 @@ function buildMetricsTable(
     t(lang, "dashboard.metrics.table.date"),
     t(lang, "dashboard.metrics.attempts"),
     `${t(lang, "dashboard.metrics.time")} (${t(lang, "options.weekly_unblock.minutes")})`,
-    t(lang, "dashboard.metrics.sessions")
+    t(lang, "dashboard.metrics.sessions"),
   ];
   headers.forEach((label) => {
     const th = doc.createElement("th");
@@ -426,7 +434,7 @@ function buildMetricsTable(
       formatDate(lang, new Date(row.dayKey).getTime()),
       String(row.attempts),
       String(roundMinutes(row.time)),
-      String(row.sessions)
+      String(row.sessions),
     ];
     cells.forEach((value) => {
       const td = doc.createElement("td");

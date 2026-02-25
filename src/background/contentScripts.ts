@@ -16,7 +16,7 @@ function buildMatches(domains: string[]) {
 export async function syncRegisteredContentScripts(blockedDomains: string[]) {
   const matches = buildMatches(blockedDomains);
   const existing = await chrome.scripting.getRegisteredContentScripts({
-    ids: [CONTENT_SCRIPT_ID]
+    ids: [CONTENT_SCRIPT_ID],
   });
   const alreadyRegistered = existing.length > 0;
   try {
@@ -37,8 +37,8 @@ export async function syncRegisteredContentScripts(blockedDomains: string[]) {
         id: CONTENT_SCRIPT_ID,
         js: ["content.js"],
         matches,
-        runAt: "document_start"
-      }
+        runAt: "document_start",
+      },
     ]);
   } catch (error) {
     const message = (error as Error)?.message || "";
@@ -49,8 +49,8 @@ export async function syncRegisteredContentScripts(blockedDomains: string[]) {
           id: CONTENT_SCRIPT_ID,
           js: ["content.js"],
           matches,
-          runAt: "document_start"
-        }
+          runAt: "document_start",
+        },
       ]);
     } else {
       throw error;
@@ -95,7 +95,7 @@ export async function reinjectContentScriptIntoOpenTabs(blockedDomains: string[]
     try {
       await chrome.scripting.executeScript({
         target: { tabId },
-        files: ["content.js"]
+        files: ["content.js"],
       });
     } catch {
       // Best effort (puede fallar si no hay permiso de host en esa pestana).

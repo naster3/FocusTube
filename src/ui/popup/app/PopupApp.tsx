@@ -115,9 +115,7 @@ export function Popup() {
     const remainingMs = timeline.currentUntil ? Math.max(0, timeline.currentUntil - Date.now()) : null;
     const duration = remainingMs !== null ? formatDuration(remainingMs) : t(lang, "toast.duration_unknown");
     const message =
-      timeline.state === "blocked"
-        ? tf(lang, "toast.blocked", { duration })
-        : tf(lang, "toast.free", { duration });
+      timeline.state === "blocked" ? tf(lang, "toast.blocked", { duration }) : tf(lang, "toast.free", { duration });
     showToast(message);
   }, [timeline, lang, showToast]);
 
@@ -207,7 +205,6 @@ export function Popup() {
           onBreakMinutesChange={focusTimer.updateBreakMinutes}
         />
       )}
-
     </div>
   );
 }

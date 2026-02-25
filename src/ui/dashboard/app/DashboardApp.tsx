@@ -2,7 +2,14 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_INTERVALS, DEFAULT_SCHEDULES, DEFAULT_SETTINGS } from "../../../domain/settings/defaults";
 import { hashPin, verifyPin } from "../../../shared/hash";
 import { t } from "../../../shared/i18n";
-import { getMetrics, getSettings, onStorageChanged, resetMetrics, setMetrics as persistMetrics, setSettings } from "../../../infrastructure/storage";
+import {
+  getMetrics,
+  getSettings,
+  onStorageChanged,
+  resetMetrics,
+  setMetrics as persistMetrics,
+  setSettings,
+} from "../../../infrastructure/storage";
 import { DomainTag, Metrics, Settings } from "../../../domain/settings/types";
 import { normalizeDomain, normalizeWhitelistEntry } from "../../../domain/blocking/url";
 import { ScheduleView } from "../../options/schedule/ScheduleView";
@@ -20,7 +27,7 @@ import {
   getDayKey,
   getRecentDays,
   percentDelta,
-  sumMetricRange
+  sumMetricRange,
 } from "../../../domain/metrics/utils";
 import { GuidePanel } from "../components/GuidePanel";
 import { GuideFloat } from "../components/GuideFloat";
@@ -71,15 +78,12 @@ export function Dashboard() {
   const tagLabels = useMemo(
     () => ({
       intervalos: t(settings.language, "tag.intervalos"),
-      por_semana: t(settings.language, "tag.por_semana")
+      por_semana: t(settings.language, "tag.por_semana"),
     }),
     [settings.language]
   );
 
-  const tagOptions = useMemo(
-    () => DOMAIN_TAGS.map((tag) => ({ value: tag, label: tagLabels[tag] })),
-    [tagLabels]
-  );
+  const tagOptions = useMemo(() => DOMAIN_TAGS.map((tag) => ({ value: tag, label: tagLabels[tag] })), [tagLabels]);
 
   // Carga inicial de settings y metrics.
   useEffect(() => {
@@ -203,14 +207,14 @@ export function Dashboard() {
       target: "nav",
       title: t(settings.language, "dashboard.guide.step.nav.title"),
       desc: t(settings.language, "dashboard.guide.step.nav.desc"),
-      highlightSelectors: ['[data-guide="nav"]']
+      highlightSelectors: ['[data-guide="nav"]'],
     },
     {
       id: "schedule",
       target: "schedule",
       title: t(settings.language, "dashboard.guide.step.schedule.title"),
       desc: t(settings.language, "dashboard.guide.step.schedule.desc"),
-      highlightSelectors: ['[data-guide="schedule"]']
+      highlightSelectors: ['[data-guide="schedule"]'],
     },
     {
       id: "whitelist",
@@ -218,7 +222,7 @@ export function Dashboard() {
       title: t(settings.language, "dashboard.guide.step.whitelist.title"),
       desc: t(settings.language, "dashboard.guide.step.whitelist.desc"),
       highlightSelectors: ['[data-guide="whitelist-controls"]', '[data-guide="whitelist-input-row"]'],
-      scrollSelector: '[data-guide="whitelist"]'
+      scrollSelector: '[data-guide="whitelist"]',
     },
     {
       id: "blocked",
@@ -226,7 +230,7 @@ export function Dashboard() {
       title: t(settings.language, "dashboard.guide.step.blocked.title"),
       desc: t(settings.language, "dashboard.guide.step.blocked.desc"),
       highlightSelectors: ['[data-guide="blocked-input-row"]', '[data-guide="blocked-tag-picker"]'],
-      scrollSelector: '[data-guide="blocked"]'
+      scrollSelector: '[data-guide="blocked"]',
     },
     {
       id: "metrics",
@@ -234,8 +238,8 @@ export function Dashboard() {
       title: t(settings.language, "dashboard.guide.step.metrics.title"),
       desc: t(settings.language, "dashboard.guide.step.metrics.desc"),
       highlightSelectors: ['[data-guide="metrics-tabs"]', '[data-guide="metrics-actions"]'],
-      scrollSelector: '[data-guide="metrics"]'
-    }
+      scrollSelector: '[data-guide="metrics"]',
+    },
   ];
 
   const {
@@ -252,7 +256,7 @@ export function Dashboard() {
     dismissGuide,
     goPrev,
     goNext,
-    goToStep
+    goToStep,
   } = useOnboardingGuide({ steps: guideSteps, storageKey: "dashboardOnboardingSeen" });
 
   // Persistencia de settings.
@@ -273,7 +277,7 @@ export function Dashboard() {
       {
         ...settings,
         schedules: DEFAULT_SCHEDULES,
-        intervalsByDay: DEFAULT_INTERVALS
+        intervalsByDay: DEFAULT_INTERVALS,
       },
       t(settings.language, "dashboard.schedule.reset_done")
     );
@@ -297,7 +301,11 @@ export function Dashboard() {
 
   const removeWhitelist = async (value: string) => {
     const next = settings.whitelist.filter((entry) => entry !== value);
-    await saveSettings({ ...settings, whitelist: next }, t(settings.language, "dashboard.whitelist.updated"), "success");
+    await saveSettings(
+      { ...settings, whitelist: next },
+      t(settings.language, "dashboard.whitelist.updated"),
+      "success"
+    );
   };
 
   // Acciones de modo estricto.
@@ -307,7 +315,11 @@ export function Dashboard() {
       return;
     }
     const pinHash = await hashPin(pinInput);
-    await saveSettings({ ...settings, strictMode: true, pinHash }, t(settings.language, "dashboard.strict.enable"), "success");
+    await saveSettings(
+      { ...settings, strictMode: true, pinHash },
+      t(settings.language, "dashboard.strict.enable"),
+      "success"
+    );
     setPinInput("");
     setPinConfirm("");
   };
@@ -344,15 +356,21 @@ export function Dashboard() {
       return;
     }
     const newHash = await hashPin(pinChangeNew);
-    await saveSettings({ ...settings, pinHash: newHash }, t(settings.language, "dashboard.strict.pin_updated"), "success");
+    await saveSettings(
+      { ...settings, pinHash: newHash },
+      t(settings.language, "dashboard.strict.pin_updated"),
+      "success"
+    );
     setPinCurrent("");
     setPinChangeNew("");
     setPinChangeConfirm("");
   };
 
-  const { permissions: blockedPermissions, requestPermission, removePermission } = useDomainPermissions(
-    settings.blockedDomains
-  );
+  const {
+    permissions: blockedPermissions,
+    requestPermission,
+    removePermission,
+  } = useDomainPermissions(settings.blockedDomains);
 
   // Acciones de dominios bloqueados.
   const addBlockedDomain = async () => {
@@ -396,9 +414,7 @@ export function Dashboard() {
 
   const toggleDomainTag = async (domain: string, tag: DomainTag, enabled: boolean) => {
     const current = settings.blockedDomainTags[domain] ?? [];
-    const nextTags = enabled
-      ? Array.from(new Set([...current, tag]))
-      : current.filter((entry) => entry !== tag);
+    const nextTags = enabled ? Array.from(new Set([...current, tag])) : current.filter((entry) => entry !== tag);
     const nextMap = { ...settings.blockedDomainTags, [domain]: nextTags };
     await saveSettings({ ...settings, blockedDomainTags: nextMap });
   };
@@ -466,7 +482,7 @@ export function Dashboard() {
     return {
       labels: days,
       attempts: days.map((day) => metrics.attemptsByDay[day] || 0),
-      times: days.map((day) => metrics.timeByDay[day] || 0)
+      times: days.map((day) => metrics.timeByDay[day] || 0),
     };
   }, [metricsPanelReady, metrics, metricsTab]);
 
@@ -558,7 +574,7 @@ export function Dashboard() {
       last30Time,
       todayLabel,
       weekLabel,
-      monthLabel
+      monthLabel,
     };
   }, [metricsPanelReady, metrics, metricsTab, settings.language]);
 
@@ -593,7 +609,7 @@ export function Dashboard() {
       timePrev30,
       sessions30,
       sessionsPrev30,
-      topDomains
+      topDomains,
     };
   }, [metricsPanelReady, metrics, metricsTab]);
 
@@ -605,13 +621,28 @@ export function Dashboard() {
     }
   }, [animateSummary]);
 
-  const attemptsTodayAnim = useCountUp(summaryData?.attemptsToday ?? 0, SUMMARY_ANIM_MS, animateSummary, summaryAnimKey);
+  const attemptsTodayAnim = useCountUp(
+    summaryData?.attemptsToday ?? 0,
+    SUMMARY_ANIM_MS,
+    animateSummary,
+    summaryAnimKey
+  );
   const timeTodayAnim = useCountUp(summaryData?.timeToday ?? 0, SUMMARY_ANIM_MS, animateSummary, summaryAnimKey);
-  const sessionsTodayAnim = useCountUp(summaryData?.sessionsToday ?? 0, SUMMARY_ANIM_MS, animateSummary, summaryAnimKey);
+  const sessionsTodayAnim = useCountUp(
+    summaryData?.sessionsToday ?? 0,
+    SUMMARY_ANIM_MS,
+    animateSummary,
+    summaryAnimKey
+  );
   const attemptsWeekAnim = useCountUp(summaryData?.attemptsWeek ?? 0, SUMMARY_ANIM_MS, animateSummary, summaryAnimKey);
   const timeWeekAnim = useCountUp(summaryData?.timeWeek ?? 0, SUMMARY_ANIM_MS, animateSummary, summaryAnimKey);
   const sessionsWeekAnim = useCountUp(summaryData?.sessionsWeek ?? 0, SUMMARY_ANIM_MS, animateSummary, summaryAnimKey);
-  const last30AttemptsAnim = useCountUp(summaryData?.last30Attempts ?? 0, SUMMARY_ANIM_MS, animateSummary, summaryAnimKey);
+  const last30AttemptsAnim = useCountUp(
+    summaryData?.last30Attempts ?? 0,
+    SUMMARY_ANIM_MS,
+    animateSummary,
+    summaryAnimKey
+  );
   const last30TimeAnim = useCountUp(summaryData?.last30Time ?? 0, SUMMARY_ANIM_MS, animateSummary, summaryAnimKey);
 
   const tableDays = useMemo(() => getRecentDays(14), []);
@@ -636,7 +667,7 @@ export function Dashboard() {
         attempts: metrics.attemptsByDay[day] || 0,
         time: metrics.timeByDay[day] || 0,
         sessions: metrics.sessionsByDay[day] || 0,
-        topDomainLabel
+        topDomainLabel,
       };
     });
   }, [metricsPanelReady, metrics, metricsTab, tableDays]);
@@ -661,7 +692,7 @@ export function Dashboard() {
     attemptsCanvasRef,
     timeCanvasRef,
     pieCanvasRef,
-    formatSeconds
+    formatSeconds,
   });
 
   // Links de navegacion.
@@ -679,7 +710,7 @@ export function Dashboard() {
         navItems={[
           { id: "config", label: t(settings.language, "nav.config"), href: optionsHref },
           { id: "dashboard", label: t(settings.language, "nav.dashboard"), href: dashboardHref },
-          { id: "help", label: t(settings.language, "nav.help"), href: helpHref }
+          { id: "help", label: t(settings.language, "nav.help"), href: helpHref },
         ]}
         activeNavId="dashboard"
         showGuide
@@ -750,8 +781,6 @@ export function Dashboard() {
         onNextPage={() => setWhitelistPage((prev) => Math.min(whitelistTotalPages, prev + 1))}
       />
 
-
-
       <BlockedPanel
         language={settings.language}
         blockedDomainInput={blockedDomainInput}
@@ -783,8 +812,6 @@ export function Dashboard() {
         onNextPage={() => setBlockedPage((prev) => Math.min(blockedTotalPages, prev + 1))}
       />
 
-
-
       <StrictPanel
         language={settings.language}
         strictMode={settings.strictMode}
@@ -802,8 +829,6 @@ export function Dashboard() {
         onDisableStrict={disableStrictMode}
         onChangePin={changePin}
       />
-
-
 
       <div ref={metricsPanelAnchorRef}>
         <MetricsPanel

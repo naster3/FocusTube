@@ -36,7 +36,7 @@ export function Help() {
         navItems={[
           { id: "config", label: t(lang, "nav.config"), href: optionsHref },
           { id: "dashboard", label: t(lang, "nav.dashboard"), href: dashboardHref },
-          { id: "help", label: t(lang, "nav.help"), href: helpHref }
+          { id: "help", label: t(lang, "nav.help"), href: helpHref },
         ]}
         activeNavId="help"
       />
@@ -63,4 +63,3 @@ export function Help() {
     </div>
   );
 }
-

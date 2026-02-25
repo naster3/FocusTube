@@ -12,7 +12,7 @@ export const downloadXlsx = (sheets: SheetData[], filename: string) => {
   });
   const out = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
   const blob = new Blob([out], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");

@@ -12,7 +12,7 @@ const LANGUAGE_LOCALE_MAP: Record<Language, string> = {
   en: "en-US",
   es: "es-ES",
   pt: "pt-BR",
-  fr: "fr-FR"
+  fr: "fr-FR",
 };
 
 type OverlayTimeline = {
@@ -63,7 +63,7 @@ function formatOverlayTime(ts: number, locale: string, hour12Preference: boolean
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
-      hour12: typeof hour12Preference === "boolean" ? hour12Preference : undefined
+      hour12: typeof hour12Preference === "boolean" ? hour12Preference : undefined,
     }).format(ts);
   } catch {
     return new Date(ts).toLocaleTimeString();
@@ -84,7 +84,10 @@ function resolveTheme(theme: "light" | "dark" | "system" | undefined): "light" |
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-function createOverlayElement<K extends keyof HTMLElementTagNameMap>(tag: K, className: string): HTMLElementTagNameMap[K] {
+function createOverlayElement<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  className: string
+): HTMLElementTagNameMap[K] {
   const el = document.createElement(tag);
   el.className = className;
   return el;
@@ -222,7 +225,7 @@ export function initFloatingTimerOverlay() {
     big.textContent = until ? formatDuration(until - now) : "--:--";
     if (timeline.nextBlockStart && timeline.nextBlockEnd) {
       line2.textContent = tf(lang, "overlay.next_block", {
-        duration: formatDuration(timeline.nextBlockEnd - timeline.nextBlockStart)
+        duration: formatDuration(timeline.nextBlockEnd - timeline.nextBlockStart),
       });
     } else {
       line2.textContent = "";
@@ -355,7 +358,7 @@ export function initFloatingTimerOverlay() {
     header.classList.remove("is-dragging");
     const rect = root.getBoundingClientRect();
     void chrome.storage.local.set({
-      overlayPos: { left: Math.round(rect.left), top: Math.round(rect.top) }
+      overlayPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
     });
   };
   header.addEventListener("pointerdown", onPointerDown);

@@ -14,7 +14,7 @@ type ScheduleAutoUnblockDeps = {
 
 // Libera automaticamente cuando el horario deja de bloquear.
 export function createScheduleAutoUnblockController({
-  resolveBlockedUrl
+  resolveBlockedUrl,
 }: ScheduleAutoUnblockDeps): ScheduleAutoUnblockController {
   let enabled = false;
   let intervalId: number | null = null;
@@ -74,6 +74,6 @@ export function createScheduleAutoUnblockController({
       } else {
         stopInterval();
       }
-    }
+    },
   };
 }

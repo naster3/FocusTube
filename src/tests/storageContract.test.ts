@@ -53,9 +53,9 @@ const chromeMock: ChromeStorage = {
         for (const key of Object.keys(storageData)) {
           delete storageData[key];
         }
-      }
-    }
-  }
+      },
+    },
+  },
 };
 
 const globalChrome = globalThis as unknown as { chrome: ChromeStorage };
@@ -71,13 +71,13 @@ describe("storage contract", () => {
       blockedDomains: ["YouTube.com", "http://tiktok.com", "   "],
       blockedDomainTags: {
         "youtube.com": ["intervalos", "bad"],
-        "bad.com": ["intervalos"]
+        "bad.com": ["intervalos"],
       } as unknown as Settings["blockedDomainTags"],
       whitelist: ["@Focus", "https://www.youtube.com/channel/ABC", "https://example.com"],
       weeklyUnblockDays: [6, "2" as unknown as number, 9, -1],
       weeklyUnblockDurationMinutes: -3,
       familyModeEnabled: true,
-      activeProfile: "kid"
+      activeProfile: "kid",
     };
 
     const merged = mergeSettings(input);
@@ -99,8 +99,8 @@ describe("storage contract", () => {
   it("migrates legacy settings structure on ensureDefaults", async () => {
     await chrome.storage.local.set({
       settings: {
-        blockedDomains: ["youtube.com"]
-      }
+        blockedDomains: ["youtube.com"],
+      },
     });
 
     await ensureDefaults();

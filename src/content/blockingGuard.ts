@@ -96,4 +96,3 @@ export function ensureBlockingGuard(): GuardHandle {
 
   return { show, hide, setLabel };
 }
-

@@ -36,7 +36,7 @@ export function sendPageHello() {
     {
       type: "PAGE_HELLO",
       url: window.location.href,
-      visible: document.visibilityState === "visible"
+      visible: document.visibilityState === "visible",
     },
     () => undefined
   );
@@ -48,7 +48,7 @@ export function trackVisibilityChanges() {
     safeSendMessage(
       {
         type: "VISIBILITY_CHANGED",
-        visible: document.visibilityState === "visible"
+        visible: document.visibilityState === "visible",
       },
       () => undefined
     );

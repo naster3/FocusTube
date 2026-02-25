@@ -28,7 +28,7 @@ export function FocusTimerCard({
   onPause,
   onReset,
   onFocusMinutesChange,
-  onBreakMinutesChange
+  onBreakMinutesChange,
 }: FocusTimerCardProps) {
   const focusLabel = mode === "focus" ? t(lang, "popup.focus.focus") : t(lang, "popup.focus.break");
 
@@ -36,7 +36,8 @@ export function FocusTimerCard({
     <div className="card focus-card">
       <div className="focus-header">
         <div className="focus-sub">
-          {tf(lang, "popup.focus.duration_focus", { minutes: String(focusMinutes) })}{" / "}
+          {tf(lang, "popup.focus.duration_focus", { minutes: String(focusMinutes) })}
+          {" / "}
           {tf(lang, "popup.focus.duration_break", { minutes: String(breakMinutes) })}
         </div>
         <span className={`focus-chip ${mode}`}>{focusLabel}</span>

@@ -4,7 +4,14 @@ import { resetMetrics } from "../infrastructure/storage";
 import { computeScheduleTimeline } from "../domain/schedule/timeline";
 import { evaluateBlock } from "../domain/blocking/url";
 import { addAttempt, addBlockedTime } from "./metrics";
-import { ensureMetricsLoaded, ensureSettingsLoaded, getTabState, setMetricsCache, setMetricsDirty, tabStates } from "./state";
+import {
+  ensureMetricsLoaded,
+  ensureSettingsLoaded,
+  getTabState,
+  setMetricsCache,
+  setMetricsDirty,
+  tabStates,
+} from "./state";
 import { updateTabTarget } from "./tabs";
 import { parseMessage } from "../shared/messages";
 

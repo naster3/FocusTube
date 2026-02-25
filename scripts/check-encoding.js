@@ -8,7 +8,7 @@ const utf8Decoder = new TextDecoder("utf-8", { fatal: true });
 const suspiciousPatterns = [
   { id: "replacement-char", regex: /\uFFFD/g },
   // Typical mojibake when UTF-8 is decoded as Latin-1/Windows-1252.
-  { id: "latin1-mojibake", regex: /(?:\u00C3[\u0080-\u00BF]|\u00C2[\u0080-\u00BF]|\u00E2\u0080[\u0080-\u00BF])/g }
+  { id: "latin1-mojibake", regex: /(?:\u00C3[\u0080-\u00BF]|\u00C2[\u0080-\u00BF]|\u00E2\u0080[\u0080-\u00BF])/g },
 ];
 
 function lineInfo(text, index) {

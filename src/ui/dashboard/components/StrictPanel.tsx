@@ -35,7 +35,7 @@ export function StrictPanel({
   onPinChangeConfirmChange,
   onEnableStrict,
   onDisableStrict,
-  onChangePin
+  onChangePin,
 }: StrictPanelProps) {
   return (
     <section className="panel strict-panel">

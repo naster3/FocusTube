@@ -34,7 +34,7 @@ export function BlockerPanel({
   nextChangeText,
   blockEnabled,
   onToggle,
-  onOpenOptions
+  onOpenOptions,
 }: BlockerPanelProps) {
   return (
     <>

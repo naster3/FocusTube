@@ -42,7 +42,7 @@ describe("MetricsPanel UI", () => {
       timeByDomainByDay: { "2024-01-10": { "youtube.com": 120 } },
       lastAttemptAt: null,
       lastAttemptUrl: null,
-      lastUpdatedAt: null
+      lastUpdatedAt: null,
     };
     const tableRows: MetricsTableRow[] = [
       {
@@ -50,8 +50,8 @@ describe("MetricsPanel UI", () => {
         attempts: 2,
         time: 120,
         sessions: 1,
-        topDomainLabel: "youtube.com (120)"
-      }
+        topDomainLabel: "youtube.com (120)",
+      },
     ];
     const summaryData: SummaryData | null = null;
     const advancedData: AdvancedData | null = null;
@@ -105,7 +105,7 @@ describe("MetricsPanel UI", () => {
       timeByDomainByDay: {},
       lastAttemptAt: null,
       lastAttemptUrl: null,
-      lastUpdatedAt: null
+      lastUpdatedAt: null,
     };
     const summaryData: SummaryData = {
       attemptsToday: 1,
@@ -121,7 +121,7 @@ describe("MetricsPanel UI", () => {
       last30Time: 600,
       todayLabel: "Today",
       weekLabel: "Week",
-      monthLabel: "Month"
+      monthLabel: "Month",
     };
 
     const { container, root } = renderPanel(

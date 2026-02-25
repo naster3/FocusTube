@@ -15,7 +15,7 @@ export function BlockerScheduleCard({
   scheduleLabel,
   scheduleCountdown,
   scheduleBlocked,
-  nextBlockDuration
+  nextBlockDuration,
 }: BlockerScheduleCardProps) {
   return (
     <div className="card">

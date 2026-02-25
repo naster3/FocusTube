@@ -42,6 +42,6 @@ export function getBlockedElements(): BlockedDom {
     confirmTitleEl: document.getElementById("confirm-title"),
     confirmDescEl: document.getElementById("confirm-desc"),
     confirmCancelBtn: document.getElementById("confirm-cancel") as HTMLButtonElement | null,
-    confirmConfirmBtn: document.getElementById("confirm-confirm") as HTMLButtonElement | null
+    confirmConfirmBtn: document.getElementById("confirm-confirm") as HTMLButtonElement | null,
   };
 }

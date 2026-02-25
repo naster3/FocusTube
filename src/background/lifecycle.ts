@@ -1,6 +1,10 @@
 import { ensureDbReady } from "../infrastructure/db";
 import { getSettings } from "../infrastructure/storage";
-import { bootstrapContentScripts, reinjectContentScriptIntoOpenTabs, syncRegisteredContentScripts } from "./contentScripts";
+import {
+  bootstrapContentScripts,
+  reinjectContentScriptIntoOpenTabs,
+  syncRegisteredContentScripts,
+} from "./contentScripts";
 import { startBackgroundTasks } from "./backgroundTasks";
 import { ensureMetricsLoaded, setMetricsCache, setSettingsCache } from "./state";
 

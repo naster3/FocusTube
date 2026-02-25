@@ -38,7 +38,7 @@ export function getTabState(tabId: number): TabState {
     lastActiveAt: null,
     sessionActive: false,
     lastAttemptAt: null,
-    lastAttemptUrl: null
+    lastAttemptUrl: null,
   };
   tabStates.set(tabId, next);
   return next;

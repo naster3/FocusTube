@@ -17,7 +17,7 @@ const languageLabels: Record<Settings["language"], string> = {
   es: "ES",
   en: "EN",
   pt: "PT",
-  fr: "FR"
+  fr: "FR",
 };
 
 const yesNo = (lang: Settings["language"], value: boolean) =>
@@ -82,17 +82,24 @@ const buildKeyValueRows = (items: KeyValueItem[], lang: Settings["language"]) =>
 
 const buildRawSheet = (payload: unknown): SheetData => ({
   name: RAW_SHEET_NAME,
-  rows: [["key", "value"], ["__raw_json__", JSON.stringify(payload)]],
-  colWidths: [20, 80]
+  rows: [
+    ["key", "value"],
+    ["__raw_json__", JSON.stringify(payload)],
+  ],
+  colWidths: [20, 80],
 });
 
-const buildScheduleRows = (lang: Settings["language"], intervalsByDay: Record<number, Interval[]>, timeFormat12h: boolean) => {
+const buildScheduleRows = (
+  lang: Settings["language"],
+  intervalsByDay: Record<number, Interval[]>,
+  timeFormat12h: boolean
+) => {
   const header = [
     t(lang, "options.data.excel.header.day"),
     t(lang, "schedule.list.start"),
     t(lang, "schedule.list.end"),
     t(lang, "schedule.list.mode"),
-    t(lang, "schedule.list.state")
+    t(lang, "schedule.list.state"),
   ];
   const rows: Array<Array<string | number>> = [header];
   for (let day = 0; day < 7; day += 1) {
@@ -104,16 +111,14 @@ const buildScheduleRows = (lang: Settings["language"], intervalsByDay: Record<nu
     }
     intervals.forEach((interval) => {
       const mode =
-        interval.mode === "free"
-          ? t(lang, "schedule.modal.mode_free")
-          : t(lang, "schedule.modal.mode_blocked");
+        interval.mode === "free" ? t(lang, "schedule.modal.mode_free") : t(lang, "schedule.modal.mode_blocked");
       const state = interval.enabled ? t(lang, "schedule.list.enabled") : t(lang, "schedule.list.disabled");
       rows.push([
         label,
         formatTimeString(interval.start, timeFormat12h),
         formatTimeString(interval.end, timeFormat12h),
         mode,
-        state
+        state,
       ]);
     });
   }
@@ -139,14 +144,17 @@ const buildListRows = (lang: Settings["language"], settings: Settings) => {
 const buildMetricsSummaryRows = (lang: Settings["language"], settings: Settings, metrics: Metrics) => {
   const items: KeyValueItem[] = [
     { label: t(lang, "options.data.pdf.metrics.total_attempts"), value: String(sumValues(metrics.attemptsByDay)) },
-    { label: t(lang, "options.data.pdf.metrics.total_time"), value: formatMinutesLabel(lang, sumValues(metrics.timeByDay)) },
+    {
+      label: t(lang, "options.data.pdf.metrics.total_time"),
+      value: formatMinutesLabel(lang, sumValues(metrics.timeByDay)),
+    },
     { label: t(lang, "options.data.pdf.metrics.total_sessions"), value: String(sumValues(metrics.sessionsByDay)) },
     {
       label: t(lang, "options.data.pdf.metrics.last_attempt"),
       value: metrics.lastAttemptAt
         ? formatDateTime(lang, metrics.lastAttemptAt, settings.timeFormat12h)
-        : t(lang, "options.data.pdf.none")
-    }
+        : t(lang, "options.data.pdf.none"),
+    },
   ];
   return buildKeyValueRows(items, lang);
 };
@@ -156,7 +164,7 @@ const buildMetricsDailyRows = (lang: Settings["language"], metrics: Metrics) => 
     t(lang, "dashboard.metrics.table.date"),
     t(lang, "dashboard.metrics.attempts"),
     t(lang, "options.data.excel.header.time"),
-    t(lang, "dashboard.metrics.sessions")
+    t(lang, "dashboard.metrics.sessions"),
   ];
   const rows: Array<Array<string | number>> = [header];
   getRecentDays(METRICS_DAYS).forEach((dayKey) => {
@@ -164,7 +172,7 @@ const buildMetricsDailyRows = (lang: Settings["language"], metrics: Metrics) => 
       formatDate(lang, new Date(dayKey).getTime()),
       metrics.attemptsByDay[dayKey] || 0,
       roundMinutes(metrics.timeByDay[dayKey] || 0),
-      metrics.sessionsByDay[dayKey] || 0
+      metrics.sessionsByDay[dayKey] || 0,
     ]);
   });
   return rows;
@@ -193,24 +201,24 @@ export function buildSettingsSheets(settings: Settings, includeRaw = true, rawPa
       value:
         settings.activeProfile === "kid"
           ? t(lang, "options.family.profile.kid")
-          : t(lang, "options.family.profile.adult")
+          : t(lang, "options.family.profile.adult"),
     },
     { label: t(lang, "options.data.pdf.language"), value: languageLabels[lang] },
     {
       label: t(lang, "options.data.pdf.time_format"),
       value: settings.timeFormat12h
         ? t(lang, "options.data.pdf.time_format_12h")
-        : t(lang, "options.data.pdf.time_format_24h")
+        : t(lang, "options.data.pdf.time_format_24h"),
     },
     { label: t(lang, "options.data.pdf.family_mode"), value: yesNo(lang, settings.familyModeEnabled) },
     { label: t(lang, "options.data.pdf.strict_mode"), value: yesNo(lang, settings.strictMode) },
-    { label: t(lang, "options.data.pdf.block_permanent"), value: yesNo(lang, settings.blockEnabled) }
+    { label: t(lang, "options.data.pdf.block_permanent"), value: yesNo(lang, settings.blockEnabled) },
   ];
 
   const blocksItems: KeyValueItem[] = [
     { label: t(lang, "options.blocks.shorts"), value: yesNo(lang, settings.blockShorts) },
     { label: t(lang, "options.blocks.kids"), value: yesNo(lang, settings.blockKids) },
-    { label: t(lang, "options.blocks.instagram_reels"), value: yesNo(lang, settings.blockInstagramReels) }
+    { label: t(lang, "options.blocks.instagram_reels"), value: yesNo(lang, settings.blockInstagramReels) },
   ];
 
   const weeklyItems: KeyValueItem[] = [
@@ -220,18 +228,18 @@ export function buildSettingsSheets(settings: Settings, includeRaw = true, rawPa
       value:
         settings.weeklyUnblockDays.length > 0
           ? settings.weeklyUnblockDays.map((day) => getDayLabel(day, lang)).join(", ")
-          : t(lang, "options.data.pdf.none")
+          : t(lang, "options.data.pdf.none"),
     },
     {
       label: t(lang, "options.data.pdf.weekly_duration"),
-      value: `${settings.weeklyUnblockDurationMinutes} ${t(lang, "options.weekly_unblock.minutes")}`
+      value: `${settings.weeklyUnblockDurationMinutes} ${t(lang, "options.weekly_unblock.minutes")}`,
     },
     {
       label: t(lang, "options.data.pdf.weekly_until"),
       value: settings.weeklyUnblockUntil
         ? formatDateTime(lang, settings.weeklyUnblockUntil, settings.timeFormat12h)
-        : t(lang, "options.data.pdf.none")
-    }
+        : t(lang, "options.data.pdf.none"),
+    },
   ];
 
   return [
@@ -239,28 +247,28 @@ export function buildSettingsSheets(settings: Settings, includeRaw = true, rawPa
     {
       name: sheetName(1, t(lang, "options.data.pdf.section.summary")),
       rows: buildKeyValueRows(summaryItems, lang),
-      colWidths: [30, 40]
+      colWidths: [30, 40],
     },
     {
       name: sheetName(2, t(lang, "options.data.pdf.section.blocks")),
       rows: buildKeyValueRows(blocksItems, lang),
-      colWidths: [30, 40]
+      colWidths: [30, 40],
     },
     {
       name: sheetName(3, t(lang, "options.data.pdf.section.lists")),
       rows: buildListRows(lang, settings),
-      colWidths: [18, 50]
+      colWidths: [18, 50],
     },
     {
       name: sheetName(4, t(lang, "options.data.pdf.section.schedule")),
       rows: buildScheduleRows(lang, settings.intervalsByDay, settings.timeFormat12h),
-      colWidths: [10, 12, 12, 14, 12]
+      colWidths: [10, 12, 12, 14, 12],
     },
     {
       name: sheetName(5, t(lang, "options.data.pdf.section.weekly")),
       rows: buildKeyValueRows(weeklyItems, lang),
-      colWidths: [30, 40]
-    }
+      colWidths: [30, 40],
+    },
   ];
 }
 
@@ -270,7 +278,7 @@ export function buildBackupSheets(settings: Settings, metrics: Metrics, rawPaylo
     version: 1,
     createdAt: new Date().toISOString(),
     settings,
-    metrics
+    metrics,
   };
   return [
     buildRawSheet(payload),
@@ -278,17 +286,17 @@ export function buildBackupSheets(settings: Settings, metrics: Metrics, rawPaylo
     {
       name: sheetName(6, t(lang, "options.data.pdf.section.metrics")),
       rows: buildMetricsSummaryRows(lang, settings, metrics),
-      colWidths: [30, 40]
+      colWidths: [30, 40],
     },
     {
       name: sheetName(7, t(lang, "options.data.pdf.section.metrics_daily")),
       rows: buildMetricsDailyRows(lang, metrics),
-      colWidths: [20, 12, 14, 12]
+      colWidths: [20, 12, 14, 12],
     },
     {
       name: sheetName(8, t(lang, "options.data.pdf.section.top_domains")),
       rows: buildTopDomainRows(lang, metrics),
-      colWidths: [30, 16]
-    }
+      colWidths: [30, 16],
+    },
   ];
 }

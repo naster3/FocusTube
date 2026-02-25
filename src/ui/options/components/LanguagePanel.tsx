@@ -14,19 +14,43 @@ export function LanguagePanel({ language, onSetLanguage }: LanguagePanelProps) {
       <div className="language-picker" data-guide="language-picker">
         <span className="language-label">{t(language, "options.language.current")}</span>
         <label className="language-option">
-          <input type="radio" name="language" value="en" checked={language === "en"} onChange={() => onSetLanguage("en")} />
+          <input
+            type="radio"
+            name="language"
+            value="en"
+            checked={language === "en"}
+            onChange={() => onSetLanguage("en")}
+          />
           <span>English</span>
         </label>
         <label className="language-option">
-          <input type="radio" name="language" value="es" checked={language === "es"} onChange={() => onSetLanguage("es")} />
+          <input
+            type="radio"
+            name="language"
+            value="es"
+            checked={language === "es"}
+            onChange={() => onSetLanguage("es")}
+          />
           <span>Español</span>
         </label>
         <label className="language-option">
-          <input type="radio" name="language" value="pt" checked={language === "pt"} onChange={() => onSetLanguage("pt")} />
+          <input
+            type="radio"
+            name="language"
+            value="pt"
+            checked={language === "pt"}
+            onChange={() => onSetLanguage("pt")}
+          />
           <span>Português</span>
         </label>
         <label className="language-option">
-          <input type="radio" name="language" value="fr" checked={language === "fr"} onChange={() => onSetLanguage("fr")} />
+          <input
+            type="radio"
+            name="language"
+            value="fr"
+            checked={language === "fr"}
+            onChange={() => onSetLanguage("fr")}
+          />
           <span>Français</span>
         </label>
       </div>

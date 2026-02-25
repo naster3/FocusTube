@@ -48,7 +48,7 @@ export function BlockedPanel({
   onToggleTagInput,
   onToggleDomainTag,
   onPrevPage,
-  onNextPage
+  onNextPage,
 }: BlockedPanelProps) {
   return (
     <section className="panel" data-guide="blocked">
@@ -140,7 +140,7 @@ export function BlockedPanel({
                 {tf(language, "dashboard.pagination.showing", {
                   from: String(blockedStart + 1),
                   to: String(blockedEnd),
-                  total: String(blockedTotal)
+                  total: String(blockedTotal),
                 })}
               </span>
               <div className="pagination-controls">
@@ -150,10 +150,15 @@ export function BlockedPanel({
                 <span className="pagination-page">
                   {tf(language, "dashboard.pagination.page", {
                     current: String(blockedPageSafe),
-                    total: String(blockedTotalPages)
+                    total: String(blockedTotalPages),
                   })}
                 </span>
-                <button type="button" className="pagination-btn" onClick={onNextPage} disabled={blockedPageSafe >= blockedTotalPages}>
+                <button
+                  type="button"
+                  className="pagination-btn"
+                  onClick={onNextPage}
+                  disabled={blockedPageSafe >= blockedTotalPages}
+                >
                   {t(language, "dashboard.pagination.next")}
                 </button>
               </div>

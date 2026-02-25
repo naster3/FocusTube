@@ -6,7 +6,7 @@ export const buildExportPayload = <T>(type: ExportType, payload: T): ExportWrapp
     signature: EXPORT_SIGNATURE,
     version: EXPORT_VERSION,
     type,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
   },
-  payload
+  payload,
 });

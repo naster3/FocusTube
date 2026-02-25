@@ -8,7 +8,7 @@ import {
   resetMetrics,
   setSettings,
   updateMetrics,
-  updateSettings
+  updateSettings,
 } from "../infrastructure/storage";
 
 type ChromeStorage = {
@@ -61,9 +61,9 @@ const chromeMock: ChromeStorage = {
         for (const key of Object.keys(storageData)) {
           delete storageData[key];
         }
-      }
-    }
-  }
+      },
+    },
+  },
 };
 
 const globalChrome = globalThis as unknown as { chrome: ChromeStorage };
@@ -105,11 +105,11 @@ describe("storage settings", () => {
               start: "10:00",
               end: "11:00",
               mode: "weird",
-              enabled: "yes"
-            }
-          ]
-        }
-      }
+              enabled: "yes",
+            },
+          ],
+        },
+      },
     });
     const settings = await getSettings();
     expect(settings.blockEnabled).toBe(true);
@@ -123,9 +123,9 @@ describe("storage settings", () => {
     await chrome.storage.local.set({
       settings: {
         schedules: {
-          1: [{ start: "09:00", end: "10:00" }]
-        }
-      }
+          1: [{ start: "09:00", end: "10:00" }],
+        },
+      },
     });
     const settings = await getSettings();
     expect(settings.intervalsByDay[1]?.[0]?.start).toBe("09:00");
@@ -138,9 +138,9 @@ describe("storage settings", () => {
         blockedDomains: ["youtube.com", "tiktok.com"],
         blockedDomainTags: {
           "youtube.com": ["intervalos", "bad", 1],
-          "tiktok.com": "nope"
-        }
-      }
+          "tiktok.com": "nope",
+        },
+      },
     });
     const settings = await getSettings();
     expect(settings.blockedDomainTags["youtube.com"]).toEqual(["intervalos"]);
@@ -171,8 +171,8 @@ describe("storage metrics", () => {
     await chrome.storage.local.set({
       metrics: {
         version: 1,
-        attemptsByDay: { "2024-01-01": 2 }
-      }
+        attemptsByDay: { "2024-01-01": 2 },
+      },
     });
     await ensureDefaults();
     const metrics = await getMetrics();

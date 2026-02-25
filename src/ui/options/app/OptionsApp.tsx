@@ -1,11 +1,23 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { t, tf } from "../../../shared/i18n";
 import { formatDuration } from "../../../domain/schedule/timeline";
-import { canStartWeeklySession, getWeeklySessionDayKey, getWeeklySessionDurationMs, isWeeklySessionActive } from "../../../domain/weekly/weekly";
+import {
+  canStartWeeklySession,
+  getWeeklySessionDayKey,
+  getWeeklySessionDurationMs,
+  isWeeklySessionActive,
+} from "../../../domain/weekly/weekly";
 import { EXPORT_SIGNATURE, EXPORT_VERSION } from "../../../domain/exports/constants";
 import { buildExportPayload } from "../../../domain/exports/payload";
 import type { ExportFormat, ExportType } from "../../../domain/exports/types";
-import { getMetrics, getSettings, mergeMetrics, mergeSettings, setMetrics, setSettings } from "../../../infrastructure/storage";
+import {
+  getMetrics,
+  getSettings,
+  mergeMetrics,
+  mergeSettings,
+  setMetrics,
+  setSettings,
+} from "../../../infrastructure/storage";
 import { DomainTag, Metrics, Settings } from "../../../domain/settings/types";
 import { devLog } from "../../../shared/devLogger";
 import { switchProfile } from "../../../domain/settings/profiles";
@@ -18,7 +30,7 @@ import {
   extractRawJson,
   flattenRecord,
   parseCsv,
-  readRawJsonFromExcel
+  readRawJsonFromExcel,
 } from "../utils/exportUtils";
 import { OptionsHeader } from "../../shared/OptionsHeader";
 import { useThemeSync } from "../../shared/hooks/useThemeSync";
@@ -57,7 +69,6 @@ export function Options() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  
   // Mensajes breves en UI.
   const showStatus = (message: string) => {
     setStatus(message);
@@ -98,7 +109,6 @@ export function Options() {
     void saveSettings({ ...settings, theme });
   };
 
-
   const getDomainOrigins = (domain: string) => [`*://${domain}/*`, `*://*.${domain}/*`];
 
   const requestDomainPermission = async (domains: string[]) => {
@@ -130,7 +140,7 @@ export function Options() {
       domains: ["tiktok.com"],
       desc: "tiktok.com",
       icon: "TT",
-      tone: "pink"
+      tone: "pink",
     },
     {
       key: "instagram",
@@ -138,7 +148,7 @@ export function Options() {
       domains: ["instagram.com"],
       desc: "instagram.com",
       icon: "IG",
-      tone: "purple"
+      tone: "purple",
     },
     {
       key: "facebook",
@@ -146,7 +156,7 @@ export function Options() {
       domains: ["facebook.com"],
       desc: "facebook.com",
       icon: "FB",
-      tone: "blue"
+      tone: "blue",
     },
     {
       key: "x",
@@ -154,8 +164,8 @@ export function Options() {
       domains: ["x.com", "twitter.com"],
       desc: "x.com / twitter.com",
       icon: "X",
-      tone: "slate"
-    }
+      tone: "slate",
+    },
   ];
 
   const toggleSocialBlock = async (domains: string[], enabled: boolean) => {
@@ -202,7 +212,7 @@ export function Options() {
       ...settings,
       blockShorts: enabled,
       blockKids: enabled,
-      blockInstagramReels: enabled
+      blockInstagramReels: enabled,
     });
     for (const block of socialBlocks) {
       await toggleSocialBlock(block.domains, enabled);
@@ -220,7 +230,7 @@ export function Options() {
       if (format === "csv") {
         const rows = [
           { key: "__raw_json__", value: JSON.stringify(payload) },
-          ...flattenRecord(currentSettings as Record<string, unknown>)
+          ...flattenRecord(currentSettings as Record<string, unknown>),
         ];
         downloadCsv(rows, "focus-tube-settings.csv");
         return;
@@ -233,7 +243,7 @@ export function Options() {
         title: `FocusTube - ${t(currentSettings.language, "options.data.settings_title")}`,
         settings: currentSettings,
         metrics: null,
-        language: currentSettings.language
+        language: currentSettings.language,
       });
       if (!opened) {
         showStatus(t(settings.language, "options.data.pdf_blocked"));
@@ -245,7 +255,7 @@ export function Options() {
       version: 1,
       createdAt: new Date().toISOString(),
       settings: currentSettings,
-      metrics: currentMetrics
+      metrics: currentMetrics,
     };
     const exportPayload = buildExportPayload("backup", payload);
     if (format === "json") {
@@ -258,7 +268,7 @@ export function Options() {
       const rows = [
         { section: "meta", key: "__raw_json__", value: JSON.stringify(exportPayload) },
         ...settingsRows.map((row) => ({ section: "settings", ...row })),
-        ...metricsRows.map((row) => ({ section: "metrics", ...row }))
+        ...metricsRows.map((row) => ({ section: "metrics", ...row })),
       ];
       downloadCsv(rows, "focus-tube-backup.csv");
       return;
@@ -271,7 +281,7 @@ export function Options() {
       title: `FocusTube - ${t(currentSettings.language, "options.data.backup_title")}`,
       settings: currentSettings,
       metrics: currentMetrics,
-      language: currentSettings.language
+      language: currentSettings.language,
     });
     if (!opened) {
       showStatus(t(settings.language, "options.data.pdf_blocked"));
@@ -377,7 +387,7 @@ export function Options() {
       { value: "json", label: t(settings.language, "options.data.format.json") },
       { value: "csv", label: t(settings.language, "options.data.format.csv") },
       { value: "excel", label: t(settings.language, "options.data.format.excel") },
-      { value: "pdf", label: t(settings.language, "options.data.format.pdf") }
+      { value: "pdf", label: t(settings.language, "options.data.format.pdf") },
     ],
     [settings.language]
   );
@@ -388,7 +398,7 @@ export function Options() {
       target: "nav",
       title: t(settings.language, "options.guide.step.nav.title"),
       desc: t(settings.language, "options.guide.step.nav.desc"),
-      highlightSelectors: ['[data-guide="nav"]']
+      highlightSelectors: ['[data-guide="nav"]'],
     },
     {
       id: "blocks",
@@ -396,7 +406,7 @@ export function Options() {
       title: t(settings.language, "options.guide.step.blocks.title"),
       desc: t(settings.language, "options.guide.step.blocks.desc"),
       highlightSelectors: ['[data-guide="blocks-actions"]', '[data-guide="blocks-social-grid"]'],
-      scrollSelector: '[data-guide="blocks"]'
+      scrollSelector: '[data-guide="blocks"]',
     },
     {
       id: "permanent",
@@ -404,21 +414,21 @@ export function Options() {
       title: t(settings.language, "options.guide.step.permanent.title"),
       desc: t(settings.language, "options.guide.step.permanent.desc"),
       highlightSelectors: ['[data-guide="weekly-session-toggle"]', '[data-guide="weekly-session-config"]'],
-      scrollSelector: '[data-guide="permanent"]'
+      scrollSelector: '[data-guide="permanent"]',
     },
     {
       id: "time",
       target: "time",
       title: t(settings.language, "options.guide.step.time.title"),
       desc: t(settings.language, "options.guide.step.time.desc"),
-      highlightSelectors: ['[data-guide="time-format-toggle"]']
+      highlightSelectors: ['[data-guide="time-format-toggle"]'],
     },
     {
       id: "language",
       target: "language",
       title: t(settings.language, "options.guide.step.language.title"),
       desc: t(settings.language, "options.guide.step.language.desc"),
-      highlightSelectors: ['[data-guide="language-picker"]']
+      highlightSelectors: ['[data-guide="language-picker"]'],
     },
     {
       id: "export",
@@ -426,8 +436,8 @@ export function Options() {
       title: t(settings.language, "options.guide.step.export.title"),
       desc: t(settings.language, "options.guide.step.export.desc"),
       highlightSelectors: ['[data-guide="export-settings-card"]', '[data-guide="export-backup-card"]'],
-      scrollSelector: '[data-guide="export"]'
-    }
+      scrollSelector: '[data-guide="export"]',
+    },
   ];
   const {
     guideActive,
@@ -443,7 +453,7 @@ export function Options() {
     dismissGuide,
     goPrev,
     goNext,
-    goToStep
+    goToStep,
   } = useOnboardingGuide({ steps: guideSteps, storageKey: "onboardingSeen" });
 
   const now = Date.now();
@@ -483,7 +493,7 @@ export function Options() {
     weeklyStatusTone = "warn";
   } else if (weeklyActive && settings.weeklyUnblockUntil) {
     weeklyStatusText = tf(settings.language, "options.weekly_unblock.status.active", {
-      duration: formatDuration(settings.weeklyUnblockUntil - now)
+      duration: formatDuration(settings.weeklyUnblockUntil - now),
     });
     weeklyStatusTone = "active";
   } else if (canStartWeekly) {
@@ -494,7 +504,7 @@ export function Options() {
     weeklyStatusTone = "warn";
   } else {
     weeklyStatusText = tf(settings.language, "options.weekly_unblock.status.not_today", {
-      day: nextAllowedLabel ?? "-"
+      day: nextAllowedLabel ?? "-",
     });
   }
 
@@ -506,7 +516,7 @@ export function Options() {
         navItems={[
           { id: "config", label: t(settings.language, "nav.config"), href: optionsHref },
           { id: "dashboard", label: t(settings.language, "nav.dashboard"), href: dashboardHref },
-          { id: "help", label: t(settings.language, "nav.help"), href: helpHref }
+          { id: "help", label: t(settings.language, "nav.help"), href: helpHref },
         ]}
         activeNavId="config"
         showGuide
@@ -604,7 +614,6 @@ export function Options() {
           ^
         </button>
       ) : null}
-
     </div>
   );
 }

@@ -20,7 +20,7 @@ describe("weekly session rules", () => {
     const settings = {
       ...DEFAULT_SETTINGS,
       weeklyUnblockEnabled: true,
-      weeklyUnblockDays: [1]
+      weeklyUnblockDays: [1],
     };
 
     expect(canStartWeeklySession(settings, monday.getTime())).toBe(true);
@@ -34,7 +34,7 @@ describe("weekly session rules", () => {
       ...DEFAULT_SETTINGS,
       weeklyUnblockEnabled: true,
       weeklyUnblockDays: [1],
-      weeklyUnblockLastWeek: usedDay
+      weeklyUnblockLastWeek: usedDay,
     };
 
     expect(canStartWeeklySession(settings, monday.getTime())).toBe(false);
@@ -48,7 +48,7 @@ describe("weekly session rules", () => {
       blockedDomains: ["youtube.com"],
       blockedDomainTags: { "youtube.com": tags },
       weeklyUnblockEnabled: true,
-      weeklyUnblockUntil: now + 10 * 60 * 1000
+      weeklyUnblockUntil: now + 10 * 60 * 1000,
     };
 
     expect(isWeeklySessionActive(settings, now)).toBe(true);
@@ -63,7 +63,7 @@ describe("weekly session rules", () => {
       blockedDomains: ["youtube.com"],
       blockedDomainTags: { "youtube.com": tags },
       weeklyUnblockEnabled: true,
-      weeklyUnblockUntil: null
+      weeklyUnblockUntil: null,
     };
 
     const decision = evaluateBlock("https://youtube.com/watch?v=1", settings, now);
@@ -76,7 +76,7 @@ describe("weekly session rules", () => {
     const settings = {
       ...DEFAULT_SETTINGS,
       blockedDomains: ["youtube.com"],
-      blockedDomainTags: {}
+      blockedDomainTags: {},
     };
 
     const decision = evaluateBlock("https://youtube.com/watch?v=1", settings, now);
@@ -92,14 +92,14 @@ describe("weekly session rules", () => {
       start: "10:00" as Interval["start"],
       end: "11:00" as Interval["end"],
       mode: "blocked",
-      enabled: true
+      enabled: true,
     };
     const tags: DomainTag[] = ["intervalos", "por_semana"];
     const settings = {
       ...DEFAULT_SETTINGS,
       blockedDomains: ["youtube.com"],
       blockedDomainTags: { "youtube.com": tags },
-      intervalsByDay: { ...DEFAULT_SETTINGS.intervalsByDay, 1: [interval] }
+      intervalsByDay: { ...DEFAULT_SETTINGS.intervalsByDay, 1: [interval] },
     };
 
     const blockedDecision = evaluateBlock("https://youtube.com/watch?v=1", settings, mondayBlocked.getTime());
@@ -117,7 +117,7 @@ describe("weekly session rules", () => {
       start: "10:00" as Interval["start"],
       end: "11:00" as Interval["end"],
       mode: "blocked",
-      enabled: false
+      enabled: false,
     };
     const tags: DomainTag[] = ["intervalos"];
     const settings = {
@@ -125,7 +125,7 @@ describe("weekly session rules", () => {
       blockEnabled: true,
       blockedDomains: ["youtube.com"],
       blockedDomainTags: { "youtube.com": tags },
-      intervalsByDay: { ...DEFAULT_SETTINGS.intervalsByDay, 1: [interval] }
+      intervalsByDay: { ...DEFAULT_SETTINGS.intervalsByDay, 1: [interval] },
     };
 
     const decision = evaluateBlock("https://youtube.com/watch?v=1", settings, mondayFree.getTime());
@@ -138,7 +138,7 @@ describe("weekly session rules", () => {
     const settings = {
       ...DEFAULT_SETTINGS,
       weeklyUnblockEnabled: true,
-      weeklyUnblockUntil: now + 5 * 60 * 1000
+      weeklyUnblockUntil: now + 5 * 60 * 1000,
     };
 
     expect(isWeeklySessionActive(settings, now)).toBe(true);

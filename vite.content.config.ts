@@ -5,8 +5,8 @@ import { resolve } from "path";
 export default defineConfig({
   resolve: {
     alias: {
-      "@": resolve(__dirname, "src")
-    }
+      "@": resolve(__dirname, "src"),
+    },
   },
   build: {
     outDir: "dist",
@@ -17,8 +17,8 @@ export default defineConfig({
         format: "iife",
         name: "FocusTubeContent",
         entryFileNames: "content.js",
-        inlineDynamicImports: true
-      }
-    }
-  }
+        inlineDynamicImports: true,
+      },
+    },
+  },
 });

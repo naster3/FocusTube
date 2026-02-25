@@ -76,7 +76,7 @@ const chromeMock: ChromeStorageMock = {
           delete storageData[key];
         }
         emitStorageChanges(changes);
-      }
+      },
     },
     onChanged: {
       addListener(listener) {
@@ -84,9 +84,9 @@ const chromeMock: ChromeStorageMock = {
       },
       removeListener(listener) {
         listeners.delete(listener);
-      }
-    }
-  }
+      },
+    },
+  },
 };
 
 function mountBlockedDom() {
@@ -106,7 +106,7 @@ function mountBlockedDom() {
     { tag: "div", id: "last-attempt-label" },
     { tag: "div", id: "blocked-reason-label" },
     { tag: "div", id: "blocked-reason" },
-    { tag: "div", id: "carryover-note" }
+    { tag: "div", id: "carryover-note" },
   ];
 
   nodes.forEach((node) => {
@@ -155,7 +155,7 @@ describe("blocked app integration", () => {
         ...DEFAULT_SETTINGS,
         blockedDomains: ["youtube.com"],
         blockedDomainTags: { "youtube.com": ["intervalos"] },
-        strictMode: false
+        strictMode: false,
       },
       { ...DEFAULT_METRICS },
       "/src/ui/blocked/index.html?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dabc"
@@ -187,7 +187,7 @@ describe("blocked app integration", () => {
         weeklyUnblockDays: [new Date().getDay()],
         weeklyUnblockDurationMinutes: durationMinutes,
         weeklyUnblockLastWeek: null,
-        strictMode: false
+        strictMode: false,
       },
       { ...DEFAULT_METRICS },
       "/src/ui/blocked/index.html?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dweekly"
@@ -215,11 +215,11 @@ describe("blocked app integration", () => {
         ...DEFAULT_SETTINGS,
         blockedDomains: ["youtube.com"],
         blockedDomainTags: { "youtube.com": ["intervalos"] },
-        strictMode: false
+        strictMode: false,
       },
       {
         ...DEFAULT_METRICS,
-        lastAttemptUrl: "https://youtube.com/watch?v=fallback"
+        lastAttemptUrl: "https://youtube.com/watch?v=fallback",
       },
       "/src/ui/blocked/index.html"
     );

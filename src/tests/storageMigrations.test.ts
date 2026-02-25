@@ -9,7 +9,7 @@ describe("storage migrations by version", () => {
       blockEnabled: true,
       blockedDomains: ["YouTube.com"],
       whitelist: ["@Focus"],
-      schedules: { 1: [{ start: "09:00", end: "10:00" }] }
+      schedules: { 1: [{ start: "09:00", end: "10:00" }] },
     } as Partial<Settings>;
 
     const migrated = mergeSettings(legacyV1);
@@ -27,7 +27,7 @@ describe("storage migrations by version", () => {
       theme: "dark",
       blockedDomains: ["tiktok.com"],
       blockedDomainTags: { "tiktok.com": ["por_semana"] },
-      proEnabled: true
+      proEnabled: true,
     } as Partial<Settings> & Record<string, unknown>;
 
     const migrated = mergeSettings(settingsV2 as Partial<Settings>);
@@ -42,7 +42,7 @@ describe("storage migrations by version", () => {
     const metricsV1 = {
       version: 1,
       attemptsByDay: { "2024-01-01": 2 },
-      lastAttemptAt: 1704103200000
+      lastAttemptAt: 1704103200000,
     } as Partial<Metrics>;
 
     const migrated = mergeMetrics(metricsV1);
@@ -56,7 +56,7 @@ describe("storage migrations by version", () => {
     const current = {
       version: METRICS_SCHEMA_VERSION,
       attemptsByDay: { "2024-01-10": 4 },
-      lastAttemptUrl: "https://youtube.com/watch?v=abc"
+      lastAttemptUrl: "https://youtube.com/watch?v=abc",
     } as Partial<Metrics>;
 
     const merged = mergeMetrics(current);

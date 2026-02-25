@@ -9,14 +9,14 @@ const DAY_LABELS_BY_LANG: Record<Language, string[]> = {
   es: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
   en: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
   pt: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
-  fr: ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"]
+  fr: ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"],
 };
 
 const LANGUAGE_LOCALES: Record<Language, string> = {
   es: "es-ES",
   en: "en-US",
   pt: "pt-BR",
-  fr: "fr-FR"
+  fr: "fr-FR",
 };
 
 export const getLocale = (language: Language) => LANGUAGE_LOCALES[language] ?? LANGUAGE_LOCALES.en;
@@ -59,7 +59,7 @@ export const formatDateTime = (
     return new Intl.DateTimeFormat(getLocale(language), {
       dateStyle,
       timeStyle,
-      hour12: timeFormat12h
+      hour12: timeFormat12h,
     }).format(new Date(ts));
   } catch {
     return new Date(ts).toLocaleString();

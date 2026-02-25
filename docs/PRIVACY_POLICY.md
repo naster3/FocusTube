@@ -15,12 +15,14 @@ If you publish the extension, **replace the contact section** with your real sup
 ## Where it is stored
 
 All data is stored locally on your device using:
+
 - `chrome.storage.local`
 - IndexedDB (including a local SQLite database stored in IndexedDB)
 
 ## How we use data
 
 Data is used only to provide the core features of the extension:
+
 - Enforcing blocks and schedules
 - Showing metrics and summaries
 - Exporting and importing your settings/metrics
@@ -36,6 +38,7 @@ Your data remains on your device until you delete it or reset the extension.
 ## Your choices
 
 You can:
+
 - Reset metrics
 - Reset schedules
 - Export or delete your data
@@ -64,12 +67,14 @@ Si publicas la extensión, **reemplaza la sección de contacto** con tu correo o
 ## Dónde se guardan
 
 Todos los datos se almacenan localmente en tu dispositivo usando:
+
 - `chrome.storage.local`
 - IndexedDB (incluyendo una base SQLite dentro de IndexedDB)
 
 ## Cómo se usan los datos
 
 Los datos se usan únicamente para las funciones principales:
+
 - Bloqueo por horarios y listas
 - Métricas y resúmenes
 - Exportar e importar tus datos
@@ -85,6 +90,7 @@ Los datos permanecen en tu dispositivo hasta que los borres o reinicies la exten
 ## Tus opciones
 
 Puedes:
+
 - Resetear métricas
 - Resetear horarios
 - Exportar o eliminar datos

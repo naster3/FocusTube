@@ -12,7 +12,7 @@ export const DEFAULT_SCHEDULES: WeekSchedule = {
   3: [],
   4: [],
   5: [],
-  6: []
+  6: [],
 };
 
 // Intervalos por defecto derivados de schedules.
@@ -28,7 +28,7 @@ const toIntervals = (schedules: WeekSchedule): IntervalWeek => {
       start: range.start as Interval["start"],
       end: range.end as Interval["end"],
       mode: "blocked",
-      enabled: true
+      enabled: true,
     }));
   }
   return intervals;
@@ -72,7 +72,7 @@ export const createDefaultProfile = (overrides: Partial<ProfileSettings> = {}): 
   weeklyUnblockDurationMinutes: 60,
   weeklyUnblockUntil: null,
   weeklyUnblockLastWeek: null,
-  ...overrides
+  ...overrides,
 });
 
 export const DEFAULT_PROFILE_ADULT = createDefaultProfile();
@@ -91,7 +91,7 @@ export const DEFAULT_SETTINGS: Settings = {
   activeProfile: "adult",
   profiles: {
     adult: DEFAULT_PROFILE_ADULT,
-    kid: DEFAULT_PROFILE_KID
+    kid: DEFAULT_PROFILE_KID,
   },
   strictMode: false,
   pinHash: null,
@@ -107,7 +107,7 @@ export const DEFAULT_SETTINGS: Settings = {
   weeklyUnblockDays: [1],
   weeklyUnblockDurationMinutes: 60,
   weeklyUnblockUntil: null,
-  weeklyUnblockLastWeek: null
+  weeklyUnblockLastWeek: null,
 };
 
 // Metrics por defecto (v2).
@@ -120,7 +120,7 @@ export const DEFAULT_METRICS: Metrics = {
   timeByDomainByDay: {},
   lastAttemptAt: null,
   lastAttemptUrl: null,
-  lastUpdatedAt: null
+  lastUpdatedAt: null,
 };
 
 export const DAY_LABELS = getDayLabels("es");

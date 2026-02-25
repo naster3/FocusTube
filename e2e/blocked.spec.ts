@@ -4,7 +4,7 @@ test("blocked carga y muestra confirmacion de desbloqueo", async ({ page }) => {
   await page.addInitScript(() => {
     const nextSettings = {
       blockedDomains: ["youtube.com"],
-      blockedDomainTags: { "youtube.com": ["intervalos"] }
+      blockedDomainTags: { "youtube.com": ["intervalos"] },
     };
     window.localStorage.setItem("focustube:settings", JSON.stringify(nextSettings));
   });

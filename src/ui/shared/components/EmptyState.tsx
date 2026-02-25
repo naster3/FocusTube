@@ -11,7 +11,11 @@ export function EmptyState({ title, description, icon = "o o", className }: Empt
   const classes = ["empty-state", className].filter(Boolean).join(" ");
   return (
     <div className={classes}>
-      {icon ? <div className="empty-state-icon" aria-hidden="true">{icon}</div> : null}
+      {icon ? (
+        <div className="empty-state-icon" aria-hidden="true">
+          {icon}
+        </div>
+      ) : null}
       <div className="empty-state-title">{title}</div>
       {description ? <div className="empty-state-text">{description}</div> : null}
     </div>

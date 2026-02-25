@@ -27,7 +27,7 @@ const normalizeFocusConfig = (input: unknown): FocusConfig => {
   const obj = typeof input === "object" && input ? (input as Partial<FocusConfig>) : {};
   return {
     focusMinutes: clampMinutes(obj.focusMinutes, 25, 180),
-    breakMinutes: clampMinutes(obj.breakMinutes, 5, 60)
+    breakMinutes: clampMinutes(obj.breakMinutes, 5, 60),
   };
 };
 
@@ -55,7 +55,7 @@ const resolveFocusState = (
       mode,
       running: false,
       endAt: null,
-      remainingMs: baseRemaining || (mode === "focus" ? focusMsValue : breakMsValue)
+      remainingMs: baseRemaining || (mode === "focus" ? focusMsValue : breakMsValue),
     };
   }
 
@@ -64,7 +64,7 @@ const resolveFocusState = (
       mode,
       running: true,
       endAt,
-      remainingMs: Math.max(0, endAt - nowTs)
+      remainingMs: Math.max(0, endAt - nowTs),
     };
   }
 
@@ -81,7 +81,7 @@ const resolveFocusState = (
     mode: nextMode,
     running: true,
     endAt: nowTs + remaining,
-    remainingMs: remaining
+    remainingMs: remaining,
   };
 };
 
@@ -144,7 +144,7 @@ async function notifyTransition(prevMode: "focus" | "break") {
     type: "basic",
     iconUrl: "icons/FT_icon_48x48.png",
     title: t(lang, titleKey),
-    message: t(lang, bodyKey)
+    message: t(lang, bodyKey),
   });
 }
 

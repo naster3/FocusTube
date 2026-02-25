@@ -1,4 +1,11 @@
-import { ensureSettingsLoaded, getActiveTabId, getTabState, setActiveTabId, setWindowFocused, tabStates } from "./state";
+import {
+  ensureSettingsLoaded,
+  getActiveTabId,
+  getTabState,
+  setActiveTabId,
+  setWindowFocused,
+  tabStates,
+} from "./state";
 import { startSession } from "./metrics";
 
 // Match del dominio objetivo contra la lista bloqueada.

@@ -39,21 +39,24 @@ export function useOnboardingGuide({ steps, storageKey }: UseOnboardingGuideOpti
     }
   }, [storageKey]);
 
-  const writeGuideSeen = useCallback(async (value: boolean) => {
-    try {
-      if (typeof chrome !== "undefined" && chrome.storage?.local) {
-        await chrome.storage.local.set({ [storageKey]: value });
-        return;
+  const writeGuideSeen = useCallback(
+    async (value: boolean) => {
+      try {
+        if (typeof chrome !== "undefined" && chrome.storage?.local) {
+          await chrome.storage.local.set({ [storageKey]: value });
+          return;
+        }
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
-    }
-    try {
-      window.localStorage.setItem(storageKey, value ? "1" : "0");
-    } catch {
-      // ignore
-    }
-  }, [storageKey]);
+      try {
+        window.localStorage.setItem(storageKey, value ? "1" : "0");
+      } catch {
+        // ignore
+      }
+    },
+    [storageKey]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -177,7 +180,7 @@ export function useOnboardingGuide({ steps, storageKey }: UseOnboardingGuideOpti
       dismissGuide,
       goPrev,
       goNext,
-      goToStep
+      goToStep,
     }),
     [
       guideActive,
@@ -193,7 +196,7 @@ export function useOnboardingGuide({ steps, storageKey }: UseOnboardingGuideOpti
       dismissGuide,
       goPrev,
       goNext,
-      goToStep
+      goToStep,
     ]
   );
 }

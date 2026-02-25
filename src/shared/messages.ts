@@ -64,7 +64,7 @@ const messageValidators: Record<MessageType, (message: AnyRecord) => boolean> = 
   GET_LAST_ATTEMPT: (message) => isNumber(message.tabId),
   CLOSE_ACTIVE_TAB: (message) => typeof message.tabId === "undefined" || isNumber(message.tabId),
   METRICS_GET: () => true,
-  METRICS_RESET: () => true
+  METRICS_RESET: () => true,
 };
 
 export function isMessageType(value: unknown): value is MessageType {

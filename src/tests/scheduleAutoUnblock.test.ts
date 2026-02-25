@@ -10,7 +10,7 @@ type ChromeRuntimeMock = {
 
 function setChromeMock(sendMessage: ChromeRuntimeMock["runtime"]["sendMessage"]) {
   (globalThis as unknown as { chrome: ChromeRuntimeMock }).chrome = {
-    runtime: { sendMessage }
+    runtime: { sendMessage },
   };
 }
 
@@ -31,7 +31,7 @@ describe("schedule auto-unblock", () => {
   it("redirects when timeline turns free", async () => {
     const sendMessage = vi.fn().mockResolvedValue({
       ok: true,
-      timeline: { state: "free" }
+      timeline: { state: "free" },
     });
     setChromeMock(sendMessage);
     const resolveBlockedUrl = vi.fn().mockResolvedValue("https://youtube.com/");
@@ -49,7 +49,7 @@ describe("schedule auto-unblock", () => {
   it("does nothing when disabled", async () => {
     const sendMessage = vi.fn().mockResolvedValue({
       ok: true,
-      timeline: { state: "free" }
+      timeline: { state: "free" },
     });
     setChromeMock(sendMessage);
     const resolveBlockedUrl = vi.fn().mockResolvedValue("https://youtube.com/");
@@ -67,7 +67,7 @@ describe("schedule auto-unblock", () => {
   it("keeps the user on the blocked page while still blocked", async () => {
     const sendMessage = vi.fn().mockResolvedValue({
       ok: true,
-      timeline: { state: "blocked" }
+      timeline: { state: "blocked" },
     });
     setChromeMock(sendMessage);
     const resolveBlockedUrl = vi.fn().mockResolvedValue("https://youtube.com/");

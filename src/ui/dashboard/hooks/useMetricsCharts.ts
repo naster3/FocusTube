@@ -21,7 +21,7 @@ export function useMetricsCharts({
   attemptsCanvasRef,
   timeCanvasRef,
   pieCanvasRef,
-  formatSeconds
+  formatSeconds,
 }: UseMetricsChartsParams) {
   const attemptsChartRef = useRef<Chart | null>(null);
   const timeChartRef = useRef<Chart | null>(null);
@@ -49,28 +49,28 @@ export function useMetricsCharts({
       maintainAspectRatio: false,
       animation: {
         duration: 800,
-        easing: "easeOutQuart"
+        easing: "easeOutQuart",
       },
       transitions: {
         active: {
-          animation: { duration: 200 }
+          animation: { duration: 200 },
         },
         resize: {
-          animation: { duration: 300 }
-        }
+          animation: { duration: 300 },
+        },
       },
       plugins: {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            title: (items: { label?: string }[]) => (items[0]?.label ? `Fecha: ${items[0].label}` : "")
-          }
-        }
+            title: (items: { label?: string }[]) => (items[0]?.label ? `Fecha: ${items[0].label}` : ""),
+          },
+        },
       },
       scales: {
         x: { ticks: { autoSkip: true, maxTicksLimit: 7 } },
-        y: { beginAtZero: true }
-      }
+        y: { beginAtZero: true },
+      },
     } satisfies ChartOptions<"bar">;
 
     const createCharts = async () => {
@@ -91,9 +91,9 @@ export function useMetricsCharts({
                 backgroundColor: "rgba(239, 68, 68, 0.35)",
                 borderColor: "rgba(239, 68, 68, 0.9)",
                 borderWidth: 1,
-                borderRadius: 8
-              }
-            ]
+                borderRadius: 8,
+              },
+            ],
           },
           options: {
             ...baseOptions,
@@ -103,19 +103,19 @@ export function useMetricsCharts({
                 ...(baseOptions.scales?.y || {}),
                 ticks: {
                   precision: 0,
-                  stepSize: 1
-                }
-              }
+                  stepSize: 1,
+                },
+              },
             },
             plugins: {
               ...baseOptions.plugins,
               tooltip: {
                 callbacks: {
-                  label: (ctx) => `Intentos: ${ctx.parsed.y ?? 0}`
-                }
-              }
-            }
-          }
+                  label: (ctx) => `Intentos: ${ctx.parsed.y ?? 0}`,
+                },
+              },
+            },
+          },
         });
       }
 
@@ -131,9 +131,9 @@ export function useMetricsCharts({
                 backgroundColor: "rgba(59, 130, 246, 0.35)",
                 borderColor: "rgba(59, 130, 246, 0.9)",
                 borderWidth: 1,
-                borderRadius: 8
-              }
-            ]
+                borderRadius: 8,
+              },
+            ],
           },
           options: {
             ...baseOptions,
@@ -141,11 +141,11 @@ export function useMetricsCharts({
               ...baseOptions.plugins,
               tooltip: {
                 callbacks: {
-                  label: (ctx) => `Tiempo: ${formatSeconds(ctx.parsed.y ?? 0)}`
-                }
-              }
-            }
-          }
+                  label: (ctx) => `Tiempo: ${formatSeconds(ctx.parsed.y ?? 0)}`,
+                },
+              },
+            },
+          },
         });
       }
 
@@ -164,32 +164,32 @@ export function useMetricsCharts({
                   "rgba(249, 115, 22, 0.6)",
                   "rgba(168, 85, 247, 0.6)",
                   "rgba(234, 179, 8, 0.6)",
-                  "rgba(148, 163, 184, 0.6)"
+                  "rgba(148, 163, 184, 0.6)",
                 ],
                 borderColor: "rgba(255, 255, 255, 0.9)",
-                borderWidth: 1
-              }
-            ]
+                borderWidth: 1,
+              },
+            ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             animation: {
               duration: 900,
-              easing: "easeOutQuart"
+              easing: "easeOutQuart",
             },
             transitions: {
               active: {
-                animation: { duration: 200 }
+                animation: { duration: 200 },
               },
               resize: {
-                animation: { duration: 300 }
-              }
+                animation: { duration: 300 },
+              },
             },
             plugins: {
-              legend: { display: true, position: "bottom" }
-            }
-          } satisfies ChartOptions<"pie">
+              legend: { display: true, position: "bottom" },
+            },
+          } satisfies ChartOptions<"pie">,
         });
       } else if (!pieSeries) {
         pieChartRef.current?.destroy();

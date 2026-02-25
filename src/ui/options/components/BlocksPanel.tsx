@@ -26,7 +26,7 @@ export function BlocksPanel({
   socialBlocks,
   onToggleAll,
   onToggleSocial,
-  onSaveSettings
+  onSaveSettings,
 }: BlocksPanelProps) {
   return (
     <section className="panel blocks-panel" data-guide="blocks">

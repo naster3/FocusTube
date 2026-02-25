@@ -19,7 +19,7 @@ export function HelpTools({
   optionsHref,
   dashboardHref,
   onQueryChange,
-  onClear
+  onClear,
 }: HelpToolsProps) {
   return (
     <section className="help-tools">

@@ -3,7 +3,7 @@ import {
   DEFAULT_METRICS,
   DEFAULT_SETTINGS,
   METRICS_SCHEMA_VERSION,
-  SETTINGS_SCHEMA_VERSION
+  SETTINGS_SCHEMA_VERSION,
 } from "../domain/settings/defaults";
 import {
   DomainTag,
@@ -13,7 +13,7 @@ import {
   ProfileId,
   ProfileSettings,
   Settings,
-  WeekSchedule
+  WeekSchedule,
 } from "../domain/settings/types";
 import { syncProfiles } from "../domain/settings/profiles";
 import { isDomainTag } from "../domain/blocking/tags";
@@ -172,7 +172,7 @@ function createLocalStorageArea(): StorageAreaLike {
       if (Object.keys(changes).length > 0) {
         notifyDevStorageListeners(changes);
       }
-    }
+    },
   };
 }
 
@@ -190,7 +190,9 @@ function getStorageArea(): StorageAreaLike {
   return createLocalStorageArea();
 }
 
-export function onStorageChanged(listener: (changes: Record<string, chrome.storage.StorageChange>, area: string) => void) {
+export function onStorageChanged(
+  listener: (changes: Record<string, chrome.storage.StorageChange>, area: string) => void
+) {
   if (!hasChromeStorage()) {
     if (!DEV_FALLBACK) {
       throw new Error("chrome.storage.onChanged is not available outside the extension context.");
@@ -253,7 +255,7 @@ export async function setSettings(settings: Settings) {
   devLog("storage.setSettings", {
     blockEnabled: next.blockEnabled,
     blockedDomains: next.blockedDomains.length,
-    whitelist: next.whitelist.length
+    whitelist: next.whitelist.length,
   });
 }
 
@@ -283,7 +285,7 @@ export async function setMetrics(metrics: Metrics) {
   await storage.set({ [METRICS_KEY]: next });
   devLog("storage.setMetrics", {
     attemptsByDay: Object.keys(next.attemptsByDay).length,
-    timeByDay: Object.keys(next.timeByDay).length
+    timeByDay: Object.keys(next.timeByDay).length,
   });
 }
 
@@ -311,7 +313,7 @@ export async function incrementAttempt(timestamp: number) {
     ...metrics,
     attemptsByDay: { ...metrics.attemptsByDay, [dateKey]: nextCount },
     lastAttemptAt: timestamp,
-    lastUpdatedAt: timestamp
+    lastUpdatedAt: timestamp,
   });
   await setMetrics(next);
   devLog("metrics.incrementAttempt", { dateKey, count: nextCount });
@@ -329,7 +331,7 @@ function schedulesToIntervals(input: WeekSchedule): IntervalWeek {
       start: range.start as Interval["start"],
       end: range.end as Interval["end"],
       mode: "blocked",
-      enabled: true
+      enabled: true,
     }));
   }
   return intervals;
@@ -365,7 +367,7 @@ function mergeSchedulesWithFallback(input: WeekSchedule | undefined, fallback: W
     }
     next[day] = ranges.map((range) => ({
       start: range.start || "00:00",
-      end: range.end || "00:00"
+      end: range.end || "00:00",
     }));
   }
   return next;
@@ -390,7 +392,7 @@ function mergeIntervalsByDayWithFallback(
       start: range.start,
       end: range.end,
       mode: range.mode === "free" ? "free" : "blocked",
-      enabled: range.enabled !== false
+      enabled: range.enabled !== false,
     }));
   }
   return next;
@@ -415,9 +417,7 @@ function normalizeBlockedDomainTags(
     if (!Array.isArray(value)) {
       continue;
     }
-    const tags = value
-      .map((tag) => String(tag))
-      .filter((tag): tag is DomainTag => isDomainTag(tag));
+    const tags = value.map((tag) => String(tag)).filter((tag): tag is DomainTag => isDomainTag(tag));
     const unique = Array.from(new Set(tags));
     if (unique.length > 0) {
       next[normalizedDomain] = unique;
@@ -463,15 +463,15 @@ function mergeProfile(input: Partial<ProfileSettings> | undefined, fallback: Pro
       ).sort((a, b) => a - b)
     : Array.from(fallback.weeklyUnblockDays);
   const weeklyDuration =
-    typeof input?.weeklyUnblockDurationMinutes === "number" &&
-    Number.isFinite(input.weeklyUnblockDurationMinutes)
+    typeof input?.weeklyUnblockDurationMinutes === "number" && Number.isFinite(input.weeklyUnblockDurationMinutes)
       ? Math.max(1, Math.floor(input.weeklyUnblockDurationMinutes))
       : fallback.weeklyUnblockDurationMinutes;
   const weeklyUntil =
     typeof input?.weeklyUnblockUntil === "number" && Number.isFinite(input.weeklyUnblockUntil)
       ? input.weeklyUnblockUntil
       : fallback.weeklyUnblockUntil;
-  const weeklyLastWeek = typeof input?.weeklyUnblockLastWeek === "string" ? input.weeklyUnblockLastWeek : fallback.weeklyUnblockLastWeek;
+  const weeklyLastWeek =
+    typeof input?.weeklyUnblockLastWeek === "string" ? input.weeklyUnblockLastWeek : fallback.weeklyUnblockLastWeek;
   const unblockUntil =
     typeof input?.unblockUntil === "number" && Number.isFinite(input.unblockUntil)
       ? input.unblockUntil
@@ -494,7 +494,7 @@ function mergeProfile(input: Partial<ProfileSettings> | undefined, fallback: Pro
     weeklyUnblockDays: weeklyDays,
     weeklyUnblockDurationMinutes: weeklyDuration,
     weeklyUnblockUntil: weeklyUntil,
-    weeklyUnblockLastWeek: weeklyLastWeek
+    weeklyUnblockLastWeek: weeklyLastWeek,
   };
 }
 
@@ -519,8 +519,8 @@ function migrateSettingsV1ToV2(input: Partial<Settings> & Record<string, unknown
     activeProfile,
     profiles: {
       adult: adultProfile,
-      kid: DEFAULT_SETTINGS.profiles.kid
-    }
+      kid: DEFAULT_SETTINGS.profiles.kid,
+    },
   };
 }
 
@@ -533,7 +533,7 @@ function migrateSettingsV2ToV3(input: Partial<Settings> & Record<string, unknown
   delete next.deviceId;
   return {
     ...next,
-    version: SETTINGS_SCHEMA_VERSION
+    version: SETTINGS_SCHEMA_VERSION,
   };
 }
 
@@ -551,7 +551,7 @@ function migrateSettingsInput(input: Partial<Settings>) {
 
   return {
     ...next,
-    version: SETTINGS_SCHEMA_VERSION
+    version: SETTINGS_SCHEMA_VERSION,
   } as Partial<Settings> & Record<string, unknown>;
 }
 
@@ -559,7 +559,7 @@ function migrateMetricsV1ToV2(input: Partial<Metrics>) {
   return {
     ...input,
     version: METRICS_SCHEMA_VERSION,
-    lastAttemptUrl: typeof input.lastAttemptUrl === "string" ? input.lastAttemptUrl : null
+    lastAttemptUrl: typeof input.lastAttemptUrl === "string" ? input.lastAttemptUrl : null,
   };
 }
 
@@ -571,7 +571,7 @@ function migrateMetricsInput(input: Partial<Metrics>) {
   }
   return {
     ...next,
-    version: METRICS_SCHEMA_VERSION
+    version: METRICS_SCHEMA_VERSION,
   };
 }
 
@@ -591,9 +591,9 @@ export function mergeSettings(input: Partial<Settings>): Settings {
   if (!familyModeEnabled) {
     activeProfile = "adult";
   }
-  const profilesInput = (migratedInput.profiles && typeof migratedInput.profiles === "object" ? migratedInput.profiles : {}) as Partial<
-    Record<ProfileId, Partial<ProfileSettings>>
-  >;
+  const profilesInput = (
+    migratedInput.profiles && typeof migratedInput.profiles === "object" ? migratedInput.profiles : {}
+  ) as Partial<Record<ProfileId, Partial<ProfileSettings>>>;
   const activeFallback = activeProfile === "kid" ? DEFAULT_SETTINGS.profiles.kid : DEFAULT_SETTINGS.profiles.adult;
   const activeProfileInput = mergeProfile(migratedInput as Partial<ProfileSettings>, activeFallback);
   const adultProfile =
@@ -620,8 +620,8 @@ export function mergeSettings(input: Partial<Settings>): Settings {
     activeProfile,
     profiles: {
       adult: adultProfile,
-      kid: kidProfile
-    }
+      kid: kidProfile,
+    },
   };
 }
 
@@ -638,6 +638,6 @@ export function mergeMetrics(input: Partial<Metrics>): Metrics {
     sessionsByDay: migratedInput.sessionsByDay || DEFAULT_METRICS.sessionsByDay,
     timeByDomainByDay: migratedInput.timeByDomainByDay || DEFAULT_METRICS.timeByDomainByDay,
     lastAttemptUrl:
-      typeof migratedInput.lastAttemptUrl === "string" ? migratedInput.lastAttemptUrl : DEFAULT_METRICS.lastAttemptUrl
+      typeof migratedInput.lastAttemptUrl === "string" ? migratedInput.lastAttemptUrl : DEFAULT_METRICS.lastAttemptUrl,
   };
 }

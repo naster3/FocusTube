@@ -204,7 +204,9 @@
   font-size: 12px;
   box-shadow: 0 10px 20px rgba(15, 23, 42, 0.2);
   z-index: 10;
-  animation: ft-toast-in-up 0.2s ease, ft-toast-out-up 0.2s ease 2.28s forwards;
+  animation:
+    ft-toast-in-up 0.2s ease,
+    ft-toast-out-up 0.2s ease 2.28s forwards;
 }
 
 .incognito-warning {

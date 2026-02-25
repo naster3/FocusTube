@@ -5,7 +5,9 @@ const PIN_HASH_BITS = 256;
 
 function toHex(buffer: ArrayBuffer | Uint8Array) {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 function fromHex(hex: string) {
@@ -28,7 +30,7 @@ async function derivePbkdf2(pin: string, salt: Uint8Array, iterations: number) {
       name: "PBKDF2",
       hash: "SHA-256",
       salt: salt as BufferSource,
-      iterations
+      iterations,
     },
     key,
     PIN_HASH_BITS

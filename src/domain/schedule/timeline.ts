@@ -108,7 +108,7 @@ export function computeScheduleTimeline(settings: Settings, now = Date.now()): S
         currentUntil: until,
         nextChangeAt: until,
         nextBlockStart: until,
-        nextBlockEnd: null
+        nextBlockEnd: null,
       };
     }
     return {
@@ -117,7 +117,7 @@ export function computeScheduleTimeline(settings: Settings, now = Date.now()): S
       currentUntil: null,
       nextChangeAt: null,
       nextBlockStart: null,
-      nextBlockEnd: null
+      nextBlockEnd: null,
     };
   }
 
@@ -133,7 +133,7 @@ export function computeScheduleTimeline(settings: Settings, now = Date.now()): S
         currentUntil: freeUntil,
         nextChangeAt: freeUntil,
         nextBlockStart: freeUntil,
-        nextBlockEnd: current.end
+        nextBlockEnd: current.end,
       };
     }
 
@@ -143,7 +143,7 @@ export function computeScheduleTimeline(settings: Settings, now = Date.now()): S
       currentUntil: current.end,
       nextChangeAt: current.end,
       nextBlockStart: null,
-      nextBlockEnd: null
+      nextBlockEnd: null,
     };
   }
 
@@ -154,7 +154,7 @@ export function computeScheduleTimeline(settings: Settings, now = Date.now()): S
     currentUntil: next ? next.start : null,
     nextChangeAt: next ? next.start : null,
     nextBlockStart: next ? next.start : null,
-    nextBlockEnd: next ? next.end : null
+    nextBlockEnd: next ? next.end : null,
   };
 }
 

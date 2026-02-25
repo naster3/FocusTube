@@ -2,12 +2,22 @@
 import { getMetrics, getSettings, updateSettings } from "../../../infrastructure/storage";
 import { formatDateTime } from "../../../shared/i18n/dates";
 import { t, tf } from "../../../shared/i18n";
-import { canStartWeeklySession, getWeeklySessionDayKey, getWeeklySessionDurationMs, isWeeklySessionActive } from "../../../domain/weekly/weekly";
+import {
+  canStartWeeklySession,
+  getWeeklySessionDayKey,
+  getWeeklySessionDurationMs,
+  isWeeklySessionActive,
+} from "../../../domain/weekly/weekly";
 import { evaluateBlock, reasonLabel } from "../../../domain/blocking/url";
 import { parseTimeToMinutes } from "../../../domain/schedule/schedule";
 import type { Settings } from "../../../domain/settings/types";
 import { getBlockedElements } from "../utils/dom";
-import { getInitialBlockedUrl, matchBlockedDomain, resolveBlockedAttempt, resolveBlockedUrl } from "../utils/blockedUrl";
+import {
+  getInitialBlockedUrl,
+  matchBlockedDomain,
+  resolveBlockedAttempt,
+  resolveBlockedUrl,
+} from "../utils/blockedUrl";
 import { startBlockedTimer } from "../utils/timers";
 import { pickMessage } from "../utils/messages";
 import { createScheduleAutoUnblockController } from "../utils/scheduleAutoUnblock";
@@ -87,18 +97,20 @@ export function initBlockedPage() {
         lastAttemptAtFallback = resolved.at;
       }
       return blockedUrl;
-    }
+    },
   });
 
   async function confirmAction(
     lang: Settings["language"],
-    {
-      title,
-      description,
-      confirmLabel
-    }: { title: string; description: string; confirmLabel: string }
+    { title, description, confirmLabel }: { title: string; description: string; confirmLabel: string }
   ) {
-    if (!elements.confirmModalEl || !elements.confirmTitleEl || !elements.confirmDescEl || !elements.confirmCancelBtn || !elements.confirmConfirmBtn) {
+    if (
+      !elements.confirmModalEl ||
+      !elements.confirmTitleEl ||
+      !elements.confirmDescEl ||
+      !elements.confirmCancelBtn ||
+      !elements.confirmConfirmBtn
+    ) {
       return window.confirm(`${title}\n\n${description}`);
     }
 
@@ -119,15 +131,16 @@ export function initBlockedPage() {
         "input:not([disabled]):not([type='hidden'])",
         "select:not([disabled])",
         "textarea:not([disabled])",
-        "[tabindex]:not([tabindex='-1'])"
+        "[tabindex]:not([tabindex='-1'])",
       ].join(",");
 
       const getFocusable = () => {
         if (!dialogEl) {
           return [] as HTMLElement[];
         }
-        return Array.from(dialogEl.querySelectorAll<HTMLElement>(focusableSelector))
-          .filter((el) => !el.hasAttribute("disabled") && el.getAttribute("aria-hidden") !== "true");
+        return Array.from(dialogEl.querySelectorAll<HTMLElement>(focusableSelector)).filter(
+          (el) => !el.hasAttribute("disabled") && el.getAttribute("aria-hidden") !== "true"
+        );
       };
 
       const cleanup = (value: boolean) => {
@@ -262,7 +275,9 @@ export function initBlockedPage() {
       elements.blockedReasonEl.textContent = label || "-";
 
       if (elements.carryoverNoteEl) {
-        const isCarryover = Boolean(decision?.blocked) && decision?.reason === "schedule" &&
+        const isCarryover =
+          Boolean(decision?.blocked) &&
+          decision?.reason === "schedule" &&
           isCarryoverScheduleBlock(new Date(), settings.intervalsByDay);
         if (isCarryover) {
           elements.carryoverNoteEl.textContent = t(lang, "blocked.carryover");
@@ -300,7 +315,7 @@ export function initBlockedPage() {
     }
 
     const matchedDomain = blockedUrl ? matchBlockedDomain(blockedUrl, settings.blockedDomains) : null;
-    const tags = matchedDomain ? settings.blockedDomainTags?.[matchedDomain] ?? [] : [];
+    const tags = matchedDomain ? (settings.blockedDomainTags?.[matchedDomain] ?? []) : [];
     const hasIntervals = tags.includes("intervalos");
     const hasWeekly = tags.includes("por_semana");
     scheduleAutoUnblock.setEnabled(hasIntervals);
@@ -350,7 +365,7 @@ export function initBlockedPage() {
         const confirmOk = await confirmAction(lang, {
           title: t(lang, "blocked.confirm.weekly.title"),
           description: tf(lang, "blocked.confirm.weekly.desc", { minutes: String(durationMin) }),
-          confirmLabel: t(lang, "blocked.confirm.confirm")
+          confirmLabel: t(lang, "blocked.confirm.confirm"),
         });
         if (!confirmOk) {
           return;
@@ -360,7 +375,7 @@ export function initBlockedPage() {
         const until = start + durationMs;
         await updateSettings({
           weeklyUnblockUntil: until,
-          weeklyUnblockLastWeek: getWeeklySessionDayKey(start)
+          weeklyUnblockLastWeek: getWeeklySessionDayKey(start),
         });
         if (blockedUrl) {
           navigateTo(blockedUrl);
@@ -381,7 +396,7 @@ export function initBlockedPage() {
         const confirmOk = await confirmAction(lang, {
           title: t(lang, "blocked.confirm.temp.title"),
           description: t(lang, "blocked.confirm.temp.desc"),
-          confirmLabel: t(lang, "blocked.confirm.confirm")
+          confirmLabel: t(lang, "blocked.confirm.confirm"),
         });
         if (!confirmOk) {
           return;

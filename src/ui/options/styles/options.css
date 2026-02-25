@@ -103,7 +103,11 @@
   text-decoration: none;
   font-size: 12px;
   font-weight: 600;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
 .options-nav a:hover {
@@ -185,7 +189,10 @@
   background: transparent;
   border: 1px solid var(--status-info-border);
   color: var(--status-info-text);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .btn-ghost:disabled {
@@ -215,7 +222,9 @@
   border: 1px solid var(--border-default);
   border-radius: 10px;
   padding: 0;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   overflow: hidden;
 }
 
@@ -361,7 +370,9 @@
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.2);
   cursor: pointer;
   z-index: 9998;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .scroll-top-btn:hover {
@@ -465,7 +476,10 @@
   border-radius: 14px;
   border: 1px solid var(--border-default);
   background: var(--surface);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
   cursor: pointer;
 }
 
@@ -493,7 +507,10 @@
   border-radius: 999px;
   background: var(--border-default);
   border: 1px solid var(--border-soft);
-  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .block-slider::after {
@@ -616,7 +633,10 @@
 
 .option-toggle {
   @apply flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .option-toggle input {
@@ -741,7 +761,9 @@
   padding: 8px 12px;
   border-radius: 10px;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .panel button:hover {
@@ -829,7 +851,9 @@
   background: var(--surface);
   color: var(--text-primary);
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   margin-bottom: 0;
 }
 
@@ -912,7 +936,10 @@
   font-weight: 600;
   color: var(--text-primary);
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .theme-option:hover {
@@ -1087,7 +1114,10 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .family-option:hover:not(:disabled) {
@@ -1112,13 +1142,11 @@
   color: var(--text-subtle);
 }
 
-
 .divider {
   height: 1px;
   background: var(--border-muted);
   margin: 12px 0;
 }
-
 
 .weekly-status {
   display: inline-flex;
@@ -1320,7 +1348,6 @@
   color: var(--brand-yellow-200);
 }
 
-
 :root[data-theme="dark"] .weekly-status {
   background: var(--surface-strong);
   border-color: var(--border-soft);
@@ -1342,7 +1369,6 @@
   background: rgba(249, 115, 22, 0.22);
   color: var(--status-warning-text);
 }
-
 
 :root[data-theme="dark"] .scroll-top-btn {
   background: var(--accent);

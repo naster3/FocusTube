@@ -33,7 +33,7 @@ export function GuidePanel({
   onStartGuide,
   onStepSelect,
   onRestartGuide,
-  onDismissGuide
+  onDismissGuide,
 }: GuidePanelProps) {
   if (guideSeen && !guideActive) {
     return null;
@@ -45,13 +45,15 @@ export function GuidePanel({
         <div className="guide-progress">
           {tf(language, "options.guide.progress", {
             current: String(Math.min(guideStepIndex + 1, totalGuideSteps || 1)),
-            total: String(Math.max(totalGuideSteps, 1))
+            total: String(Math.max(totalGuideSteps, 1)),
           })}
         </div>
         <div className="guide-progress-track" aria-hidden="true">
           <span
             className="guide-progress-value"
-            style={{ width: `${(Math.min(guideStepIndex + 1, totalGuideSteps || 1) / Math.max(totalGuideSteps, 1)) * 100}%` }}
+            style={{
+              width: `${(Math.min(guideStepIndex + 1, totalGuideSteps || 1) / Math.max(totalGuideSteps, 1)) * 100}%`,
+            }}
           />
         </div>
       </div>

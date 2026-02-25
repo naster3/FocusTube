@@ -29,7 +29,7 @@ export function OptionsHeader({
   guideLabel,
   guideDisabled = false,
   onGuideClick,
-  navDataGuide = "nav"
+  navDataGuide = "nav",
 }: OptionsHeaderProps) {
   const shouldShowGuide = showGuide && Boolean(guideLabel) && Boolean(onGuideClick);
 

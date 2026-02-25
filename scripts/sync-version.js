@@ -25,9 +25,7 @@ if (typeof version !== "string" || version.trim().length === 0) {
 }
 
 if (!isManifestCompatibleVersion(version)) {
-  throw new Error(
-    `Version "${version}" is not valid for Chrome manifest. Use numeric segments like 3.2.0 or 3.2.0.1.`
-  );
+  throw new Error(`Version "${version}" is not valid for Chrome manifest. Use numeric segments like 3.2.0 or 3.2.0.1.`);
 }
 
 let updatedCount = 0;

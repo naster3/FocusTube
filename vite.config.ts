@@ -11,17 +11,17 @@ export default defineConfig({
       "@": resolve(__dirname, "src"),
       fs: resolve(__dirname, "src/shims/fs.ts"),
       path: resolve(__dirname, "src/shims/path.ts"),
-      crypto: resolve(__dirname, "src/shims/crypto.ts")
-    }
+      crypto: resolve(__dirname, "src/shims/crypto.ts"),
+    },
   },
   optimizeDeps: {
-    exclude: ["sql.js"]
+    exclude: ["sql.js"],
   },
   build: {
     outDir: "dist",
     emptyOutDir: true,
     commonjsOptions: {
-      include: [/sql\.js/, /node_modules/]
+      include: [/sql\.js/, /node_modules/],
     },
     // Entradas para popup/options/blocked y scripts de background/content.
     rollupOptions: {
@@ -32,13 +32,13 @@ export default defineConfig({
         help: resolve(__dirname, "src/ui/help/index.html"),
         blocked: resolve(__dirname, "src/ui/blocked/index.html"),
         background: resolve(__dirname, "src/background/index.ts"),
-        content: resolve(__dirname, "src/content/index.ts")
+        content: resolve(__dirname, "src/content/index.ts"),
       },
       output: {
         entryFileNames: "[name].js",
         chunkFileNames: "chunk-[name].js",
-        assetFileNames: "[name].[ext]"
-      }
-    }
-  }
+        assetFileNames: "[name].[ext]",
+      },
+    },
+  },
 });

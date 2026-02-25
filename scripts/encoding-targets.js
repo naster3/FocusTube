@@ -1,14 +1,7 @@
 import { readdirSync, statSync } from "fs";
 import { extname, resolve } from "path";
 
-const IGNORED_DIRS = new Set([
-  ".git",
-  "node_modules",
-  "dist",
-  "playwright-report",
-  "test-results",
-  ".vscode"
-]);
+const IGNORED_DIRS = new Set([".git", "node_modules", "dist", "playwright-report", "test-results", ".vscode"]);
 
 const TEXT_EXTENSIONS = new Set([
   ".js",
@@ -22,14 +15,26 @@ const TEXT_EXTENSIONS = new Set([
   ".md",
   ".txt",
   ".yml",
-  ".yaml"
+  ".yaml",
 ]);
 
 const TEXT_BASENAMES = new Set([".editorconfig", ".gitignore", ".prettierrc", ".prettierignore", "LICENSE"]);
 
 function isTextFile(filePath) {
   const normalized = filePath.toLowerCase();
-  for (const ignored of [".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".woff", ".woff2", ".zip", ".db", ".sqlite"]) {
+  for (const ignored of [
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".webp",
+    ".ico",
+    ".woff",
+    ".woff2",
+    ".zip",
+    ".db",
+    ".sqlite",
+  ]) {
     if (normalized.endsWith(ignored)) {
       return false;
     }

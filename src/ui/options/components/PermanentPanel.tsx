@@ -25,7 +25,7 @@ export function PermanentPanel({
   weeklyStatusTone,
   canStartWeekly,
   onSaveSettings,
-  onStartWeeklySession
+  onStartWeeklySession,
 }: PermanentPanelProps) {
   return (
     <section className="panel permanent-panel" data-guide="permanent">
@@ -102,7 +102,11 @@ export function PermanentPanel({
             <span className="weekly-status-value">{weeklyStatusText}</span>
           </div>
           <div className="weekly-actions">
-            <button type="button" onClick={onStartWeeklySession} disabled={!settings.weeklyUnblockEnabled || !canStartWeekly}>
+            <button
+              type="button"
+              onClick={onStartWeeklySession}
+              disabled={!settings.weeklyUnblockEnabled || !canStartWeekly}
+            >
               {t(language, "options.weekly_unblock.action.start")}
             </button>
           </div>

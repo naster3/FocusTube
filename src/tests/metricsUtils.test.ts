@@ -6,7 +6,7 @@ import {
   getDayKey,
   getRecentDays,
   percentDelta,
-  sumMetricRange
+  sumMetricRange,
 } from "../domain/metrics/utils";
 
 describe("metrics utils", () => {
@@ -58,7 +58,7 @@ describe("metrics utils", () => {
       timeByDomainByDay: {},
       lastAttemptAt: null,
       lastAttemptUrl: null,
-      lastUpdatedAt: null
+      lastUpdatedAt: null,
     };
     expect(sumMetricRange(metrics, ["2024-01-10", "2024-01-08"], "attemptsByDay")).toBe(2);
     expect(sumMetricRange(metrics, ["2024-01-10", "2024-01-09"], "attemptsByDay")).toBe(5);

@@ -1,7 +1,14 @@
 import { flushToDb } from "../infrastructure/db";
 import { setMetrics } from "../infrastructure/storage";
 import type { DailyDelta, DbEvent } from "../infrastructure/db";
-import { ensureMetricsLoaded, getMetricsCache, getTabState, isMetricsDirty, isWindowFocused, setMetricsDirty } from "./state";
+import {
+  ensureMetricsLoaded,
+  getMetricsCache,
+  getTabState,
+  isMetricsDirty,
+  isWindowFocused,
+  setMetricsDirty,
+} from "./state";
 import { tabStates } from "./state";
 
 // Ritmos de tracking y flush de metricas.
@@ -27,7 +34,7 @@ function mergeDailyDelta(day: string, delta: DailyDelta) {
     time: (current.time || 0) + (delta.time || 0),
     blockedTime: (current.blockedTime || 0) + (delta.blockedTime || 0),
     sessions: (current.sessions || 0) + (delta.sessions || 0),
-    updatedAt: delta.updatedAt || current.updatedAt
+    updatedAt: delta.updatedAt || current.updatedAt,
   };
 
   const byDomain: Record<string, number> = { ...(current.timeByDomain || {}) };
@@ -81,7 +88,7 @@ export async function startSession(tabId: number, now: number) {
     type: "session_start",
     domain: state.domain,
     tabId,
-    url: null
+    url: null,
   });
   mergeDailyDelta(dayKey, { sessions: 1, updatedAt: now });
 }
@@ -92,15 +99,15 @@ async function addTime(domain: string, deltaSec: number, now: number) {
   const dayKey = getDayKey(now);
   metrics.timeByDay = {
     ...metrics.timeByDay,
-    [dayKey]: (metrics.timeByDay[dayKey] || 0) + deltaSec
+    [dayKey]: (metrics.timeByDay[dayKey] || 0) + deltaSec,
   };
   const dayDomains = metrics.timeByDomainByDay[dayKey] || {};
   metrics.timeByDomainByDay = {
     ...metrics.timeByDomainByDay,
     [dayKey]: {
       ...dayDomains,
-      [domain]: (dayDomains[domain] || 0) + deltaSec
-    }
+      [domain]: (dayDomains[domain] || 0) + deltaSec,
+    },
   };
   metrics.lastUpdatedAt = now;
   setMetricsDirty(true);
@@ -116,7 +123,7 @@ export async function addBlockedTime(deltaSec: number, now: number) {
   const dayKey = getDayKey(now);
   metrics.blockedTimeByDay = {
     ...metrics.blockedTimeByDay,
-    [dayKey]: (metrics.blockedTimeByDay[dayKey] || 0) + deltaSec
+    [dayKey]: (metrics.blockedTimeByDay[dayKey] || 0) + deltaSec,
   };
   metrics.lastUpdatedAt = now;
   setMetricsDirty(true);

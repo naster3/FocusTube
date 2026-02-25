@@ -36,7 +36,9 @@
   font-weight: 600;
   background: var(--surface);
   color: var(--text-primary);
-  animation: ft-toast-in-up 0.22s ease, ft-toast-out-up 0.22s ease 2.35s forwards;
+  animation:
+    ft-toast-in-up 0.22s ease,
+    ft-toast-out-up 0.22s ease 2.35s forwards;
 }
 
 .toast.success {
@@ -224,7 +226,10 @@
   border-radius: 999px;
   cursor: pointer;
   font-weight: 600;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 .metrics-nav .metrics-tab.active {
@@ -313,7 +318,6 @@
   padding: 4px 8px;
   border-radius: 999px;
 }
-
 
 .blocked-permission-missing {
   background: var(--surface-danger-soft);
@@ -485,7 +489,10 @@
   border: 1px solid var(--border-default);
   background: var(--surface-muted);
   box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
   animation: ft-list-stagger-in 0.28s ease both;
   animation-delay: calc(var(--stagger-index, 0) * 40ms);
 }
@@ -551,7 +558,10 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .pagination-btn:disabled {
@@ -612,7 +622,6 @@
   color: var(--status-warning-text-soft);
 }
 
-
 .blocked-input-row input {
   min-width: 260px;
 }
@@ -627,7 +636,10 @@
   border: 1px solid var(--border-default);
   background: var(--surface-muted);
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
   animation: ft-list-stagger-in 0.28s ease both;
   animation-delay: calc(var(--stagger-index, 0) * 40ms);
 }
@@ -731,7 +743,6 @@
     width: 100%;
   }
 }
-
 
 .list li.blocked-card {
   display: grid;
@@ -837,7 +848,6 @@
 :root[data-theme="dark"] .advanced-value {
   background: var(--surface-soft);
 }
-
 
 :root[data-theme="dark"] .strict-panel {
   border-color: var(--border-default);

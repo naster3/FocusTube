@@ -7,11 +7,11 @@ import { allowWhitelistedYouTubeWatchIfPossible } from "../content/youtubeWhitel
 const settingsFixture = {
   ...DEFAULT_SETTINGS,
   whitelistEnabled: true,
-  whitelist: ["https://www.youtube.com/@veritasium"]
+  whitelist: ["https://www.youtube.com/@veritasium"],
 };
 
 vi.mock("../infrastructure/storage", () => ({
-  getSettings: vi.fn(async () => settingsFixture)
+  getSettings: vi.fn(async () => settingsFixture),
 }));
 
 const clearBody = () => {

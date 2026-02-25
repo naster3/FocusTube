@@ -18,7 +18,7 @@ describe("blocked DOM mapping", () => {
       { id: "attempts-label", tag: "div" },
       { id: "last-attempt-label", tag: "div" },
       { id: "blocked-reason-label", tag: "div" },
-      { id: "blocked-reason", tag: "div" }
+      { id: "blocked-reason", tag: "div" },
     ];
 
     elementsToCreate.forEach(({ id, tag }) => {

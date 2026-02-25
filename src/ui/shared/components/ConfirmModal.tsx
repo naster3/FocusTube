@@ -19,7 +19,7 @@ export function ConfirmModal({
   cancelLabel,
   onConfirm,
   onCancel,
-  tone = "default"
+  tone = "default",
 }: ConfirmModalProps) {
   const dialogRef = React.useRef<HTMLDivElement | null>(null);
   const cancelBtnRef = React.useRef<HTMLButtonElement | null>(null);
@@ -38,15 +38,16 @@ export function ConfirmModal({
       "input:not([disabled]):not([type='hidden'])",
       "select:not([disabled])",
       "textarea:not([disabled])",
-      "[tabindex]:not([tabindex='-1'])"
+      "[tabindex]:not([tabindex='-1'])",
     ].join(",");
 
     const getFocusable = () => {
       if (!dialogRef.current) {
         return [] as HTMLElement[];
       }
-      return Array.from(dialogRef.current.querySelectorAll<HTMLElement>(focusableSelector))
-        .filter((el) => !el.hasAttribute("disabled") && el.getAttribute("aria-hidden") !== "true");
+      return Array.from(dialogRef.current.querySelectorAll<HTMLElement>(focusableSelector)).filter(
+        (el) => !el.hasAttribute("disabled") && el.getAttribute("aria-hidden") !== "true"
+      );
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -102,11 +103,15 @@ export function ConfirmModal({
   }
 
   return (
-    <div className="confirm-backdrop" role="presentation" onClick={(event) => {
-      if (event.target === event.currentTarget) {
-        onCancel();
-      }
-    }}>
+    <div
+      className="confirm-backdrop"
+      role="presentation"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          onCancel();
+        }
+      }}
+    >
       <div
         ref={dialogRef}
         className="confirm-card"
@@ -126,7 +131,12 @@ export function ConfirmModal({
           <button ref={cancelBtnRef} type="button" className="btn-ghost" onClick={onCancel} aria-label={cancelLabel}>
             {cancelLabel}
           </button>
-          <button type="button" className={tone === "danger" ? "primary" : ""} onClick={onConfirm} aria-label={confirmLabel}>
+          <button
+            type="button"
+            className={tone === "danger" ? "primary" : ""}
+            onClick={onConfirm}
+            aria-label={confirmLabel}
+          >
             {confirmLabel}
           </button>
         </div>

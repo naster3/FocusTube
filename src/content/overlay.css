@@ -4,7 +4,13 @@
   top: 16px;
   z-index: 2147483647;
   width: 226px;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
   user-select: none;
   color-scheme: dark;
   --ft-overlay-bg: linear-gradient(142deg, rgba(11, 18, 32, 0.93), rgba(15, 23, 42, 0.88));
@@ -75,7 +81,10 @@
   box-shadow: var(--ft-overlay-shadow);
   overflow: hidden;
   transform: translateZ(0);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .focustube-overlay-box::before {
@@ -140,7 +149,10 @@
   font-weight: 800;
   font-size: 12px;
   line-height: 1;
-  transition: transform 0.12s ease, background-color 0.16s ease, border-color 0.16s ease;
+  transition:
+    transform 0.12s ease,
+    background-color 0.16s ease,
+    border-color 0.16s ease;
 }
 
 .focustube-overlay-btn:hover {
@@ -236,7 +248,9 @@
   font-weight: 700;
   letter-spacing: 0.2px;
   box-shadow: var(--ft-overlay-restore-shadow);
-  transition: transform 0.12s ease, filter 0.16s ease;
+  transition:
+    transform 0.12s ease,
+    filter 0.16s ease;
 }
 
 .focustube-overlay-restore-btn:hover {

@@ -63,7 +63,7 @@ export function MetricsPanel({
   pieCanvasRef,
   formatSeconds,
   percentDelta,
-  deltaClass
+  deltaClass,
 }: MetricsPanelProps) {
   if (deferred) {
     return (
@@ -71,7 +71,12 @@ export function MetricsPanel({
         <div className="metrics-header">
           <h3>{t(language, "dashboard.metrics.title")}</h3>
         </div>
-        <div className="metrics-skeleton" role="status" aria-live="polite" aria-label={t(language, "dashboard.metrics.loading")}>
+        <div
+          className="metrics-skeleton"
+          role="status"
+          aria-live="polite"
+          aria-label={t(language, "dashboard.metrics.loading")}
+        >
           <div className="metrics-skeleton-row w-70" />
           <div className="metrics-skeleton-row" />
           <div className="metrics-skeleton-row w-45" />
@@ -119,7 +124,12 @@ export function MetricsPanel({
         </div>
       </div>
       {!metrics ? (
-        <div className="metrics-skeleton" role="status" aria-live="polite" aria-label={t(language, "dashboard.metrics.loading")}>
+        <div
+          className="metrics-skeleton"
+          role="status"
+          aria-live="polite"
+          aria-label={t(language, "dashboard.metrics.loading")}
+        >
           <div className="metrics-skeleton-row w-70" />
           <div className="metrics-skeleton-row" />
           <div className="metrics-skeleton-row w-45" />
@@ -201,7 +211,8 @@ export function MetricsPanel({
           ) : null}
 
           {metricsTab === "charts" ? (
-            chartSeries && (chartSeries.attempts.some((value) => value > 0) || chartSeries.times.some((value) => value > 0)) ? (
+            chartSeries &&
+            (chartSeries.attempts.some((value) => value > 0) || chartSeries.times.some((value) => value > 0)) ? (
               <div className="charts">
                 <div className="chart metric-attempts">
                   <h4>{t(language, "dashboard.metrics.attempts_day")}</h4>
@@ -275,7 +286,9 @@ export function MetricsPanel({
                       <div className="metric-row">
                         <span className="metric-label">{t(language, "dashboard.metrics.attempts")}</span>
                         <span className="metric-value">{advancedData.attempts30}</span>
-                        <span className={`metric-delta ${deltaClass(advancedData.attempts30, advancedData.attemptsPrev30)}`}>
+                        <span
+                          className={`metric-delta ${deltaClass(advancedData.attempts30, advancedData.attemptsPrev30)}`}
+                        >
                           {percentDelta(advancedData.attempts30, advancedData.attemptsPrev30)}
                         </span>
                       </div>
@@ -289,7 +302,9 @@ export function MetricsPanel({
                       <div className="metric-row">
                         <span className="metric-label">{t(language, "dashboard.metrics.sessions")}</span>
                         <span className="metric-value">{advancedData.sessions30}</span>
-                        <span className={`metric-delta ${deltaClass(advancedData.sessions30, advancedData.sessionsPrev30)}`}>
+                        <span
+                          className={`metric-delta ${deltaClass(advancedData.sessions30, advancedData.sessionsPrev30)}`}
+                        >
                           {percentDelta(advancedData.sessions30, advancedData.sessionsPrev30)}
                         </span>
                       </div>

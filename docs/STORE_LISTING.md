@@ -12,9 +12,10 @@ Block distracting sites with schedules, whitelist, strict mode, and focus timer.
 
 ## Detailed description
 
-FocusTube Blocker helps you stay focused by blocking distracting sites on a schedule.  
+FocusTube Blocker helps you stay focused by blocking distracting sites on a schedule.
 
 Key features:
+
 - Daily schedules with blocked/free intervals
 - Permanent block + weekly session
 - Strict mode with PIN

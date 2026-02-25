@@ -80,7 +80,7 @@ function defaultDaily(day: string, now: number): DailyStats {
     blockedTime: 0,
     sessions: 0,
     timeByDomain: {},
-    updatedAt: now
+    updatedAt: now,
   };
 }
 

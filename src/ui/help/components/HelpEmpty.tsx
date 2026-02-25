@@ -9,10 +9,5 @@ type HelpEmptyProps = {
 };
 
 export function HelpEmpty({ language, query }: HelpEmptyProps) {
-  return (
-    <EmptyState
-      className="help-empty"
-      title={tf(language, "help.search.empty", { query })}
-    />
-  );
+  return <EmptyState className="help-empty" title={tf(language, "help.search.empty", { query })} />;
 }

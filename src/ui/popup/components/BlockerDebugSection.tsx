@@ -9,12 +9,7 @@ type BlockerDebugSectionProps = {
   nextChangeText: string | null;
 };
 
-export function BlockerDebugSection({
-  lang,
-  browserTimeText,
-  tzOffsetMin,
-  nextChangeText
-}: BlockerDebugSectionProps) {
+export function BlockerDebugSection({ lang, browserTimeText, tzOffsetMin, nextChangeText }: BlockerDebugSectionProps) {
   return (
     <details style={{ marginTop: 8 }}>
       <summary style={{ cursor: "pointer", fontSize: 12, opacity: 0.85 }}>{t(lang, "popup.debug.title")}</summary>

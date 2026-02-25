@@ -9,12 +9,7 @@ type FamilyPanelProps = {
   onSelectProfile: (profileId: "adult" | "kid") => void;
 };
 
-export function FamilyPanel({
-  settings,
-  language,
-  onToggleFamilyMode,
-  onSelectProfile
-}: FamilyPanelProps) {
+export function FamilyPanel({ settings, language, onToggleFamilyMode, onSelectProfile }: FamilyPanelProps) {
   return (
     <section className="panel family-panel">
       <div className="family-header">

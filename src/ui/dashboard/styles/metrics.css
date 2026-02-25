@@ -14,12 +14,17 @@
   border: 1px solid var(--border-muted);
   border-radius: 12px;
   background: linear-gradient(135deg, var(--surface-muted), var(--surface));
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .summary-card .metric-value,
 .summary-card .metric-delta {
-  transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
 }
 
 .summary-card:hover .metric-value {
@@ -108,7 +113,9 @@
   background: var(--border-default);
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .metric-delta:hover {
@@ -141,7 +148,10 @@
   padding: 12px;
   border: 1px solid var(--border-muted);
   border-radius: 12px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .chart:hover {
@@ -165,7 +175,10 @@
   border: 1px dashed var(--border-brand-soft);
   background: var(--surface-muted);
   text-align: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .metrics-empty:hover {

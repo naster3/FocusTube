@@ -28,7 +28,7 @@ export function GuideFloat({
   onPrev,
   onNext,
   onFinish,
-  onSkip
+  onSkip,
 }: GuideFloatProps) {
   const floatRef = React.useRef<HTMLDivElement | null>(null);
   const titleId = React.useId();
@@ -89,11 +89,15 @@ export function GuideFloat({
       <div className="guide-progress">
         {tf(language, "dashboard.guide.progress", {
           current: String(guideStepIndex + 1),
-          total: String(totalGuideSteps)
+          total: String(totalGuideSteps),
         })}
       </div>
-      <div className="guide-title" id={titleId}>{guideStep.title}</div>
-      <div className="guide-text" id={descId}>{guideStep.desc}</div>
+      <div className="guide-title" id={titleId}>
+        {guideStep.title}
+      </div>
+      <div className="guide-text" id={descId}>
+        {guideStep.desc}
+      </div>
       <div className="guide-nav">
         <button type="button" className="btn-ghost" onClick={onPrev} disabled={guideStepIndex === 0}>
           {t(language, "dashboard.guide.back")}

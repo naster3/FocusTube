@@ -38,14 +38,18 @@ export function WhitelistPanel({
   onAdd,
   onRemove,
   onPrevPage,
-  onNextPage
+  onNextPage,
 }: WhitelistPanelProps) {
   return (
     <section className="panel" data-guide="whitelist">
       <h3>{t(language, "dashboard.whitelist.title")}</h3>
       <div className="whitelist-controls" data-guide="whitelist-controls">
         <label className="whitelist-toggle">
-          <input type="checkbox" checked={whitelistEnabled} onChange={(event) => onToggleEnabled(event.target.checked)} />
+          <input
+            type="checkbox"
+            checked={whitelistEnabled}
+            onChange={(event) => onToggleEnabled(event.target.checked)}
+          />
           <span>{t(language, "dashboard.whitelist.enabled")}</span>
         </label>
         {!whitelistEnabled ? (
@@ -72,7 +76,9 @@ export function WhitelistPanel({
             {whitelistSlice.map((entry, index) => (
               <li key={entry} className="whitelist-item" style={{ "--stagger-index": index } as React.CSSProperties}>
                 <div className="whitelist-item-main">
-                  <span className="whitelist-icon" aria-hidden="true">✓</span>
+                  <span className="whitelist-icon" aria-hidden="true">
+                    ✓
+                  </span>
                   <span className="whitelist-url" title={entry}>
                     {entry}
                   </span>
@@ -89,22 +95,17 @@ export function WhitelistPanel({
                 {tf(language, "dashboard.pagination.showing", {
                   from: String(whitelistStart + 1),
                   to: String(whitelistEnd),
-                  total: String(whitelistTotal)
+                  total: String(whitelistTotal),
                 })}
               </span>
               <div className="pagination-controls">
-                <button
-                  type="button"
-                  className="pagination-btn"
-                  onClick={onPrevPage}
-                  disabled={whitelistPageSafe <= 1}
-                >
+                <button type="button" className="pagination-btn" onClick={onPrevPage} disabled={whitelistPageSafe <= 1}>
                   {t(language, "dashboard.pagination.prev")}
                 </button>
                 <span className="pagination-page">
                   {tf(language, "dashboard.pagination.page", {
                     current: String(whitelistPageSafe),
-                    total: String(whitelistTotalPages)
+                    total: String(whitelistTotalPages),
                   })}
                 </span>
                 <button

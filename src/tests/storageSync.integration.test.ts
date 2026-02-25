@@ -77,7 +77,7 @@ const chromeMock: ChromeStorageMock = {
           delete storageData[key];
         }
         emitStorageChanges(changes);
-      }
+      },
     },
     onChanged: {
       addListener(listener) {
@@ -85,9 +85,9 @@ const chromeMock: ChromeStorageMock = {
       },
       removeListener(listener) {
         storageListeners.delete(listener);
-      }
-    }
-  }
+      },
+    },
+  },
 };
 
 (globalThis as unknown as { chrome: ChromeStorageMock }).chrome = chromeMock;

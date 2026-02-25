@@ -28,7 +28,7 @@ const normalizeFocusConfig = (input: unknown): FocusConfig => {
   const obj = typeof input === "object" && input ? (input as Partial<FocusConfig>) : {};
   return {
     focusMinutes: clampMinutes(obj.focusMinutes, 25, 180),
-    breakMinutes: clampMinutes(obj.breakMinutes, 5, 60)
+    breakMinutes: clampMinutes(obj.breakMinutes, 5, 60),
   };
 };
 
@@ -56,7 +56,7 @@ const resolveFocusState = (
       mode,
       running: false,
       endAt: null,
-      remainingMs: baseRemaining || (mode === "focus" ? focusMsValue : breakMsValue)
+      remainingMs: baseRemaining || (mode === "focus" ? focusMsValue : breakMsValue),
     };
   }
 
@@ -65,7 +65,7 @@ const resolveFocusState = (
       mode,
       running: true,
       endAt,
-      remainingMs: Math.max(0, endAt - nowTs)
+      remainingMs: Math.max(0, endAt - nowTs),
     };
   }
 
@@ -82,7 +82,7 @@ const resolveFocusState = (
     mode: nextMode,
     running: true,
     endAt: nowTs + remaining,
-    remainingMs: remaining
+    remainingMs: remaining,
   };
 };
 
@@ -175,17 +175,20 @@ export function useFocusTimer(now: number) {
     }
   }, []);
 
-  const applyConfig = useCallback((next: FocusConfig, persist = true) => {
-    setFocusMinutes(next.focusMinutes);
-    setBreakMinutes(next.breakMinutes);
-    if (!running) {
-      const nextTotal = mode === "focus" ? next.focusMinutes * 60 * 1000 : next.breakMinutes * 60 * 1000;
-      setRemainingMs(nextTotal);
-    }
-    if (persist) {
-      void writeFocusConfig(next);
-    }
-  }, [mode, running]);
+  const applyConfig = useCallback(
+    (next: FocusConfig, persist = true) => {
+      setFocusMinutes(next.focusMinutes);
+      setBreakMinutes(next.breakMinutes);
+      if (!running) {
+        const nextTotal = mode === "focus" ? next.focusMinutes * 60 * 1000 : next.breakMinutes * 60 * 1000;
+        setRemainingMs(nextTotal);
+      }
+      if (persist) {
+        void writeFocusConfig(next);
+      }
+    },
+    [mode, running]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -194,7 +197,12 @@ export function useFocusTimer(now: number) {
       if (cancelled) return;
       const config = normalizeFocusConfig(storedConfig);
       applyConfig(config, false);
-      const next = resolveFocusState(storedTimer, Date.now(), config.focusMinutes * 60 * 1000, config.breakMinutes * 60 * 1000);
+      const next = resolveFocusState(
+        storedTimer,
+        Date.now(),
+        config.focusMinutes * 60 * 1000,
+        config.breakMinutes * 60 * 1000
+      );
       applyState(next, false);
     })();
     return () => {
@@ -229,13 +237,13 @@ export function useFocusTimer(now: number) {
 
   const start = () => {
     if (running) return;
-    const baseRemaining = (running && endAt) ? Math.max(0, endAt - Date.now()) : remainingMs;
-    const nextRemaining = baseRemaining > 0 ? baseRemaining : (mode === "focus" ? focusMs : breakMs);
+    const baseRemaining = running && endAt ? Math.max(0, endAt - Date.now()) : remainingMs;
+    const nextRemaining = baseRemaining > 0 ? baseRemaining : mode === "focus" ? focusMs : breakMs;
     applyState({
       mode,
       running: true,
       endAt: Date.now() + nextRemaining,
-      remainingMs: nextRemaining
+      remainingMs: nextRemaining,
     });
   };
 
@@ -246,7 +254,7 @@ export function useFocusTimer(now: number) {
       mode,
       running: false,
       endAt: null,
-      remainingMs: nextRemaining
+      remainingMs: nextRemaining,
     });
   };
 
@@ -255,7 +263,7 @@ export function useFocusTimer(now: number) {
       mode: "focus",
       running: false,
       endAt: null,
-      remainingMs: focusMs
+      remainingMs: focusMs,
     });
   };
 
@@ -281,6 +289,6 @@ export function useFocusTimer(now: number) {
     pause,
     reset,
     updateFocusMinutes,
-    updateBreakMinutes
+    updateBreakMinutes,
   };
 }

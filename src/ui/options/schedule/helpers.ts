@@ -14,7 +14,7 @@ const PERIODS = [
   { label: "Manana", start: 360, end: 720 },
   { label: "Mediodia", start: 720, end: 840 },
   { label: "Tarde", start: 840, end: 1200 },
-  { label: "Noche", start: 1200, end: 1440 }
+  { label: "Noche", start: 1200, end: 1440 },
 ];
 
 // Convierte HH:MM a minutos.
@@ -45,7 +45,7 @@ function expandIntervalToRanges(startMin: number, endMin: number) {
   if (endMin < startMin) {
     return [
       { startMin, endMin: 1440 },
-      { startMin: 0, endMin }
+      { startMin: 0, endMin },
     ];
   }
   return [];
@@ -97,7 +97,7 @@ export function normalizeIntervals(intervals: Interval[]): Segment[] {
         startMin,
         endMin: m,
         mode: currentMode,
-        periodLabel: currentPeriod
+        periodLabel: currentPeriod,
       });
       startMin = m;
       currentMode = mode;
@@ -152,4 +152,3 @@ export function computeTotals(intervals: Interval[]) {
   const freeMinutes = 1440 - blockedMinutes;
   return { blockedMinutes, freeMinutes };
 }
-

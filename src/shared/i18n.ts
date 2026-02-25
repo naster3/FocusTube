@@ -8,16 +8,19 @@ type I18nEntry = { en: string; es: string; pt: string; fr: string };
 
 export type I18nKey = keyof typeof EN;
 
-export const STRINGS = Object.keys(EN).reduce((acc, key) => {
-  const typedKey = key as I18nKey;
-  acc[typedKey] = {
-    en: EN[typedKey],
-    es: ES[typedKey] ?? EN[typedKey],
-    pt: PT[typedKey] ?? EN[typedKey],
-    fr: FR[typedKey] ?? EN[typedKey]
-  };
-  return acc;
-}, {} as Record<I18nKey, I18nEntry>);
+export const STRINGS = Object.keys(EN).reduce(
+  (acc, key) => {
+    const typedKey = key as I18nKey;
+    acc[typedKey] = {
+      en: EN[typedKey],
+      es: ES[typedKey] ?? EN[typedKey],
+      pt: PT[typedKey] ?? EN[typedKey],
+      fr: FR[typedKey] ?? EN[typedKey],
+    };
+    return acc;
+  },
+  {} as Record<I18nKey, I18nEntry>
+);
 
 export function t(lang: Language, key: I18nKey): string {
   const entry = STRINGS[key];

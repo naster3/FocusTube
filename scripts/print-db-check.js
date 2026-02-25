@@ -23,7 +23,7 @@ const snippets = [
     const daily = await countStore(tx.objectStore("daily_stats"));
     console.log({ events, daily });
   })();
-})();`
+})();`,
   },
   {
     title: "SQLite file size (sqlite_file/main)",
@@ -48,8 +48,8 @@ const snippets = [
     const row = await getRow(tx.objectStore("sqlite_file"), "main");
     console.log("sqlite_file bytes:", row?.data?.byteLength || 0);
   })();
-})();`
-  }
+})();`,
+  },
 ];
 
 console.log("Run these snippets in the extension Service Worker DevTools console.");

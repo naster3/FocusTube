@@ -106,7 +106,7 @@ function defaultDaily(day: string, now: number): DailyStats {
     blockedTime: 0,
     sessions: 0,
     timeByDomain: {},
-    updatedAt: now
+    updatedAt: now,
   };
 }
 
@@ -128,7 +128,7 @@ export async function ensureSqliteReady() {
           return chrome.runtime.getURL(wasmUrl);
         }
         return wasmUrl;
-      }
+      },
     });
     const saved = await loadSqliteFile();
     const db = saved ? new SQL.Database(new Uint8Array(saved)) : new SQL.Database();
@@ -172,15 +172,7 @@ export async function flushToSqlite(events: Omit<DbEvent, "id">[], dailyDeltas: 
     "INSERT INTO events (ts, day, type, domain, url, deltaSec, tabId) VALUES (?, ?, ?, ?, ?, ?, ?);"
   );
   for (const e of events) {
-    insertEvent.run([
-      e.ts,
-      e.day,
-      e.type,
-      e.domain ?? null,
-      e.url ?? null,
-      e.deltaSec ?? null,
-      e.tabId ?? null
-    ]);
+    insertEvent.run([e.ts, e.day, e.type, e.domain ?? null, e.url ?? null, e.deltaSec ?? null, e.tabId ?? null]);
   }
   insertEvent.free();
 
@@ -210,7 +202,7 @@ export async function flushToSqlite(events: Omit<DbEvent, "id">[], dailyDeltas: 
           blockedTime: Number(selectDaily.getAsObject().blockedTime || 0),
           sessions: Number(selectDaily.getAsObject().sessions || 0),
           timeByDomain: String(selectDaily.getAsObject().timeByDomain || ""),
-          updatedAt: Number(selectDaily.getAsObject().updatedAt || 0)
+          updatedAt: Number(selectDaily.getAsObject().updatedAt || 0),
         }
       : null;
     selectDaily.reset();
@@ -223,7 +215,7 @@ export async function flushToSqlite(events: Omit<DbEvent, "id">[], dailyDeltas: 
           blockedTime: row.blockedTime,
           sessions: row.sessions,
           timeByDomain: parseTimeByDomain(row.timeByDomain),
-          updatedAt: row.updatedAt
+          updatedAt: row.updatedAt,
         }
       : defaultDaily(day, now);
 
@@ -246,7 +238,7 @@ export async function flushToSqlite(events: Omit<DbEvent, "id">[], dailyDeltas: 
       current.blockedTime,
       current.sessions,
       JSON.stringify(current.timeByDomain),
-      current.updatedAt
+      current.updatedAt,
     ]);
   }
   selectDaily.free();

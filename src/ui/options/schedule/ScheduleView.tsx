@@ -3,7 +3,14 @@ import React, { useMemo, useState, useEffect } from "react";
 import type { Interval, IntervalWeek, Language } from "../../../domain/settings/types";
 import { t, tf } from "../../../shared/i18n";
 import { DAY_ORDER_MONDAY_FIRST, getDayLabel, getDayLabelsInOrder } from "../../../shared/i18n/dates";
-import { Segment, computeTotals, detectOverlaps, minutesToTime, normalizeIntervals, parseTimeToMinutes } from "./helpers";
+import {
+  Segment,
+  computeTotals,
+  detectOverlaps,
+  minutesToTime,
+  normalizeIntervals,
+  parseTimeToMinutes,
+} from "./helpers";
 import { EmptyState } from "../../shared/components/EmptyState";
 
 // Orden visual Lunes a Domingo.
@@ -17,22 +24,22 @@ const PERIOD_LABELS_BY_LANG: Record<string, Record<string, string>> = {
     Manana: "Morning",
     Mediodia: "Midday",
     Tarde: "Afternoon",
-    Noche: "Night"
+    Noche: "Night",
   },
   pt: {
     Madrugada: "Madrugada",
     Manana: "Manha",
     Mediodia: "Meio-dia",
     Tarde: "Tarde",
-    Noche: "Noite"
+    Noche: "Noite",
   },
   fr: {
     Madrugada: "Nuit",
     Manana: "Matin",
     Mediodia: "Midi",
     Tarde: "Apres-midi",
-    Noche: "Soir"
-  }
+    Noche: "Soir",
+  },
 };
 
 type ScheduleViewProps = {
@@ -51,10 +58,7 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, language, onChange
   const [editing, setEditing] = useState<Interval | null>(null);
 
   // Intervalos del dia seleccionado.
-  const intervals = useMemo(
-    () => intervalsByDay[selectedDay] ?? EMPTY_INTERVALS,
-    [intervalsByDay, selectedDay]
-  );
+  const intervals = useMemo(() => intervalsByDay[selectedDay] ?? EMPTY_INTERVALS, [intervalsByDay, selectedDay]);
   const overlaps = useMemo(() => detectOverlaps(intervals), [intervals]);
   const carryOver = useMemo(() => {
     const prevDay = (selectedDay + 6) % 7;
@@ -87,8 +91,8 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, language, onChange
         start: "00:00" as Interval["start"],
         end: minutesToTime(untilMin) as Interval["end"],
         mode: "blocked" as Interval["mode"],
-        enabled: true
-      }
+        enabled: true,
+      },
     };
   }, [intervalsByDay, selectedDay]);
 
@@ -120,7 +124,7 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, language, onChange
   const handleDelete = (id: string) => {
     onChange({
       ...intervalsByDay,
-      [selectedDay]: intervals.filter((i) => i.id !== id)
+      [selectedDay]: intervals.filter((i) => i.id !== id),
     });
   };
 
@@ -131,7 +135,7 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, language, onChange
         if (i.id !== id) return i;
         const isEnabled = i.enabled !== false;
         return { ...i, enabled: !isEnabled };
-      })
+      }),
     });
   };
 
@@ -195,7 +199,7 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, language, onChange
           <div className="mt-3 text-sm text-slate-700">
             {tf(language, "schedule.blocked_free", {
               blocked: formatMinutes(totals.blockedMinutes),
-              free: formatMinutes(totals.freeMinutes)
+              free: formatMinutes(totals.freeMinutes),
             })}
           </div>
 
@@ -258,7 +262,7 @@ function DayTimelineBar({
   timeFormat12h,
   language,
   carryOverMinutes,
-  carryOverLabel
+  carryOverLabel,
 }: {
   intervals: Interval[];
   timeFormat12h: boolean;
@@ -294,12 +298,7 @@ function DayTimelineBar({
       <div className="relative">
         <div className="flex h-12 w-full overflow-hidden rounded-md border border-slate-200 bg-white">
           {segments.map((segment) => (
-            <TimeBlockSegment
-              key={segment.id}
-              segment={segment}
-              timeFormat12h={timeFormat12h}
-              language={language}
-            />
+            <TimeBlockSegment key={segment.id} segment={segment} timeFormat12h={timeFormat12h} language={language} />
           ))}
         </div>
 
@@ -313,7 +312,7 @@ function DayTimelineBar({
               className="h-full w-full border-r border-rose-400/70"
               style={{
                 backgroundImage:
-                  "repeating-linear-gradient(135deg, rgba(248,113,113,0.35) 0, rgba(248,113,113,0.35) 6px, rgba(255,255,255,0.25) 6px, rgba(255,255,255,0.25) 12px)"
+                  "repeating-linear-gradient(135deg, rgba(248,113,113,0.35) 0, rgba(248,113,113,0.35) 6px, rgba(255,255,255,0.25) 6px, rgba(255,255,255,0.25) 12px)",
               }}
             />
           </div>
@@ -338,7 +337,7 @@ function WeekTimelineBars({
   selectedDay,
   timeFormat12h,
   language,
-  onSelectDay
+  onSelectDay,
 }: {
   intervalsByDay: IntervalWeek;
   selectedDay: number;
@@ -387,7 +386,7 @@ function TimeBlockSegment({
   segment,
   compact,
   timeFormat12h,
-  language
+  language,
 }: {
   segment: Segment;
   compact?: boolean;
@@ -397,7 +396,8 @@ function TimeBlockSegment({
   const width = ((segment.endMin - segment.startMin) / 1440) * 100;
   const start = formatMinuteLabel(segment.startMin, timeFormat12h);
   const end = formatMinuteLabel(segment.endMin, timeFormat12h);
-  const modeLabel = segment.mode === "blocked" ? t(language, "schedule.blocked_label") : t(language, "schedule.free_label");
+  const modeLabel =
+    segment.mode === "blocked" ? t(language, "schedule.blocked_label") : t(language, "schedule.free_label");
   const period = translatePeriodLabel(segment.periodLabel, language);
   const isNightSegment = segment.periodLabel === "Madrugada" || segment.periodLabel === "Noche";
 
@@ -431,7 +431,7 @@ function IntervalList({
   timeFormat12h,
   onEdit,
   onDelete,
-  onToggle
+  onToggle,
 }: {
   intervals: Interval[];
   language: Language;
@@ -487,11 +487,7 @@ function IntervalList({
                 }`}
                 onClick={() => onToggle(interval.id)}
               >
-                <span
-                  className={`h-2 w-2 rounded-full ${
-                    isEnabled ? "bg-emerald-500" : "bg-slate-400"
-                  }`}
-                />
+                <span className={`h-2 w-2 rounded-full ${isEnabled ? "bg-emerald-500" : "bg-slate-400"}`} />
                 {isEnabled ? t(language, "schedule.list.enabled") : t(language, "schedule.list.disabled")}
               </button>
               <div className="flex justify-end gap-2">
@@ -516,7 +512,7 @@ function AddEditIntervalModal({
   interval,
   language,
   onClose,
-  onSave
+  onSave,
 }: {
   open: boolean;
   interval: Interval | null;
@@ -559,7 +555,7 @@ function AddEditIntervalModal({
       start,
       end,
       mode,
-      enabled
+      enabled,
     });
   };
 
@@ -586,9 +582,7 @@ function AddEditIntervalModal({
         </p>
 
         {error && (
-          <div className="mb-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 px-3 py-2 rounded">
-            {error}
-          </div>
+          <div className="mb-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 px-3 py-2 rounded">{error}</div>
         )}
 
         <div className="grid gap-3">

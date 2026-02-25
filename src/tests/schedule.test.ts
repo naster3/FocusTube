@@ -6,9 +6,9 @@ import { isWithinBlockedSchedule, parseTimeToMinutes } from "../domain/schedule/
 const intervals = {
   1: [
     { id: "a1", start: "08:00", end: "10:00", mode: "blocked", enabled: true },
-    { id: "a2", start: "14:00", end: "16:00", mode: "blocked", enabled: true }
+    { id: "a2", start: "14:00", end: "16:00", mode: "blocked", enabled: true },
   ],
-  2: [{ id: "b1", start: "22:00", end: "02:00", mode: "blocked", enabled: true }]
+  2: [{ id: "b1", start: "22:00", end: "02:00", mode: "blocked", enabled: true }],
 } satisfies IntervalWeek;
 
 // Suite de pruebas para utilidades de horarios.

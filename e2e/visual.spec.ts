@@ -4,7 +4,7 @@ const viewports: Record<string, { width: number; height: number }> = {
   popup: { width: 420, height: 720 },
   dashboard: { width: 1440, height: 1200 },
   blocked: { width: 1280, height: 960 },
-  options: { width: 1440, height: 1200 }
+  options: { width: 1440, height: 1200 },
 };
 
 const pages = [
@@ -12,9 +12,9 @@ const pages = [
   { key: "dashboard", url: "/src/ui/dashboard/index.html" },
   {
     key: "blocked",
-    url: "/src/ui/blocked/index.html?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dabc"
+    url: "/src/ui/blocked/index.html?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dabc",
   },
-  { key: "options", url: "/src/ui/options/index.html" }
+  { key: "options", url: "/src/ui/options/index.html" },
 ] as const;
 
 test.describe("visual snapshots @visual", () => {
@@ -31,7 +31,7 @@ test.describe("visual snapshots @visual", () => {
         await page.addInitScript(() => {
           const nextSettings = {
             blockedDomains: ["youtube.com"],
-            blockedDomainTags: { "youtube.com": ["intervalos"] }
+            blockedDomainTags: { "youtube.com": ["intervalos"] },
           };
           window.localStorage.setItem("focustube:settings", JSON.stringify(nextSettings));
         });
@@ -48,14 +48,14 @@ test.describe("visual snapshots @visual", () => {
             transition: none !important;
             caret-color: transparent !important;
           }
-        `
+        `,
       });
 
       await page.waitForLoadState("networkidle");
       await page.waitForTimeout(150);
       await page.screenshot({
         path: `test-results/visual/${entry.key}.png`,
-        fullPage: true
+        fullPage: true,
       });
     });
   }

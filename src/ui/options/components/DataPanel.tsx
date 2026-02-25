@@ -24,7 +24,7 @@ export function DataPanel({
   onChangeSettingsFormat,
   onChangeBackupFormat,
   onExportData,
-  onImportData
+  onImportData,
 }: DataPanelProps) {
   return (
     <section className="panel data-panel" data-guide="export">
@@ -40,7 +40,10 @@ export function DataPanel({
           <div className="data-actions">
             <label className="data-select">
               <span>{t(language, "options.data.format_label")}</span>
-              <select value={settingsExportFormat} onChange={(event) => onChangeSettingsFormat(event.target.value as ExportFormat)}>
+              <select
+                value={settingsExportFormat}
+                onChange={(event) => onChangeSettingsFormat(event.target.value as ExportFormat)}
+              >
                 {exportFormatOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -72,7 +75,10 @@ export function DataPanel({
           <div className="data-actions">
             <label className="data-select">
               <span>{t(language, "options.data.format_label")}</span>
-              <select value={backupExportFormat} onChange={(event) => onChangeBackupFormat(event.target.value as ExportFormat)}>
+              <select
+                value={backupExportFormat}
+                onChange={(event) => onChangeBackupFormat(event.target.value as ExportFormat)}
+              >
                 {exportFormatOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
