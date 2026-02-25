@@ -6,18 +6,18 @@ export default defineConfig({
   reporter: "list",
   use: {
     baseURL: "http://127.0.0.1:43173",
-    trace: "on-first-retry"
+    trace: "on-first-retry",
   },
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] }
-    }
+      use: { ...devices["Desktop Chrome"] },
+    },
   ],
   webServer: {
-    command: "npm run dev -- --host 127.0.0.1 --port 43173 --strictPort",
+    command: "pnpm dev --host 127.0.0.1 --port 43173 --strictPort",
     url: "http://127.0.0.1:43173/src/ui/popup/index.html",
     reuseExistingServer: false,
-    timeout: 120000
-  }
+    timeout: 120000,
+  },
 });
