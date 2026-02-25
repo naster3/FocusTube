@@ -17,26 +17,27 @@ Manuel Adolfo Deño de los Santos
 
 ## Requisitos
 
-- Node.js + npm
+- Node.js 20+
+- pnpm (recomendado via `corepack enable`)
 
 ## Desarrollo (UI)
 
 1. Instalar dependencias:
 
 ```bash
-npm i
+pnpm install
 ```
 
 1. Servidor dev (solo UI):
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ## Build
 
 ```bash
-npm run build
+pnpm build
 ```
 
 El bundle sale en `dist/`.
@@ -49,12 +50,12 @@ El bundle sale en `dist/`.
 
 ## Scripts utiles
 
-- `npm run dev`: UI en modo dev.
-- `npm run build`: build completo + manifest.
-- `npm run test`: tests (vitest).
-- `npm run encoding:check`: valida UTF-8 (sin BOM) + normalizacion NFC + deteccion de mojibake.
-- `npm run encoding:fix`: corrige automaticamente encoding/normalizacion en archivos de texto.
-- `npm run db:check`: diagnostico de DB (devtools del service worker).
+- `pnpm dev`: UI en modo dev.
+- `pnpm build`: build completo + manifest.
+- `pnpm test`: tests (vitest).
+- `pnpm encoding:check`: valida UTF-8 (sin BOM) + normalizacion NFC + deteccion de mojibake.
+- `pnpm encoding:fix`: corrige automaticamente encoding/normalizacion en archivos de texto.
+- `pnpm db:check`: diagnostico de DB (devtools del service worker).
 
 ## Estructura
 

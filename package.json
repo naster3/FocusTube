@@ -1,9 +1,10 @@
 {
   "name": "focus-tube-blocker",
-  "version": "3.1.3",
+  "version": "3.1.5",
   "author": "Manuel Adolfo Deño de los Santos",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.28.0",
   "scripts": {
     "dev": "vite",
     "version:sync": "node scripts/sync-version.js",
