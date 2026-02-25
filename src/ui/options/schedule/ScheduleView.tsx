@@ -399,9 +399,13 @@ function TimeBlockSegment({
   const end = formatMinuteLabel(segment.endMin, timeFormat12h);
   const modeLabel = segment.mode === "blocked" ? t(language, "schedule.blocked_label") : t(language, "schedule.free_label");
   const period = translatePeriodLabel(segment.periodLabel, language);
+  const isNightSegment = segment.periodLabel === "Madrugada" || segment.periodLabel === "Noche";
 
-  const base =
-    segment.mode === "blocked"
+  const base = isNightSegment
+    ? segment.mode === "blocked"
+      ? "bg-indigo-200 text-indigo-900 border-indigo-300"
+      : "bg-sky-100 text-sky-900 border-sky-300"
+    : segment.mode === "blocked"
       ? "bg-rose-200 text-rose-900 border-rose-300"
       : "bg-emerald-100 text-emerald-900 border-emerald-300";
 

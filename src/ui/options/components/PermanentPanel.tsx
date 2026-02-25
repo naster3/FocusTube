@@ -101,13 +101,11 @@ export function PermanentPanel({
             <span className="weekly-status-label">{t(language, "options.weekly_unblock.status.title")}</span>
             <span className="weekly-status-value">{weeklyStatusText}</span>
           </div>
-          {settings.weeklyUnblockEnabled && canStartWeekly ? (
-            <div className="weekly-actions">
-              <button type="button" onClick={onStartWeeklySession}>
-                {t(language, "options.weekly_unblock.action.start")}
-              </button>
-            </div>
-          ) : null}
+          <div className="weekly-actions">
+            <button type="button" onClick={onStartWeeklySession} disabled={!settings.weeklyUnblockEnabled || !canStartWeekly}>
+              {t(language, "options.weekly_unblock.action.start")}
+            </button>
+          </div>
         </div>
       </div>
     </section>

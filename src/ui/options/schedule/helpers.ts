@@ -10,7 +10,7 @@ export type Segment = {
 
 // Periodos fijos del dia.
 const PERIODS = [
-  { label: "Madrugada", start: 0, end: 360 },
+  { label: "Noche", start: 0, end: 360 },
   { label: "Manana", start: 360, end: 720 },
   { label: "Mediodia", start: 720, end: 840 },
   { label: "Tarde", start: 840, end: 1200 },
@@ -152,5 +152,4 @@ export function computeTotals(intervals: Interval[]) {
   const freeMinutes = 1440 - blockedMinutes;
   return { blockedMinutes, freeMinutes };
 }
-
 
