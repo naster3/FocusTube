@@ -71,7 +71,16 @@
 }
 
 .focus-card {
-  gap: 10px;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.focus-card.phase-burst .focus-hero {
+  animation: focus-phase-burst 0.52s ease;
+}
+
+.focus-card.phase-burst .focus-progress-shell {
+  animation: focus-ring-pulse 0.52s ease;
 }
 
 .focus-header {
@@ -114,11 +123,101 @@
   border-color: var(--status-success-border);
 }
 
+.focus-hero {
+  position: relative;
+  border-radius: 16px;
+  padding: 14px;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.8), transparent 58%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.04), rgba(15, 23, 42, 0.01));
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  display: grid;
+  gap: 12px;
+}
+
+.focus-hero.focus {
+  background:
+    radial-gradient(circle at top, rgba(191, 219, 254, 0.8), transparent 58%),
+    linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(14, 165, 233, 0.06));
+}
+
+.focus-hero.break {
+  background:
+    radial-gradient(circle at top, rgba(187, 247, 208, 0.82), transparent 58%),
+    linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.06));
+}
+
+.focus-progress-shell {
+  --focus-progress: 0deg;
+  width: 148px;
+  height: 148px;
+  margin: 0 auto;
+  border-radius: 999px;
+  background:
+    conic-gradient(var(--accent) 0deg, var(--accent) var(--focus-progress), rgba(148, 163, 184, 0.18) var(--focus-progress), rgba(148, 163, 184, 0.18) 360deg);
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.focus-progress-core {
+  width: 118px;
+  height: 118px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 12px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
+}
+
+.focus-progress-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
 .focus-timer {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
   letter-spacing: 0.4px;
   text-align: center;
+  color: var(--text-primary);
+}
+
+.focus-progress-meta {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.focus-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.focus-stat {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  padding: 10px;
+  display: grid;
+  gap: 3px;
+}
+
+.focus-stat span {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.focus-stat strong {
+  font-size: 16px;
   color: var(--text-primary);
 }
 
@@ -142,21 +241,52 @@
   font-size: 12px;
 }
 
+.focus-presets {
+  display: grid;
+  gap: 8px;
+}
+
+.focus-preset-group {
+  display: flex;
+  gap: 6px;
+}
+
+.focus-preset {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  background: rgba(59, 130, 246, 0.08);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.focus-preset.ghost {
+  border-color: rgba(16, 185, 129, 0.18);
+  background: rgba(16, 185, 129, 0.08);
+}
+
 .focus-actions {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
 }
 
 .focus-btn {
-  flex: 1 1 70px;
+  flex: 1 1 0;
   border: 1px solid var(--accent);
   background: var(--accent);
   color: var(--accent-contrast);
-  padding: 6px 8px;
-  border-radius: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
   font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
+}
+
+.focus-btn.primary {
+  box-shadow: 0 8px 18px rgba(59, 130, 246, 0.22);
 }
 
 .focus-btn.ghost {
@@ -290,16 +420,61 @@
   color: var(--status-success-text);
 }
 
+:root[data-theme="dark"] .focus-hero {
+  border-color: rgba(148, 163, 184, 0.16);
+  background:
+    radial-gradient(circle at top, rgba(51, 65, 85, 0.7), transparent 58%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.82), rgba(30, 41, 59, 0.92));
+}
+
+:root[data-theme="dark"] .focus-hero.focus {
+  background:
+    radial-gradient(circle at top, rgba(30, 64, 175, 0.55), transparent 58%),
+    linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.94));
+}
+
+:root[data-theme="dark"] .focus-hero.break {
+  background:
+    radial-gradient(circle at top, rgba(22, 101, 52, 0.5), transparent 58%),
+    linear-gradient(135deg, rgba(20, 30, 25, 0.96), rgba(15, 23, 42, 0.94));
+}
+
+:root[data-theme="dark"] .focus-progress-core,
+:root[data-theme="dark"] .focus-stat {
+  background: rgba(15, 23, 42, 0.78);
+  border-color: rgba(148, 163, 184, 0.14);
+}
+
+:root[data-theme="dark"] .focus-progress-shell {
+  background:
+    conic-gradient(var(--accent) 0deg, var(--accent) var(--focus-progress), rgba(71, 85, 105, 0.42) var(--focus-progress), rgba(71, 85, 105, 0.42) 360deg);
+}
+
 :root[data-theme="dark"] .focus-btn {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-contrast);
 }
 
+:root[data-theme="dark"] .focus-btn.primary {
+  box-shadow: 0 8px 18px rgba(14, 165, 233, 0.16);
+}
+
 :root[data-theme="dark"] .focus-btn.ghost {
   background: var(--surface-strong);
   color: var(--text-primary);
   border-color: var(--border-soft);
+}
+
+:root[data-theme="dark"] .focus-preset {
+  border-color: rgba(59, 130, 246, 0.32);
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .focus-preset.ghost {
+  border-color: rgba(16, 185, 129, 0.32);
+  background: rgba(16, 185, 129, 0.12);
 }
 
 :root[data-theme="dark"] .primary {
@@ -330,5 +505,40 @@
     transition: none;
     transform: none;
     animation: none;
+  }
+
+  .focus-card.phase-burst .focus-hero,
+  .focus-card.phase-burst .focus-progress-shell {
+    animation: none;
+  }
+}
+
+@keyframes focus-phase-burst {
+  0% {
+    transform: scale(0.985);
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+  }
+  45% {
+    transform: scale(1.015);
+    box-shadow: 0 16px 28px rgba(59, 130, 246, 0.12);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+@keyframes focus-ring-pulse {
+  0% {
+    transform: scale(0.98);
+    filter: saturate(1);
+  }
+  50% {
+    transform: scale(1.03);
+    filter: saturate(1.12);
+  }
+  100% {
+    transform: scale(1);
+    filter: saturate(1);
   }
 }
