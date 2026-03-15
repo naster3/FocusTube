@@ -8,6 +8,7 @@ type BlockerScheduleCardProps = {
   scheduleCountdown: string;
   scheduleBlocked: boolean;
   nextBlockDuration: string | null;
+  scheduleHint: string | null;
 };
 
 export function BlockerScheduleCard({
@@ -16,6 +17,7 @@ export function BlockerScheduleCard({
   scheduleCountdown,
   scheduleBlocked,
   nextBlockDuration,
+  scheduleHint,
 }: BlockerScheduleCardProps) {
   return (
     <div className="card">
@@ -31,6 +33,12 @@ export function BlockerScheduleCard({
         <div className="row">
           <span>{t(lang, "popup.next_block")}</span>
           <strong>{nextBlockDuration}</strong>
+        </div>
+      ) : null}
+      {scheduleHint ? (
+        <div className="row">
+          <span>{t(lang, "popup.schedule_note")}</span>
+          <strong>{scheduleHint}</strong>
         </div>
       ) : null}
     </div>

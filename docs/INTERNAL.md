@@ -62,8 +62,8 @@ FocusTube Blocker es una extension MV3 para bloquear sitios web y contenidos por
 ## Tests
 
 - `vitest run` (ver `src/tests/schedule.test.ts`).
-- `npm run encoding:check` valida UTF-8 sin BOM + NFC y detecta mojibake en archivos de texto.
-- `npm run encoding:fix` normaliza automaticamente UTF-8/NFC en el repo.
+- `pnpm run encoding:check` valida UTF-8 sin BOM + NFC y detecta mojibake en archivos de texto.
+- `pnpm run encoding:fix` normaliza automaticamente UTF-8/NFC en el repo.
 
 ## Puntos a vigilar
 

@@ -74,6 +74,7 @@ export function useMetricsCharts({
     } satisfies ChartOptions<"bar">;
 
     const createCharts = async () => {
+      // Chart.js se carga bajo demanda para no penalizar popup/dashboard inicial.
       const { default: ChartCtor } = await import("chart.js/auto");
       if (cancelled) {
         return;
@@ -192,6 +193,7 @@ export function useMetricsCharts({
           } satisfies ChartOptions<"pie">,
         });
       } else if (!pieSeries) {
+        // Si desaparecen datos del pie chart, destruimos la instancia para liberar canvas/eventos.
         pieChartRef.current?.destroy();
         pieChartRef.current = null;
       }

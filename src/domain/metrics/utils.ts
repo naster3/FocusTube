@@ -24,6 +24,7 @@ export const getRecentDays = (count: number) => {
 
 export const percentDelta = (current: number, previous: number) => {
   if (previous === 0) {
+    // Evita dividir por cero y presenta una lectura simple para el caso "aparecio actividad".
     return current === 0 ? "0%" : "+100%";
   }
   const delta = ((current - previous) / previous) * 100;
@@ -40,4 +41,5 @@ export const deltaClass = (current: number, previous: number) => {
 };
 
 export const sumMetricRange = (metrics: Metrics, keys: string[], field: keyof Metrics) =>
+  // Se usa solo con mapas diarios numéricos del shape de Metrics.
   keys.reduce((acc, key) => acc + ((metrics[field] as Record<string, number>)[key] || 0), 0);

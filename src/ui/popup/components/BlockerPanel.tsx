@@ -13,6 +13,7 @@ type BlockerPanelProps = {
   scheduleCountdown: string;
   scheduleBlocked: boolean;
   nextBlockDuration: string | null;
+  scheduleHint: string | null;
   browserTimeText: string;
   tzOffsetMin: number;
   nextChangeText: string | null;
@@ -29,6 +30,7 @@ export function BlockerPanel({
   scheduleCountdown,
   scheduleBlocked,
   nextBlockDuration,
+  scheduleHint,
   browserTimeText,
   tzOffsetMin,
   nextChangeText,
@@ -45,6 +47,7 @@ export function BlockerPanel({
         scheduleCountdown={scheduleCountdown}
         scheduleBlocked={scheduleBlocked}
         nextBlockDuration={nextBlockDuration}
+        scheduleHint={scheduleHint}
       />
       <BlockerDebugSection
         lang={lang}

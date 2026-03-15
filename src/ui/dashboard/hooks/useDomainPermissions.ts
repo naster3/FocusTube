@@ -45,6 +45,7 @@ export function useDomainPermissions(domains: string[]) {
         setPermissions({});
         return;
       }
+      // El dashboard muestra el estado real del permiso opcional para cada dominio configurado.
       const entries = await Promise.all(domains.map(async (domain) => [domain, await readPermission(domain)] as const));
       if (!cancelled) {
         setPermissions(Object.fromEntries(entries));

@@ -1,6 +1,7 @@
 import type { Settings } from "../settings/types";
 
 function getLocalDayKey(date: Date) {
+  // Usamos fecha local, no UTC, para que la "sesion semanal" coincida con la percepcion del usuario.
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -17,6 +18,7 @@ export function canStartWeeklySession(settings: Settings, now = Date.now()) {
   const allowedDays = settings.weeklyUnblockDays ?? [];
   if (!allowedDays.includes(today.getDay())) return false;
   const dayKey = getLocalDayKey(today);
+  // La llave guardada marca el ultimo dia local en que ya se consumio la sesion.
   return settings.weeklyUnblockLastWeek !== dayKey;
 }
 

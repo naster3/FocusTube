@@ -180,6 +180,7 @@ function getStorageArea(): StorageAreaLike {
   if (hasChromeStorage()) {
     return chrome.storage.local;
   }
+  // En desarrollo permitimos correr la UI fuera de la extension usando localStorage.
   if (!DEV_FALLBACK) {
     throw new Error("chrome.storage.local is not available outside the extension context.");
   }
@@ -378,6 +379,7 @@ function mergeIntervalsByDayWithFallback(
   fallbackIntervals: IntervalWeek,
   fallbackSchedules?: WeekSchedule
 ): IntervalWeek {
+  // Si el usuario viene de una version vieja, reconstruimos los intervalos desde el horario clasico.
   if (!input) {
     return fallbackSchedules ? schedulesToIntervals(fallbackSchedules) : cloneIntervalWeek(fallbackIntervals);
   }
@@ -417,6 +419,7 @@ function normalizeBlockedDomainTags(
     if (!Array.isArray(value)) {
       continue;
     }
+    // Conserva solo tags validos y asociados a dominios que siguen bloqueados.
     const tags = value.map((tag) => String(tag)).filter((tag): tag is DomainTag => isDomainTag(tag));
     const unique = Array.from(new Set(tags));
     if (unique.length > 0) {
@@ -427,6 +430,7 @@ function normalizeBlockedDomainTags(
 }
 
 function mergeProfile(input: Partial<ProfileSettings> | undefined, fallback: ProfileSettings): ProfileSettings {
+  // Cada perfil se normaliza de forma independiente para que adult/kid puedan migrarse sin pisarse.
   const blockedDomains = Array.isArray(input?.blockedDomains)
     ? Array.from(
         new Set(
@@ -541,6 +545,7 @@ function migrateSettingsInput(input: Partial<Settings>) {
   let next = { ...input } as Partial<Settings> & Record<string, unknown>;
   let version = toSchemaVersion(next.version, 1);
 
+  // Las migraciones se aplican en cadena para soportar upgrades desde cualquier version previa.
   if (version < 2) {
     next = migrateSettingsV1ToV2(next);
     version = 2;

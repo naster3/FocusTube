@@ -50,6 +50,7 @@ export async function ensureSettingsLoaded() {
     try {
       settingsCache = await getSettings();
     } catch {
+      // Si storage falla, mantenemos defaults para que el worker siga respondiendo.
       settingsCache = DEFAULT_SETTINGS;
     }
   }
@@ -62,6 +63,7 @@ export async function ensureMetricsLoaded() {
     try {
       metricsCache = await getMetrics();
     } catch {
+      // Mismo criterio que settings: degradar a defaults antes que romper mensajeria/UI.
       metricsCache = DEFAULT_METRICS;
     }
   }

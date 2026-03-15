@@ -66,6 +66,22 @@ export const formatDateTime = (
   }
 };
 
+export const formatTime = (
+  language: Language,
+  ts: number,
+  timeFormat12h: boolean,
+  timeStyle: "short" | "medium" = "short"
+) => {
+  try {
+    return new Intl.DateTimeFormat(getLocale(language), {
+      timeStyle,
+      hour12: timeFormat12h,
+    }).format(new Date(ts));
+  } catch {
+    return new Date(ts).toLocaleTimeString();
+  }
+};
+
 export const formatDateRange = (language: Language, start: Date, end: Date) => {
   return `${formatDate(language, start.getTime())} - ${formatDate(language, end.getTime())}`;
 };

@@ -72,6 +72,7 @@ const resolveFocusState = (
   let elapsed = nowTs - endAt;
   let nextMode: FocusTimerMode = mode === "focus" ? "break" : "focus";
   let nextDuration = nextMode === "focus" ? focusMsValue : breakMsValue;
+  // Si la extension estuvo cerrada, avanzamos todas las rondas vencidas hasta el estado real actual.
   while (elapsed >= nextDuration) {
     elapsed -= nextDuration;
     nextMode = nextMode === "focus" ? "break" : "focus";
@@ -180,6 +181,7 @@ export function useFocusTimer(now: number) {
       setFocusMinutes(next.focusMinutes);
       setBreakMinutes(next.breakMinutes);
       if (!running) {
+        // Al editar la configuracion en pausa, reseteamos el total visible sin arrancar el reloj.
         const nextTotal = mode === "focus" ? next.focusMinutes * 60 * 1000 : next.breakMinutes * 60 * 1000;
         setRemainingMs(nextTotal);
       }
@@ -228,6 +230,7 @@ export function useFocusTimer(now: number) {
         applyConfig(config, false);
       }
       if (changes[FOCUS_TIMER_KEY]?.newValue) {
+        // Recalcula contra `Date.now()` para que otra pestaña no deje un `remainingMs` obsoleto.
         const next = resolveFocusState(changes[FOCUS_TIMER_KEY].newValue, Date.now(), focusMs, breakMs);
         applyState(next, false);
       }

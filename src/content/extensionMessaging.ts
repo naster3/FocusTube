@@ -20,6 +20,7 @@ export function safeSendMessage<T extends MessageType>(
   try {
     chrome.runtime.sendMessage(message, (response) => {
       const err = chrome.runtime.lastError;
+      // Durante recargas de la extension, el content script puede seguir vivo unos ms mas que el background.
       if (err?.message?.includes("Extension context invalidated")) {
         return;
       }
@@ -58,6 +59,7 @@ export function trackVisibilityChanges() {
 // Detecta cambios de URL en SPA (YouTube) y dispara callback.
 export function trackUrlChanges(onChange: () => void) {
   let lastUrl = window.location.href;
+  // En sitios SPA preferimos polling corto; evita engancharse a APIs privadas del sitio.
   window.setInterval(() => {
     if (!canUseExtension()) {
       return;

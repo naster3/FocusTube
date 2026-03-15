@@ -79,18 +79,18 @@ pnpm run version:patch
 1. Ejecutar calidad local:
 
 ```bash
-npm run encoding:check
-npm run lint
-npm run typecheck
-npm test
-npm run test:e2e
-npm run build
+pnpm run encoding:check
+pnpm run lint
+pnpm run typecheck
+pnpm test
+pnpm run test:e2e
+pnpm run build
 ```
 
 1. Si hubo cambios de UI/CSS, correr tambien:
 
 ```bash
-npm run test:e2e:visual
+pnpm run test:e2e:visual
 ```
 
 1. Validar artefacto en `dist/` y cargar unpacked en Chrome.

@@ -112,6 +112,7 @@ export function Options() {
   const getDomainOrigins = (domain: string) => [`*://${domain}/*`, `*://*.${domain}/*`];
 
   const requestDomainPermission = async (domains: string[]) => {
+    // Los dominios sociales usan permisos opcionales para no pedir acceso amplio desde la instalacion.
     if (typeof chrome === "undefined" || !chrome.permissions?.request) {
       devLog("chrome.permissions.request not available; skipping permission prompt (dev only).");
       return true;
@@ -186,6 +187,7 @@ export function Options() {
       await saveSettings({ ...settings, blockedDomains: nextDomains, blockedDomainTags: nextTags });
       return;
     }
+    // Quitamos solo el tag de este origen; si otro flujo sigue usando el dominio, no se elimina.
     const nextTags = { ...settings.blockedDomainTags };
     const remainingDomains = new Set(settings.blockedDomains);
     const removed: string[] = [];
@@ -251,6 +253,7 @@ export function Options() {
       return;
     }
     const [currentSettings, currentMetrics] = await Promise.all([getSettings(), getMetrics()]);
+    // El backup guarda estado funcional completo para poder restaurar la extension en otro navegador.
     const payload = {
       version: 1,
       createdAt: new Date().toISOString(),
@@ -299,6 +302,7 @@ export function Options() {
           payload?: unknown;
         };
         if (wrapper._focustube) {
+          // Validamos firma/version antes de tocar storage para rechazar archivos ajenos o viejos.
           if (wrapper._focustube.signature !== EXPORT_SIGNATURE) {
             showStatus(t(settings.language, "options.import.bad_signature"));
             return;

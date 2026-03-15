@@ -4,6 +4,7 @@ import { evaluateBlock, reasonLabel } from "../../../domain/blocking/url";
 import { computeScheduleTimeline, formatDuration } from "../../../domain/schedule/timeline";
 import { t, tf } from "../../../shared/i18n";
 import { devLog } from "../../../shared/devLogger";
+import { formatTime, getDayLabel } from "../../../shared/i18n/dates";
 import { BlockerPanel } from "../components/BlockerPanel";
 import { FocusTimerCard } from "../components/FocusTimerCard";
 import { useActiveTabInfo } from "../hooks/useActiveTabInfo";
@@ -64,6 +65,7 @@ export function Popup() {
   // Toggle de bloqueo manual.
   const handleToggle = async () => {
     const next = !blockEnabled;
+    // Actualizamos optimistamente para que el switch responda antes de persistir.
     setSettings((prev) => (prev ? { ...prev, blockEnabled: next } : prev));
     await updateSettings({ blockEnabled: next });
   };
@@ -102,6 +104,16 @@ export function Popup() {
 
   const scheduleCountdownText = scheduleCountdown ?? "-";
 
+  const scheduleHint = useMemo(() => {
+    if (!timeline?.isCarryover || timeline.currentSourceDay === null || !timeline.currentBlockEnd) {
+      return null;
+    }
+    return tf(lang, "popup.schedule.carryover", {
+      day: getDayLabel(timeline.currentSourceDay, lang),
+      time: formatTime(lang, timeline.currentBlockEnd, settings.timeFormat12h),
+    });
+  }, [timeline, lang, settings.timeFormat12h]);
+
   useEffect(() => {
     if (!timeline) return;
     if (!lastStateRef.current) {
@@ -112,6 +124,7 @@ export function Popup() {
       return;
     }
     lastStateRef.current = timeline.state;
+    // Solo avisamos cuando cambia el estado global, no en cada tick del contador.
     const remainingMs = timeline.currentUntil ? Math.max(0, timeline.currentUntil - Date.now()) : null;
     const duration = remainingMs !== null ? formatDuration(remainingMs) : t(lang, "toast.duration_unknown");
     const message =
@@ -177,6 +190,7 @@ export function Popup() {
           scheduleCountdown={scheduleCountdownText}
           scheduleBlocked={timeline?.state === "blocked"}
           nextBlockDuration={nextBlockDuration}
+          scheduleHint={scheduleHint}
           browserTimeText={browserTimeText}
           tzOffsetMin={tzOffsetMin}
           nextChangeText={nextChangeText}

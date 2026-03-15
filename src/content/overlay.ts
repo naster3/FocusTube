@@ -3,6 +3,7 @@ import overlayCss from "./overlay.css?raw";
 import { safeSendMessage } from "./extensionMessaging";
 import { t, tf } from "../shared/i18n";
 import type { Language } from "../domain/settings/types";
+import { formatTime, getDayLabel } from "../shared/i18n/dates";
 
 const OVERLAY_VISUAL_TICK_MS = 1000;
 const OVERLAY_SYNC_TICK_MS = 10000;
@@ -19,8 +20,13 @@ type OverlayTimeline = {
   state: "blocked" | "free";
   reason: string;
   currentUntil: number | null;
+  currentBlockStart: number | null;
+  currentBlockEnd: number | null;
+  currentSourceDay: number | null;
+  isCarryover: boolean;
   nextBlockStart: number | null;
   nextBlockEnd: number | null;
+  nextBlockSourceDay: number | null;
 };
 
 type OverlaySettings = {
@@ -193,13 +199,14 @@ export function initFloatingTimerOverlay() {
       return;
     }
 
-    line3.textContent = `${t(lang, "overlay.now")}: ${formatOverlayTime(now, locale, timeFormat12h)}`;
+    const nowText = `${t(lang, "overlay.now")}: ${formatOverlayTime(now, locale, timeFormat12h)}`;
 
     if (!hasTimelineResponse) {
       setOverlayState("loading");
       line1.textContent = t(lang, "overlay.loading");
       big.textContent = "--:--";
       line2.textContent = "";
+      line3.textContent = nowText;
       return;
     }
 
@@ -208,28 +215,40 @@ export function initFloatingTimerOverlay() {
       line1.textContent = t(lang, "overlay.no_state");
       big.textContent = "--:--";
       line2.textContent = "";
+      line3.textContent = nowText;
       return;
     }
 
     const until = timeline.currentUntil;
+    const carryoverText =
+      timeline.isCarryover && timeline.currentSourceDay !== null && timeline.currentBlockEnd
+        ? tf(lang, "overlay.carryover", {
+            day: getDayLabel(timeline.currentSourceDay, lang),
+            time: formatTime(lang, timeline.currentBlockEnd, Boolean(timeFormat12h)),
+          })
+        : null;
     if (timeline.state === "blocked") {
       setOverlayState("blocked");
       line1.textContent = t(lang, "overlay.blocked");
       big.textContent = until ? formatDuration(until - now) : "--:--";
       line2.textContent = `${t(lang, "overlay.reason")}: ${reasonLabel(timeline.reason)}`;
+      line3.textContent = carryoverText ? `${carryoverText} | ${nowText}` : nowText;
       return;
     }
 
     setOverlayState("free");
     line1.textContent = t(lang, "overlay.free");
     big.textContent = until ? formatDuration(until - now) : "--:--";
-    if (timeline.nextBlockStart && timeline.nextBlockEnd) {
+    if (carryoverText) {
+      line2.textContent = carryoverText;
+    } else if (timeline.nextBlockStart && timeline.nextBlockEnd) {
       line2.textContent = tf(lang, "overlay.next_block", {
         duration: formatDuration(timeline.nextBlockEnd - timeline.nextBlockStart),
       });
     } else {
       line2.textContent = "";
     }
+    line3.textContent = nowText;
   };
 
   const updateMinimizeControlState = () => {

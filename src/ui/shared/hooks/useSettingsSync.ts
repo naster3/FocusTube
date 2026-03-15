@@ -8,6 +8,7 @@ export function useSettingsSync(initial: Settings = DEFAULT_SETTINGS) {
 
   useEffect(() => {
     void (async () => {
+      // La vista arranca con defaults y luego se hidrata desde storage para evitar render bloqueante.
       const stored = await getSettings();
       setSettings(stored);
     })();
@@ -21,6 +22,7 @@ export function useSettingsSync(initial: Settings = DEFAULT_SETTINGS) {
       if (changes.settings) {
         const nextValue = changes.settings.newValue;
         if (nextValue && typeof nextValue === "object") {
+          // Normalizamos siempre desde storage para absorber migraciones/valores faltantes.
           setSettings(mergeSettings(nextValue as Partial<Settings>));
           return;
         }

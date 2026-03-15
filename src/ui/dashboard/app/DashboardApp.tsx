@@ -159,6 +159,7 @@ export function Dashboard() {
       return () => undefined;
     }
 
+    // Diferimos charts/tablas pesadas hasta que el panel se acerque al viewport o pase un warmup corto.
     const warmupTimer = window.setTimeout(() => setMetricsPanelReady(true), 1800);
 
     if (!metricsPanelAnchorRef.current || typeof IntersectionObserver === "undefined") {
@@ -392,6 +393,7 @@ export function Dashboard() {
       showBlockedStatus(t(settings.language, "dashboard.domain.permission_denied"), "error");
       return;
     }
+    // El dominio queda bloqueado junto con sus tags para que la regla sobreviva a reinicios/export.
     const next = Array.from(new Set([...settings.blockedDomains, domain]));
     const nextTags = { ...settings.blockedDomainTags, [domain]: blockedTagInput };
     setBlockedDomainInput("");
@@ -416,6 +418,7 @@ export function Dashboard() {
     const current = settings.blockedDomainTags[domain] ?? [];
     const nextTags = enabled ? Array.from(new Set([...current, tag])) : current.filter((entry) => entry !== tag);
     const nextMap = { ...settings.blockedDomainTags, [domain]: nextTags };
+    // Los tags controlan la semantica del bloqueo sin duplicar listas de dominios.
     await saveSettings({ ...settings, blockedDomainTags: nextMap });
   };
 
@@ -442,6 +445,7 @@ export function Dashboard() {
       window.clearTimeout(undoResetTimerRef.current);
     }
     setUndoMetrics(snapshot);
+    // Damos una ventana corta para deshacer sin persistir historial extra ni estados intermedios.
     undoResetTimerRef.current = window.setTimeout(() => {
       setUndoMetrics(null);
       undoResetTimerRef.current = null;
@@ -507,6 +511,7 @@ export function Dashboard() {
     if (entries.length === 0) {
       return { labels: [], values: [] as number[] };
     }
+    // Agrupamos el resto en "other" para que la grafica siga legible con muchos dominios.
     const top = entries.slice(0, 5);
     const otherSum = entries.slice(5).reduce((acc, [, value]) => acc + value, 0);
     const labels = top.map(([domain]) => domain);
@@ -655,6 +660,7 @@ export function Dashboard() {
       const domains = metrics.timeByDomainByDay[day] || {};
       let topDomain = "";
       let topSeconds = 0;
+      // Resumimos el dominio dominante del dia en lugar de listar toda la distribucion.
       for (const [domain, seconds] of Object.entries(domains)) {
         if (seconds > topSeconds) {
           topSeconds = seconds;

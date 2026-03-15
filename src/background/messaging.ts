@@ -53,6 +53,7 @@ export function registerMessageListener() {
       if (parsed.type === "PAGE_HELLO") {
         const tabId = sender.tab?.id;
         if (tabId) {
+          // Este estado alimenta las metricas por pestana activa sin depender del DOM.
           await updateTabTarget(tabId, parsed.url);
           const state = getTabState(tabId);
           state.visible = parsed.visible !== false;
@@ -70,6 +71,7 @@ export function registerMessageListener() {
           const state = getTabState(tabId);
           state.visible = Boolean(parsed.visible);
           if (!parsed.visible) {
+            // Al ocultarse, cortamos el tramo actual para no seguir acumulando tiempo invisible.
             state.lastTick = Date.now();
           }
         }
@@ -116,6 +118,7 @@ export function registerMessageListener() {
       if (parsed.type === "METRICS_RESET") {
         await resetMetrics();
         await clearDb();
+        // Sincroniza el cache del service worker para que popup/dashboard vean el reset al instante.
         setMetricsCache(DEFAULT_METRICS);
         setMetricsDirty(false);
         sendResponse({ ok: true });

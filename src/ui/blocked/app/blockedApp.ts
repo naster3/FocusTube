@@ -1,6 +1,6 @@
 // Pantalla de bloqueo y desbloqueo temporal.
 import { getMetrics, getSettings, updateSettings } from "../../../infrastructure/storage";
-import { formatDateTime } from "../../../shared/i18n/dates";
+import { formatDateTime, formatTime, getDayLabel } from "../../../shared/i18n/dates";
 import { t, tf } from "../../../shared/i18n";
 import {
   canStartWeeklySession,
@@ -9,7 +9,7 @@ import {
   isWeeklySessionActive,
 } from "../../../domain/weekly/weekly";
 import { evaluateBlock, reasonLabel } from "../../../domain/blocking/url";
-import { parseTimeToMinutes } from "../../../domain/schedule/schedule";
+import { computeScheduleTimeline } from "../../../domain/schedule/timeline";
 import type { Settings } from "../../../domain/settings/types";
 import { getBlockedElements } from "../utils/dom";
 import {
@@ -25,24 +25,6 @@ import { closeBlockedTab } from "../utils/close";
 import { navigateTo } from "../utils/navigation";
 
 let initialized = false;
-
-function isCarryoverScheduleBlock(now: Date, intervalsByDay: Settings["intervalsByDay"]) {
-  const day = now.getDay();
-  const minutes = now.getHours() * 60 + now.getMinutes();
-  const prevDay = (day + 6) % 7;
-  const prevIntervals = intervalsByDay[prevDay] || [];
-  return prevIntervals.some((interval) => {
-    if (interval.enabled === false || interval.mode !== "blocked") {
-      return false;
-    }
-    const start = parseTimeToMinutes(interval.start);
-    const end = parseTimeToMinutes(interval.end);
-    if (start === end || end > start) {
-      return false;
-    }
-    return minutes < end;
-  });
-}
 
 export function initBlockedPage() {
   if (initialized) {
@@ -91,6 +73,7 @@ export function initBlockedPage() {
 
   const scheduleAutoUnblock = createScheduleAutoUnblockController({
     resolveBlockedUrl: async () => {
+      // La URL puede perderse al abrir blocked.html; se rehidrata desde query/referrer/background.
       const resolved = await resolveBlockedAttempt(blockedUrl);
       blockedUrl = resolved.url;
       if (typeof resolved.at === "number") {
@@ -185,6 +168,7 @@ export function initBlockedPage() {
         const last = focusable[focusable.length - 1];
         const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         const activeInside = active ? dialogEl?.contains(active) : false;
+        // Mantiene el foco atrapado dentro del modal mientras este abierto.
         if (event.shiftKey) {
           if (!activeInside || active === first) {
             event.preventDefault();
@@ -270,17 +254,24 @@ export function initBlockedPage() {
     }
 
     if (elements.blockedReasonEl) {
+      const timeline = computeScheduleTimeline(settings, Date.now());
       const decision = blockedUrl ? evaluateBlock(blockedUrl, settings, Date.now()) : null;
       const label = decision?.blocked ? reasonLabel(decision.reason, lang) : "";
       elements.blockedReasonEl.textContent = label || "-";
 
       if (elements.carryoverNoteEl) {
-        const isCarryover =
+        // Explica por que el bloqueo sigue activo aunque "hoy" no muestre un rango visible.
+        if (
           Boolean(decision?.blocked) &&
           decision?.reason === "schedule" &&
-          isCarryoverScheduleBlock(new Date(), settings.intervalsByDay);
-        if (isCarryover) {
-          elements.carryoverNoteEl.textContent = t(lang, "blocked.carryover");
+          timeline.isCarryover &&
+          timeline.currentSourceDay !== null &&
+          timeline.currentBlockEnd
+        ) {
+          elements.carryoverNoteEl.textContent = tf(lang, "blocked.carryover", {
+            day: getDayLabel(timeline.currentSourceDay, lang),
+            time: formatTime(lang, timeline.currentBlockEnd, settings.timeFormat12h),
+          });
           elements.carryoverNoteEl.setAttribute("data-visible", "true");
         } else {
           elements.carryoverNoteEl.textContent = "";
@@ -318,6 +309,7 @@ export function initBlockedPage() {
     const tags = matchedDomain ? (settings.blockedDomainTags?.[matchedDomain] ?? []) : [];
     const hasIntervals = tags.includes("intervalos");
     const hasWeekly = tags.includes("por_semana");
+    // Solo el flujo horario necesita chequeo periodico para auto-liberar la pagina.
     scheduleAutoUnblock.setEnabled(hasIntervals);
 
     if (!tags.length) {
@@ -373,6 +365,7 @@ export function initBlockedPage() {
         blockedUrl = await resolveBlockedUrl(blockedUrl);
         const start = Date.now();
         const until = start + durationMs;
+        // Marcamos semana usada al iniciar la sesion para impedir reutilizarla ese mismo dia/semana.
         await updateSettings({
           weeklyUnblockUntil: until,
           weeklyUnblockLastWeek: getWeeklySessionDayKey(start),
@@ -403,6 +396,7 @@ export function initBlockedPage() {
         }
         blockedUrl = await resolveBlockedUrl(blockedUrl);
         const start = Date.now();
+        // El desbloqueo temporal es fijo a 5 minutos y luego el content script vuelve a evaluar reglas.
         await updateSettings({ unblockUntil: start + 5 * 60 * 1000 });
         if (blockedUrl) {
           navigateTo(blockedUrl);
@@ -428,6 +422,7 @@ export function initBlockedPage() {
       if (area !== "local" || (!changes.settings && !changes.metrics)) {
         return;
       }
+      // Re-renderiza al cambiar settings o metricas y revalida el auto-unblock si cambio el horario.
       void render().then(() => {
         if (changes.settings) {
           void scheduleAutoUnblock.checkOnce();

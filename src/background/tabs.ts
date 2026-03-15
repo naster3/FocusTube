@@ -32,6 +32,7 @@ export async function updateTabTarget(tabId: number, url: string | null) {
   state.domain = domain;
   state.isTarget = Boolean(domain);
   if (state.isTarget && !wasTarget) {
+    // Solo abrimos sesion cuando la pestana entra al universo trackeable por primera vez.
     startSession(tabId, Date.now());
   }
   if (!state.isTarget && state.sessionActive) {
@@ -74,6 +75,7 @@ export function registerTabListeners() {
     const now = Date.now();
     const activeTabId = getActiveTabId();
     if (activeTabId !== null) {
+      // Cerramos el tramo de la pestana anterior en el instante del cambio de foco.
       const prevState = getTabState(activeTabId);
       prevState.active = false;
       prevState.lastTick = now;
@@ -97,6 +99,7 @@ export function registerTabListeners() {
   });
 
   chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    // `changeInfo.url` no siempre llega; usamos `tab.url` como respaldo.
     if (typeof changeInfo.url === "string") {
       void updateTabTarget(tabId, changeInfo.url);
     } else if (tab.url) {

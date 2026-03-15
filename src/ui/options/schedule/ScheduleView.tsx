@@ -109,6 +109,31 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, language, onChange
     const timeLabel = formatMinuteLabel(carryOver.untilMin, timeFormat12h);
     return tf(language, "schedule.carryover.notice", { day: dayLabel, time: timeLabel });
   }, [carryOver, language, timeFormat12h]);
+  const selectedDayLabel = useMemo(() => getDayLabel(selectedDay, language), [selectedDay, language]);
+  const daySummary = useMemo(() => {
+    if (carryOver) {
+      return {
+        tone: "carryover" as const,
+        title: tf(language, "schedule.day_summary.carryover_title", { day: selectedDayLabel }),
+        desc: carryOverNotice ?? "",
+      };
+    }
+    if (intervals.length > 0) {
+      return {
+        tone: "scheduled" as const,
+        title: tf(language, "schedule.day_summary.scheduled_title", { day: selectedDayLabel }),
+        desc: tf(language, "schedule.day_summary.scheduled_desc", {
+          blocked: formatMinutes(totals.blockedMinutes),
+          free: formatMinutes(totals.freeMinutes),
+        }),
+      };
+    }
+    return {
+      tone: "free" as const,
+      title: tf(language, "schedule.day_summary.free_title", { day: selectedDayLabel }),
+      desc: t(language, "schedule.day_summary.free_desc"),
+    };
+  }, [carryOver, carryOverNotice, intervals.length, language, selectedDayLabel, totals.blockedMinutes, totals.freeMinutes]);
 
   // Acciones CRUD de intervalos.
   const handleAdd = () => {
@@ -188,6 +213,7 @@ export function ScheduleView({ intervalsByDay, timeFormat12h, language, onChange
 
       {activeTab === "day" ? (
         <>
+          <DaySummaryCard summary={daySummary} />
           {/* Timeline del dia seleccionado */}
           <DayTimelineBar
             intervals={intervals}
@@ -349,6 +375,7 @@ function WeekTimelineBars({
     <div className="grid gap-3">
       {DAY_ORDER.map((day, idx) => {
         const segments = normalizeIntervals(intervalsByDay[day] || []);
+        const carryOver = getCarryOverForDay(intervalsByDay, day);
         const dayLabels = getDayLabelsInOrder(language, "monday-first");
         const dayLabel = dayLabels[idx];
         const isActive = day === selectedDay;
@@ -362,21 +389,75 @@ function WeekTimelineBars({
           >
             <div className="flex items-center gap-3">
               <span className="w-10 text-sm font-semibold">{dayLabel}</span>
-              <div className="flex h-6 w-full overflow-hidden rounded-md border border-slate-200 bg-white">
-                {segments.map((segment) => (
-                  <TimeBlockSegment
-                    key={segment.id}
-                    segment={segment}
-                    compact
-                    timeFormat12h={timeFormat12h}
-                    language={language}
-                  />
-                ))}
+              <div className="flex-1">
+                <div className="relative flex h-6 w-full overflow-hidden rounded-md border border-slate-200 bg-white">
+                  {segments.map((segment) => (
+                    <TimeBlockSegment
+                      key={segment.id}
+                      segment={segment}
+                      compact
+                      timeFormat12h={timeFormat12h}
+                      language={language}
+                    />
+                  ))}
+                  {carryOver ? (
+                    <div
+                      className="absolute inset-y-0 left-0 pointer-events-none"
+                      style={{ width: `${Math.min(100, (carryOver.untilMin / 1440) * 100)}%` }}
+                      title={tf(language, "schedule.carryover.notice", {
+                        day: getDayLabel((day + 6) % 7, language),
+                        time: formatMinuteLabel(carryOver.untilMin, timeFormat12h),
+                      })}
+                    >
+                      <div
+                        className="h-full w-full border-r border-amber-400/80"
+                        style={{
+                          backgroundImage:
+                            "repeating-linear-gradient(135deg, rgba(251,191,36,0.34) 0, rgba(251,191,36,0.34) 5px, rgba(255,255,255,0.2) 5px, rgba(255,255,255,0.2) 10px)",
+                        }}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px]">
+                  {carryOver ? (
+                    <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 font-semibold text-amber-800">
+                      {tf(language, "schedule.week.carryover_badge", {
+                        time: formatMinuteLabel(carryOver.untilMin, timeFormat12h),
+                      })}
+                    </span>
+                  ) : null}
+                  {segments.every((segment) => segment.mode === "free") ? (
+                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700">
+                      {t(language, "schedule.week.free_badge")}
+                    </span>
+                  ) : null}
+                </div>
               </div>
             </div>
           </button>
         );
       })}
+    </div>
+  );
+}
+
+function DaySummaryCard({
+  summary,
+}: {
+  summary: { tone: "carryover" | "scheduled" | "free"; title: string; desc: string };
+}) {
+  const toneClass =
+    summary.tone === "carryover"
+      ? "border-amber-300 bg-amber-50 text-amber-900"
+      : summary.tone === "scheduled"
+        ? "border-slate-200 bg-slate-50 text-slate-800"
+        : "border-emerald-200 bg-emerald-50 text-emerald-900";
+
+  return (
+    <div className={`mb-4 rounded-xl border px-4 py-3 ${toneClass}`}>
+      <div className="text-sm font-semibold">{summary.title}</div>
+      <div className="mt-1 text-xs opacity-90">{summary.desc}</div>
     </div>
   );
 }
@@ -657,6 +738,26 @@ function formatMinuteLabel(totalMinutes: number, use12h: boolean) {
 function formatIntervalTime(value: Interval["start"], use12h: boolean) {
   const minutes = parseTimeToMinutes(value);
   return formatMinuteLabel(minutes, use12h);
+}
+
+function getCarryOverForDay(intervalsByDay: IntervalWeek, day: number) {
+  const prevDay = (day + 6) % 7;
+  const prevIntervals = intervalsByDay[prevDay] || [];
+  let untilMin = 0;
+
+  prevIntervals.forEach((interval) => {
+    if (interval.enabled === false || interval.mode !== "blocked") {
+      return;
+    }
+    const startMin = parseTimeToMinutes(interval.start);
+    const endMin = parseTimeToMinutes(interval.end);
+    if (startMin === endMin || endMin > startMin) {
+      return;
+    }
+    untilMin = Math.max(untilMin, endMin);
+  });
+
+  return untilMin > 0 ? { untilMin } : null;
 }
 
 function intervalCrossesMidnight(interval: Interval) {

@@ -23,6 +23,7 @@ export function startBlockedTimer() {
     const now = Date.now();
     const deltaSec = Math.floor((now - lastTick) / 1000);
     if (deltaSec > 0) {
+      // Reportamos en lotes cada 10s para reducir trafico sin perder fidelidad util.
       sendTick(deltaSec);
       lastTick = now;
     }

@@ -34,6 +34,7 @@ export function createScheduleAutoUnblockController({
       }
       const res = (await chrome.runtime.sendMessage(message)) as MessageResponse<"GET_TIMELINE"> | undefined;
       if (res?.ok && res.timeline.state === "free") {
+        // Cuando el horario deja de bloquear, devolvemos al usuario a la URL original.
         navigateTo(url);
       }
     } catch {
@@ -45,6 +46,7 @@ export function createScheduleAutoUnblockController({
     if (intervalId !== null) {
       return;
     }
+    // Polling liviano: el blocked page no necesita precision de segundo para salir solo.
     intervalId = window.setInterval(() => {
       void checkOnce();
     }, 15000);

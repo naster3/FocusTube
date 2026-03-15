@@ -8,6 +8,7 @@ export function startBackgroundTasks() {
     return;
   }
   setBackgroundStarted(true);
+  // El service worker puede reiniciarse; este flag evita duplicar intervalos al volver a montar.
   setInterval(() => {
     void tickMetrics();
   }, TICK_MS);

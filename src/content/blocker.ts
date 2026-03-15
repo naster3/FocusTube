@@ -16,6 +16,7 @@ export async function checkAndBlock(options?: { showGuard?: boolean }) {
   // Atajo: permitir /watch si el canal esta en whitelist.
   if (isYouTubeWatchUrl(url)) {
     try {
+      // La whitelist necesita inspeccionar el contexto de la pagina antes de pedir la decision global.
       const allowed = await allowWhitelistedYouTubeWatchIfPossible((label) => guard.setLabel(label));
       if (allowed) {
         guard.hide();
@@ -30,6 +31,7 @@ export async function checkAndBlock(options?: { showGuard?: boolean }) {
   // Fail-open si el background no responde rapido.
   let settled = false;
   const failOpen = window.setTimeout(() => {
+    // Preferimos no congelar la navegacion si el service worker esta dormido o reiniciando.
     if (settled) return;
     guard.hide();
   }, 2000);

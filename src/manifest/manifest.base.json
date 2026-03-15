@@ -1,12 +1,21 @@
 {
   "manifest_version": 3,
   "name": "FocusTube Blocker",
-  "version": "3.1.6",
+  "version": "3.1.7",
   "author": "Manuel Adolfo Deño de los Santos",
   "description": "Bloquea YouTube por horarios con whitelist y modo estricto.",
-  "permissions": ["permissions", "storage", "tabs", "scripting", "notifications", "alarms"],
+  "permissions": [
+    "permissions",
+    "storage",
+    "tabs",
+    "scripting",
+    "notifications",
+    "alarms"
+  ],
   "host_permissions": [],
-  "optional_host_permissions": ["*://*/*"],
+  "optional_host_permissions": [
+    "*://*/*"
+  ],
   "action": {
     "default_title": "FocusTube Blocker",
     "default_popup": "src/ui/popup/index.html"
@@ -27,8 +36,13 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["src/ui/blocked/index.html", "blocked.js"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "src/ui/blocked/index.html",
+        "blocked.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }

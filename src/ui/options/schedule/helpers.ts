@@ -69,6 +69,7 @@ function buildMinuteModes(intervals: Interval[]) {
             minutes[m] = "blocked";
             blockedMask[m] = true;
           } else if (!blockedMask[m]) {
+            // Un tramo libre solo gana si ese minuto no quedo reclamado por un bloque previo.
             minutes[m] = "free";
           }
         }
@@ -91,6 +92,7 @@ export function normalizeIntervals(intervals: Interval[]): Segment[] {
     const mode = m < 1440 ? minutes[m] : currentMode;
     const period = m < 1440 ? getPeriodLabel(m) : currentPeriod;
 
+    // Cortamos segmento al cambiar modo o etiqueta visual para simplificar el render del timeline.
     if (mode !== currentMode || period !== currentPeriod || m === 1440) {
       segments.push({
         id: `${currentMode}-${currentPeriod}-${startMin}`,
@@ -130,6 +132,7 @@ export function detectOverlaps(intervals: Interval[]) {
   let inOverlap = false;
   let overlapStart = 0;
 
+  // Reconstruye tramos continuos donde al menos dos intervalos pisan el mismo minuto.
   for (let m = 0; m <= 1440; m += 1) {
     const isOverlap = m < 1440 && counts[m] > 1;
     if (isOverlap && !inOverlap) {

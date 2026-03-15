@@ -22,6 +22,7 @@ function getHttpReferrerUrl() {
 
 export const getInitialBlockedUrl = () => {
   const params = new URLSearchParams(window.location.search);
+  // Primero intentamos query param; si no existe, usamos referrer HTTP para recargas/manual open.
   return params.get("url") || getHttpReferrerUrl();
 };
 
@@ -30,6 +31,7 @@ export async function resolveBlockedAttempt(currentUrl: string): Promise<Resolve
     return { url: currentUrl, at: null };
   }
   try {
+    // El background conserva el ultimo intento por pestana para reconstruir blocked.html.
     const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
     const tabId = tabs?.[0]?.id;
     if (!tabId) {
